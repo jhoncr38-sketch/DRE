@@ -11,3 +11,12 @@ dados-originais/
 
 # gerado pela Vercel no deploy (vercel.json): só o painel, como index.html
 public/
+
+# configuração local do Supabase (modelo em .env.example)
+.env
+.env.*
+!.env.example
+
+# pastas locais da CLI do Supabase
+supabase/.temp/
+supabase/.branches/

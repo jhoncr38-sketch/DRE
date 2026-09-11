@@ -208,6 +208,40 @@
   .prem2 .in:focus{border-bottom-color:var(--brand)}
   .hint{margin:12px 0 0; font-size:11px; color:var(--muted-2); line-height:1.5}
 
+  /* Banco de dados: barra de salvamento, login e janelas */
+  .btn.prim{background:var(--fill); border-color:var(--fill); color:#fff}
+  .btn.prim:hover{border-color:var(--fill); filter:brightness(1.25)}
+  .btn:disabled{opacity:.55; cursor:default; filter:none}
+  .barra{display:flex; align-items:flex-end; gap:12px 22px; flex-wrap:wrap; background:var(--surface); padding:12px 16px; box-shadow:0 0 0 1px var(--line-2)}
+  .barra.local{padding:9px 16px; font-size:12px; color:var(--muted); background:var(--surface-2)}
+  .bsel{display:flex; flex-direction:column; gap:2px; min-width:0; max-width:100%}
+  .bsel .cap{font-size:10px; letter-spacing:.1em; color:var(--muted-2)}
+  .bsel select{font:600 14px/1.3 var(--sans); color:var(--ink); background:transparent; border:0; border-bottom:1px solid var(--line-3); border-radius:0; padding:2px 0; max-width:320px; cursor:pointer; outline:none}
+  .bsel select:focus{border-bottom-color:var(--brand)}
+  .bsel select:disabled{color:var(--muted-2); cursor:default}
+  .bstatus{margin-left:auto; display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--muted); white-space:nowrap}
+  .bstatus::before{content:""; width:7px; height:7px; background:var(--muted-3)}
+  .bstatus.ok::before{background:var(--ok)}
+  .bstatus.sujo{color:var(--ink)}
+  .bstatus.sujo::before{background:var(--fill)}
+  .bstatus.erro{color:var(--ink)}
+  .bstatus.erro::before{background:var(--brand)}
+  .menu .menu-email{font-size:11px; color:var(--muted-2); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .login{width:min(380px,100%); margin:8vh auto 0; background:var(--surface); padding:30px 28px; display:flex; flex-direction:column; gap:10px; box-shadow:0 0 0 1px var(--line-2)}
+  .login .logo{align-self:flex-start; margin-bottom:6px}
+  .login .sub{margin:0}
+  .login form{display:flex; flex-direction:column; gap:14px; margin-top:10px}
+  .login .field .in.txt, .modal-caixa .field .in.txt{font-size:14px; border-bottom-color:var(--line-3)}
+  .login-erro, .modal-erro{margin:0; min-height:1.2em; font-size:12px; color:var(--ink-3)}
+  .login .btn.prim{justify-content:center; padding:12px}
+  .modal-fundo{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(20,22,26,.45)}
+  .modal-caixa{width:min(440px,100%); background:var(--surface); padding:24px 26px; display:flex; flex-direction:column; gap:14px; box-shadow:0 0 0 1px var(--line-2)}
+  .modal-caixa .sub{margin:0}
+  .modal-campos{display:flex; flex-direction:column; gap:12px}
+  .modal-acoes{display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-top:4px}
+  .present .barra{display:none}
+  @media print{ .barra, #modal{display:none !important} }
+
   /* Cadeia de crédito (resumo do cliente) */
   .cadeia{margin-top:36px; padding-top:26px; border-top:1px solid var(--line)}
   .cli .cadeia .cad-sub{margin:0 0 16px; font-size:12px; max-width:none}
@@ -315,8 +349,12 @@
 <body>
 <div class="page"><div class="wrap" id="app"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="modal" hidden></div>
 <script>
 const LOGO_DEFAULT = "data:image/png;base64,{{LOGO_B64}}";
+// Supabase {url, chave pública}: preenchido no build (scripts/vercel_build.mjs ou gerar_dashboard.py com .env).
+// null = modo local: o painel funciona, mas não salva no banco.
+const SUPABASE = /*SUPABASE_CONFIG*/null;
 const SCHEMA = 3;
 
 /* ---------- dados iniciais (DRE do cliente) ---------- */
@@ -705,11 +743,14 @@ function rMenu(){
     ${it('present', 'Modo apresentação')}
     ${it('print', 'Imprimir / PDF')}
     <div class="sep" role="separator"></div>
-    ${it('salvar', 'Salvar (compartilhar no link)')}
+    ${banco.ativo ? '' : it('salvar', 'Salvar (compartilhar no link)')}
     ${it('baixar', 'Baixar HTML')}
     <div class="sep" role="separator"></div>
     ${it('restaurar', 'Restaurar padrão')}
     <button role="menuitem" data-act="limpar" class="${ui.armado ? 'armed' : ''}">${ui.armado ? 'Confirmar limpeza?' : 'Limpar tudo'}</button>
+    ${banco.ativo && banco.sessao ? `<div class="sep" role="separator"></div>
+    ${it('senha', 'Alterar senha')}
+    <button role="menuitem" data-act="sair">Sair<span class="menu-email">${esc(banco.sessao.email)}</span></button>` : ''}
   </div>`;
 }
 function rPersonalizar(){
@@ -940,11 +981,54 @@ function rAnual(){
   </div></section>`;
 }
 
+function rLogin(){
+  if(banco.carregando) return `<section class="login" aria-busy="true"><p class="sub">Carregando do banco de dados…</p></section>`;
+  return `<section class="login" aria-labelledby="login-titulo">
+    <img class="logo" src="${esc(S.logo || LOGO_DEFAULT)}" alt="Logo do escritório">
+    <h2 id="login-titulo">Entrar no painel</h2>
+    <p class="sub">Acesso da equipe. Tudo o que você preencher fica salvo no banco de dados do escritório.</p>
+    <form data-form="login">
+      <label class="field"><span>E-mail</span><input class="in txt" name="email" type="email" autocomplete="username" value="${esc(banco.emailLogin || '')}" required></label>
+      <label class="field"><span>Senha</span><input class="in txt" name="senha" type="password" autocomplete="current-password" required></label>
+      <p class="login-erro" role="alert">${esc(banco.msgLogin || '')}</p>
+      <button class="btn prim" type="submit">Entrar</button>
+    </form>
+  </section>`;
+}
+function rBarra(){
+  if(ui.present) return '';
+  if(!banco.ativo) return `<div class="barra local">Modo local: nada é salvo no banco de dados. Para salvar, configure o Supabase (README → Banco de dados).</div>`;
+  const empresas = banco.empresas.map(e => `<option value="${e.id}"${e.id === banco.empresaId ? ' selected' : ''}>${esc(e.nome)}</option>`).join('');
+  const meses = banco.meses.map(p => `<option value="${p}"${p === banco.periodo ? ' selected' : ''}>${mesCurto(p)}</option>`).join('');
+  return `<div class="barra">
+    <label class="bsel"><span class="cap">Empresa</span><select data-banco="empresa">${banco.empresaId ? '' : '<option value="" selected>Nenhuma empresa</option>'}${empresas}<option value="__nova__">+ Nova empresa…</option></select></label>
+    <label class="bsel"><span class="cap">Competência</span><select data-banco="periodo"${banco.empresaId ? '' : ' disabled'}>${meses}<option value="__nova__">+ Novo mês…</option></select></label>
+    <span class="bstatus" id="b-status" role="status" aria-live="polite"></span>
+    <button class="btn prim" data-act="salvar-banco" id="b-salvar" title="Salvar (Ctrl+S)">Salvar</button>
+  </div>`;
+}
+function atualizarBarra(){
+  const st = document.getElementById('b-status'), bt = document.getElementById('b-salvar');
+  if(!st || !bt) return;
+  let texto, classe = '';
+  if(banco.salvando) texto = 'Salvando…';
+  else if(banco.erro){ texto = 'Não salvou — tente de novo'; classe = 'erro'; }
+  else if(!banco.empresaId) texto = 'Cadastre uma empresa para salvar';
+  else if(sujo()){ texto = 'Alterações não salvas'; classe = 'sujo'; }
+  else { texto = banco.salvoEm ? `Salvo às ${hora(banco.salvoEm)}` : 'Tudo salvo'; classe = 'ok'; }
+  if(st.textContent !== texto) st.textContent = texto;
+  st.className = 'bstatus ' + classe;
+  bt.disabled = banco.salvando;
+}
+
 function render(){
   document.body.classList.toggle('editando', editavel());
   document.body.classList.toggle('present', ui.present);
+  if(banco.ativo && (!banco.sessao || banco.carregando)){      // sem login, nenhum dado aparece
+    app.innerHTML = rLogin(); document.title = 'Entrar — Painel DRE'; return;
+  }
   const telas = {resultado: rResultado, reforma: rReforma, cliente: rCliente, anual: rAnual};
-  app.innerHTML = rTopo() + rPersonalizar() + rHeroi() + telas[ui.tab]() +
+  app.innerHTML = rTopo() + rBarra() + rPersonalizar() + rHeroi() + telas[ui.tab]() +
     `<footer class="foot"><span data-o="footer"></span><span data-o="comp"></span></footer>`;
   refresh();
 }
@@ -967,6 +1051,7 @@ function refresh(){
   const img = app.querySelector('[data-src="logo"]'), src = S.logo || LOGO_DEFAULT;
   if(img && img.getAttribute('src') !== src) img.setAttribute('src', src);
   document.title = 'DRE — ' + (S.co || 'Painel');
+  atualizarBarra();
 }
 
 /* ---------- ações ---------- */
@@ -977,15 +1062,19 @@ function toast(msg){
 const focar = sel => { const el = app.querySelector(sel); if(el) el.focus(); };
 function irPara(tab, foco){ ui.tab = tab; ui.menu = false; ui.armado = false; render(); if(foco) focar('#tab-' + tab); }
 
-function limparTudo(){
+function zerarValores(base){
   // zera valores; mantém categorias, % base, alíquotas, premissas, identidade visual e rótulos
-  const d = JSON.parse(JSON.stringify(S));
+  const d = JSON.parse(JSON.stringify(base));
   const zera = arr => arr.forEach(r => { r[1] = 0; });
   [d.annual, d.monthly].forEach(x => { x.receita = 0; x.compraMercadoria = 0; ['custos', 'ga', 'vendas', 'tributarias'].forEach(g => zera(x[g])); });
   d.annual.resultadoInformado = 0;
   zera(d.monthly.reforma.debitos); zera(d.monthly.reforma.creditos); zera(d.monthly.estoque || []);
   d.monthly.reforma.saldoCredorAnterior = 0; d.monthly.ibs = 0;
-  d.co = '[Nome da empresa]';
+  return d;
+}
+function limparTudo(){
+  const d = zerarValores(S);
+  if(!banco.empresaId) d.co = '[Nome da empresa]';            // com empresa aberta, o nome é o da empresa
   d.cadeia = { fornecedores: [], clientes: [] };
   return d;
 }
@@ -1011,6 +1100,8 @@ function baixar(){
   clone.querySelector('#app').innerHTML = '';
   const t = clone.querySelector('#toast'); t.className = 'toast'; t.textContent = '';
   const velho = clone.querySelector('#estado-salvo'); if(velho) velho.remove();
+  // o arquivo baixado funciona sozinho, sem o banco: quem recebe não tem login
+  clone.querySelectorAll('script:not([id])').forEach(s => { s.textContent = s.textContent.replace(/const SUPABASE = [^\n]*;/, 'const SUPABASE = null;'); });
   // o estado vai num <script> próprio no <head>, antes do script principal (inserido pelo DOM, sem busca em texto)
   const sc = document.createElement('script'); sc.id = 'estado-salvo';
   sc.textContent = 'window.__SAVED_STATE__=' + JSON.stringify(S).replace(/</g, '\\u003c') + ';';
@@ -1021,6 +1112,317 @@ function baixar(){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   toast('HTML baixado');
+}
+
+/* ---------- banco de dados (Supabase) ---------- */
+// Sem biblioteca: Auth e API REST do Supabase por fetch. Quem protege os dados é o RLS do banco
+// (supabase/migrations): a chave pública sozinha não lê nada, só usuários da equipe logados.
+const banco = {
+  ativo: !!(SUPABASE && SUPABASE.url && SUPABASE.chave),
+  sessao: null,            // {access_token, refresh_token, expires_at, email}
+  carregando: false,
+  empresas: [],            // [{id, nome, cnpj}]
+  meses: [],               // competências salvas da empresa aberta, da mais recente para a mais antiga
+  empresaId: null, periodo: null,
+  base: null,              // "atualizado_em" de quando o mês foi aberto: detecta se outra pessoa salvou depois
+  instantaneo: null,       // estado no último salvamento: detecta alterações não salvas
+  salvando: false, erro: '', salvoEm: null,
+  msgLogin: '', emailLogin: '',
+  aposLogin: null          // o que retomar depois de entrar de novo (sessão expirou no meio do trabalho)
+};
+const guarda = {             // localStorage com proteção: navegador sem acesso ao armazenamento não quebra o painel
+  ler(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+  gravar(k, v){ try { if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const rotuloMes = p => { const [a, m] = String(p).split('-'); return `${MESES[+m - 1]} ${a}`; };
+const mesCurto = p => { const [a, m] = String(p).split('-'); return `${MESES[+m - 1].slice(0, 3).toLowerCase()}/${a}`; };
+const mesBarra = p => { const [a, m] = String(p).split('-'); return `${m}/${a}`; };
+const semAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const hora = d => d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+function periodoAtual(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; }
+function proximoMes(p){ const [a, m] = p.split('-').map(Number); return m === 12 ? `${a + 1}-01-01` : `${a}-${String(m + 1).padStart(2, '0')}-01`; }
+function lerPeriodo(txt){                     // "12/2025", "2025-12" ou "Dezembro 2025" → "2025-12-01"
+  const s = semAcento(txt); let m, ano, mes;
+  if((m = s.match(/(\d{1,2})\s*\/\s*(\d{4})/))){ mes = +m[1]; ano = m[2]; }
+  else if((m = s.match(/(\d{4})-(\d{1,2})/))){ ano = m[1]; mes = +m[2]; }
+  else { const i = MESES.findIndex(n => s.includes(semAcento(n))), a = s.match(/\d{4}/); if(i >= 0 && a){ mes = i + 1; ano = a[0]; } }
+  return ano && mes >= 1 && mes <= 12 ? `${ano}-${String(mes).padStart(2, '0')}-01` : null;
+}
+const instantaneo = () => JSON.stringify(S);
+const sujo = () => banco.ativo && !!banco.empresaId && banco.instantaneo !== instantaneo();
+
+async function sbAuth(caminho, corpo, token, metodo){
+  const r = await fetch(`${SUPABASE.url}/auth/v1/${caminho}`, {
+    method: metodo || 'POST',
+    headers: Object.assign({apikey: SUPABASE.chave, 'Content-Type': 'application/json'}, token ? {Authorization: 'Bearer ' + token} : {}),
+    body: corpo ? JSON.stringify(corpo) : undefined
+  });
+  const txt = await r.text(); let d = null; try { d = txt ? JSON.parse(txt) : null; } catch(e){}
+  if(!r.ok){ const err = new Error((d && (d.error_description || d.msg || d.message)) || `HTTP ${r.status}`); err.status = r.status; throw err; }
+  return d;
+}
+function guardarSessao(d){
+  banco.sessao = d ? {
+    access_token: d.access_token, refresh_token: d.refresh_token,
+    expires_at: d.expires_at || Math.floor(Date.now() / 1000) + (d.expires_in || 3600),
+    email: (d.user && d.user.email) || (banco.sessao && banco.sessao.email) || ''
+  } : null;
+  guarda.gravar('dre.sessao', banco.sessao);
+}
+async function tokenValido(){
+  const s = banco.sessao;
+  if(!s) throw Object.assign(new Error('Entre para continuar'), {status: 401});
+  if(s.expires_at - 60 > Date.now() / 1000) return s.access_token;
+  try { guardarSessao(await sbAuth('token?grant_type=refresh_token', {refresh_token: s.refresh_token})); }
+  catch(e){ guardarSessao(null); throw Object.assign(new Error('Sua sessão expirou'), {status: 401}); }
+  return banco.sessao.access_token;
+}
+async function sb(caminho, o){
+  o = o || {};
+  const token = await tokenValido();
+  const r = await fetch(`${SUPABASE.url}/rest/v1/${caminho}`, {
+    method: o.metodo || 'GET',
+    headers: Object.assign({apikey: SUPABASE.chave, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json'}, o.prefer ? {Prefer: o.prefer} : {}),
+    body: o.corpo !== undefined ? JSON.stringify(o.corpo) : undefined
+  });
+  const txt = await r.text(); let d = null; try { d = txt ? JSON.parse(txt) : null; } catch(e){ d = txt; }
+  if(!r.ok){
+    const err = new Error((d && d.message) || `HTTP ${r.status}`); err.status = r.status;
+    if(r.status === 401) guardarSessao(null);
+    throw err;
+  }
+  return d;
+}
+async function comErro(fn){
+  try { return await fn(); }
+  catch(e){
+    if(e.status === 401){ banco.msgLogin = 'Sua sessão expirou. Entre de novo.'; render(); }
+    else toast('Erro no banco de dados: ' + e.message);
+  }
+}
+
+// janela simples: resolve {botao, valores}; Enter = cfg.padrao, Esc = cancelar
+function modal(cfg){
+  return new Promise(resolve => {
+    const caixa = document.getElementById('modal'), antes = document.activeElement;
+    const campos = (cfg.campos || []).map(([nome, rotulo, valor, tipo]) =>
+      `<label class="field"><span>${esc(rotulo)}</span><input class="in txt" name="${nome}" type="${tipo || 'text'}" value="${esc(valor || '')}" autocomplete="${tipo === 'password' ? 'new-password' : 'off'}"></label>`).join('');
+    const botoes = cfg.botoes.map(([k, rotulo, estilo]) => `<button type="button" class="btn ${estilo || ''}" data-modal="${k}">${esc(rotulo)}</button>`).join('');
+    caixa.innerHTML = `<div class="modal-fundo"><form class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+      <h2 id="modal-titulo">${esc(cfg.titulo)}</h2>${cfg.texto ? `<p class="sub">${esc(cfg.texto)}</p>` : ''}
+      ${campos ? `<div class="modal-campos">${campos}</div>` : ''}${cfg.erro ? `<p class="modal-erro" role="alert">${esc(cfg.erro)}</p>` : ''}
+      <div class="modal-acoes">${botoes}</div><button type="submit" hidden tabindex="-1"></button></form></div>`;
+    caixa.hidden = false;
+    const form = caixa.querySelector('form');
+    const fechar = botao => {
+      const valores = {}; new FormData(form).forEach((v, k) => { valores[k] = String(v); });
+      caixa.hidden = true; caixa.innerHTML = '';
+      if(antes && document.contains(antes)) antes.focus();
+      resolve({botao, valores});
+    };
+    form.addEventListener('submit', e => { e.preventDefault(); fechar(cfg.padrao || 'cancelar'); });
+    form.addEventListener('click', e => { const b = e.target.closest('[data-modal]'); if(b) fechar(b.dataset.modal); });
+    form.addEventListener('keydown', e => { if(e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); fechar('cancelar'); } });
+    (form.querySelector('input') || form.querySelector(`[data-modal="${cfg.padrao || 'cancelar'}"]`)).focus();
+  });
+}
+
+async function entrar(email, senha){
+  banco.emailLogin = email;
+  guardarSessao(await sbAuth('token?grant_type=password', {email, password: senha}));
+  banco.msgLogin = '';
+  const retomar = banco.aposLogin; banco.aposLogin = null;
+  if(retomar){ render(); return retomar(); }      // a tela continua com o que estava sendo feito
+  await carregarDoBanco();
+}
+async function carregarDoBanco(){
+  banco.carregando = true; render();
+  try { await aposEntrar(); }
+  catch(e){
+    if(e.status === 401){ guardarSessao(null); banco.msgLogin = 'Sua sessão expirou. Entre de novo.'; }
+    else toast('Não foi possível carregar do banco de dados: ' + e.message);
+  }
+  finally { banco.carregando = false; render(); }
+}
+async function aposEntrar(){
+  if(!(await sb('membros?select=user_id&limit=1')).length){
+    guardarSessao(null);
+    banco.msgLogin = 'Seu usuário entrou, mas ainda não faz parte da equipe do painel. Peça para incluí-lo (supabase/scripts/adicionar_membro.sql).';
+    return;
+  }
+  banco.empresas = await sb('empresas?select=id,nome,cnpj&order=nome.asc');
+  const ultimo = guarda.ler('dre.ultimo') || {};
+  const alvo = banco.empresas.find(e => e.id === ultimo.empresaId) || banco.empresas[0];
+  if(!alvo){ banco.carregando = false; render(); return novaEmpresa(); }
+  await abrirEmpresa(alvo.id, alvo.id === ultimo.empresaId ? ultimo.periodo : null);
+}
+async function listarMeses(empresaId){
+  banco.meses = (await sb(`competencias?select=periodo&empresa_id=eq.${empresaId}&order=periodo.desc`)).map(m => m.periodo);
+}
+async function abrirEmpresa(id, periodo){
+  await listarMeses(id);
+  await abrirMes(id, periodo && banco.meses.includes(periodo) ? periodo : (banco.meses[0] || periodoAtual()));
+}
+async function abrirMes(empresaId, periodo, op){
+  op = op || {};
+  const r = await sb('rpc/carregar_painel', {metodo: 'POST', corpo: {p_empresa_id: empresaId, p_periodo: periodo}});
+  const cadeia = {fornecedores: [], clientes: []};
+  (r.parceiros || []).forEach(p => cadeia[p[0] === 'cliente' ? 'clientes' : 'fornecedores'].push([p[1] || '', p[2] || '', p[3] || '', p[4] || '']));
+  const novo = !r.competencia;
+  if(!novo){
+    S = mesclar(defaults(), migrar(r.competencia.dados)); S.cadeia = cadeia;
+    banco.base = r.competencia.atualizado_em;
+  } else {
+    // mês ainda não salvo: a tela atual (primeira empresa) ou o mês salvo mais próximo, com os valores zerados
+    if(!op.manterTela){ S = zerarValores(r.modelo ? mesclar(defaults(), migrar(r.modelo)) : defaults()); S.cadeia = cadeia; }
+    S.co = (banco.empresas.find(e => e.id === empresaId) || {}).nome || S.co;
+    banco.base = '-infinity';                      // no banco, "este mês ainda não pode existir"
+  }
+  S.mesLabel = rotuloMes(periodo);
+  Object.assign(banco, {empresaId, periodo, erro: '', salvoEm: null, instantaneo: novo ? null : instantaneo()});
+  guarda.gravar('dre.ultimo', {empresaId, periodo});
+  ui.menu = false; ui.cadeia = null;
+  render();
+  if(novo) await salvarBanco();
+}
+
+async function salvarBanco(forcar){
+  if(!banco.ativo){ toast('Banco de dados não configurado — veja "Banco de dados" no README.'); return; }
+  if(!banco.sessao){ banco.aposLogin = () => salvarBanco(forcar); render(); return; }
+  if(!banco.empresaId) return comErro(novaEmpresa);
+  if(banco.salvando) return;
+  const enviado = instantaneo(), dados = JSON.parse(enviado);
+  const cadeia = dados.cadeia || {fornecedores: [], clientes: []}; delete dados.cadeia;
+  const linha = tipo => r => [tipo, limpaCnpj(r[0]), r[1] || '', r[2] || '', r[3] || ''];
+  const parceiros = cadeia.fornecedores.map(linha('fornecedor')).concat(cadeia.clientes.map(linha('cliente')));
+  banco.salvando = true; banco.erro = ''; atualizarBarra();
+  try{
+    banco.base = await sb('rpc/salvar_painel', {metodo: 'POST', corpo: {
+      p_empresa_id: banco.empresaId, p_periodo: banco.periodo, p_dados: dados, p_parceiros: parceiros, p_base: forcar ? null : banco.base}});
+    banco.instantaneo = enviado; banco.salvoEm = new Date(); banco.salvando = false;
+    const mesNovo = !banco.meses.includes(banco.periodo);
+    if(mesNovo) banco.meses = banco.meses.concat(banco.periodo).sort().reverse();
+    const emp = banco.empresas.find(e => e.id === banco.empresaId), nome = String(S.co || '').trim();
+    const renomeou = !!(emp && nome && emp.nome !== nome);
+    if(renomeou){ emp.nome = nome; banco.empresas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')); }
+    if(mesNovo || renomeou){ const foco = document.activeElement && document.activeElement.id; render(); if(foco) focar('#' + foco); }
+    else atualizarBarra();
+    toast('Salvo no banco de dados');
+  }catch(e){
+    banco.salvando = false;
+    if(e.message === 'CONFLITO'){ atualizarBarra(); return resolverConflito(); }
+    if(e.status === 401){
+      banco.aposLogin = () => salvarBanco(forcar);
+      banco.msgLogin = 'Sua sessão expirou. Entre de novo — o que você preencheu continua aqui.';
+      render(); return;
+    }
+    banco.erro = e.message; atualizarBarra();
+    toast('Não foi possível salvar: ' + e.message);
+  }
+}
+async function resolverConflito(){
+  const r = await modal({
+    titulo: 'Outra pessoa salvou este mês',
+    texto: `${S.co} · ${mesCurto(banco.periodo)} foi salvo por outra pessoa depois que você abriu. O que fazer com as suas alterações?`,
+    botoes: [['sobrescrever', 'Salvar as minhas por cima'], ['recarregar', 'Descartar e abrir a versão salva'], ['cancelar', 'Cancelar', 'prim']],
+    padrao: 'cancelar'
+  });
+  if(r.botao === 'sobrescrever') return salvarBanco(true);
+  if(r.botao === 'recarregar') return comErro(() => abrirMes(banco.empresaId, banco.periodo));
+}
+async function podeSair(){
+  if(!sujo()) return true;
+  const r = await modal({
+    titulo: 'Alterações não salvas',
+    texto: `Há alterações em ${S.co} · ${mesCurto(banco.periodo)} que ainda não foram salvas.`,
+    botoes: [['salvar', 'Salvar e continuar', 'prim'], ['descartar', 'Descartar'], ['cancelar', 'Cancelar']],
+    padrao: 'salvar'
+  });
+  if(r.botao === 'salvar'){ await salvarBanco(); return !sujo(); }
+  return r.botao === 'descartar';
+}
+async function trocar(tipo, valor){
+  if(valor === '__nova__'){ render(); return comErro(tipo === 'empresa' ? novaEmpresa : novoMes); }
+  if(!(await podeSair())){ render(); return; }
+  await comErro(() => tipo === 'empresa' ? abrirEmpresa(valor) : abrirMes(banco.empresaId, valor));
+}
+async function novaEmpresa(){
+  if(!(await podeSair())){ render(); return; }
+  const primeira = !banco.empresas.length;
+  let valores = {nome: primeira ? S.co : '', cnpj: '', periodo: mesBarra(primeira ? (lerPeriodo(S.mesLabel) || periodoAtual()) : periodoAtual())};
+  let erro = '';
+  for(;;){
+    const r = await modal({
+      titulo: primeira ? 'Cadastre a primeira empresa' : 'Nova empresa',
+      texto: primeira ? 'O que está na tela agora será salvo nesta empresa.' : 'A empresa começa com as categorias e alíquotas padrão e os valores zerados.',
+      campos: [['nome', 'Nome da empresa', valores.nome], ['cnpj', 'CNPJ (opcional)', valores.cnpj], ['periodo', 'Competência (mês/ano)', valores.periodo]],
+      erro, botoes: [['cancelar', 'Cancelar'], ['criar', 'Cadastrar e salvar', 'prim']], padrao: 'criar'
+    });
+    if(r.botao !== 'criar'){ render(); return; }
+    valores = r.valores;
+    const nome = (valores.nome || '').trim(), cnpj = limpaCnpj(valores.cnpj), periodo = lerPeriodo(valores.periodo);
+    erro = !nome ? 'Informe o nome da empresa.'
+      : cnpj && !cnpjValido(cnpj) ? 'CNPJ inválido — confira os números.'
+      : !periodo ? 'Competência inválida — use mês/ano, por exemplo 12/2025.' : '';
+    if(erro) continue;
+    try{
+      const [empresa] = await sb('empresas?select=id,nome,cnpj', {metodo: 'POST', corpo: {nome, cnpj: cnpj || null}, prefer: 'return=representation'});
+      banco.empresas = banco.empresas.concat(empresa).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      banco.meses = [];
+      if(primeira) S.co = nome;
+      return abrirMes(empresa.id, periodo, {manterTela: primeira});
+    }catch(e){
+      if(e.status === 401) throw e;
+      erro = e.status === 409 ? 'Já existe uma empresa com esse CNPJ.' : 'Não foi possível cadastrar: ' + e.message;
+    }
+  }
+}
+async function novoMes(){
+  if(!banco.empresaId) return novaEmpresa();
+  if(!(await podeSair())){ render(); return; }
+  let valor = mesBarra(banco.meses.length ? proximoMes(banco.meses[0]) : periodoAtual()), erro = '';
+  for(;;){
+    const r = await modal({
+      titulo: 'Novo mês',
+      texto: 'Começa com as categorias, as alíquotas e a cadeia de crédito do mês salvo mais próximo, com os valores zerados. Se o mês já existir, ele é aberto.',
+      campos: [['periodo', 'Competência (mês/ano)', valor]],
+      erro, botoes: [['cancelar', 'Cancelar'], ['criar', 'Criar e salvar', 'prim']], padrao: 'criar'
+    });
+    if(r.botao !== 'criar'){ render(); return; }
+    valor = r.valores.periodo;
+    const periodo = lerPeriodo(valor);
+    if(!periodo){ erro = 'Competência inválida — use mês/ano, por exemplo 01/2026.'; continue; }
+    await listarMeses(banco.empresaId);
+    return abrirMes(banco.empresaId, periodo);
+  }
+}
+async function alterarSenha(){
+  let erro = '';
+  for(;;){
+    const r = await modal({
+      titulo: 'Alterar senha',
+      texto: `Nova senha para ${banco.sessao.email}. Use pelo menos 8 caracteres.`,
+      campos: [['senha', 'Nova senha', '', 'password'], ['confirma', 'Repita a nova senha', '', 'password']],
+      erro, botoes: [['cancelar', 'Cancelar'], ['salvar', 'Salvar senha', 'prim']], padrao: 'salvar'
+    });
+    if(r.botao !== 'salvar') return;
+    const senha = r.valores.senha || '';
+    erro = senha.length < 8 ? 'A senha precisa ter pelo menos 8 caracteres.'
+      : senha !== r.valores.confirma ? 'As duas senhas não são iguais.' : '';
+    if(erro) continue;
+    try { await sbAuth('user', {password: senha}, await tokenValido(), 'PUT'); toast('Senha alterada'); return; }
+    catch(e){ if(e.status === 401) throw e; erro = 'Não foi possível alterar: ' + e.message; }
+  }
+}
+async function sair(){
+  if(!(await podeSair())){ render(); return; }
+  const token = banco.sessao && banco.sessao.access_token;
+  guardarSessao(null);
+  try { if(token) await sbAuth('logout', null, token); } catch(e){}
+  Object.assign(banco, {empresas: [], meses: [], empresaId: null, periodo: null, base: null, instantaneo: null, erro: '', salvoEm: null, msgLogin: ''});
+  S = defaults(); ui.menu = false;
+  render();
 }
 
 /* ---------- eventos ---------- */
@@ -1042,6 +1444,7 @@ app.addEventListener('change', e => {
     const rd = new FileReader(); rd.onload = () => { S.logo = rd.result; refresh(); }; rd.readAsDataURL(f);
     return;
   }
+  if(t.matches('select[data-banco]')){ trocar(t.dataset.banco, t.value); return; }
   if(t.matches('select[data-b]')){ setPath(t.dataset.b, t.value); refresh(); return; }
   if(!t.matches('input[data-b]') || t.type === 'color') return;
   if(t.dataset.f === 'txt' && t.dataset.b.startsWith('monthly.reforma') && !t.value.trim()) setPath(t.dataset.b, '(sem nome)');
@@ -1075,6 +1478,9 @@ app.addEventListener('click', e => {
     case 'present': ui.present = !ui.present; ui.menu = false; render(); break;
     case 'print': ui.menu = false; render(); setTimeout(() => window.print(), 50); break;
     case 'salvar': ui.menu = false; render(); salvar(); break;
+    case 'salvar-banco': salvarBanco(); break;
+    case 'sair': ui.menu = false; sair(); break;
+    case 'senha': ui.menu = false; render(); comErro(alterarSenha); break;
     case 'baixar': ui.menu = false; render(); baixar(); break;
     case 'restaurar': S = defaults(); ui.menu = false; render(); toast('Padrão restaurado'); break;
     case 'limpar':
@@ -1129,13 +1535,30 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && ui.menu){ ui.menu = false; ui.armado = false; render(); focar('[data-act="menu"]'); }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && banco.ativo && banco.sessao){ e.preventDefault(); salvarBanco(); }
 });
+app.addEventListener('submit', async e => {
+  if(!e.target.matches('[data-form="login"]')) return;
+  e.preventDefault();
+  const f = new FormData(e.target), bt = e.target.querySelector('button[type="submit"]');
+  bt.disabled = true; bt.textContent = 'Entrando…';
+  try { await entrar(String(f.get('email') || '').trim(), String(f.get('senha') || '')); }
+  catch(err){
+    banco.msgLogin = err.status === 400 ? 'E-mail ou senha incorretos.' : 'Não foi possível entrar: ' + err.message;
+    render();
+  }
+});
+window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- início ---------- */
 let S = defaults();
 const ui = {tab: 'resultado', detalhe: true, memoria: true, cadeia: null, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
-(async function(){ await carregar(); render(); })();
+(async function(){
+  await carregar();
+  if(banco.ativo){ banco.sessao = guarda.ler('dre.sessao'); if(banco.sessao) return carregarDoBanco(); }
+  render();
+})();
 </script>
 </body>
 </html>

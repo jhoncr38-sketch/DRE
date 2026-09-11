@@ -50,8 +50,16 @@ src/
   add_charts.py            # 4 gráficos nativos do Excel, cores da marca
   finalize.py              # impressão A4, proteção de células, caixa de instruções
   exportar.py              # recalcula via LibreOffice e gera o PDF
-  gerar_dashboard.py       # injeta a logo e as fontes (base64) no template
+  gerar_dashboard.py       # injeta logo e fontes; com .env, gera também build/DRE_Dashboard_banco.html
   dashboard_template.html  # dashboard completo (1 arquivo, sem dependências externas)
+supabase/
+  migrations/20260911120000_estrutura_inicial.sql   # tabelas, segurança (RLS) e funções de salvar/carregar
+  scripts/adicionar_membro.sql                       # dar acesso a alguém da equipe
+  scripts/conferir_instalacao.sql                    # conferir se o banco ficou configurado
+scripts/
+  vercel_build.mjs         # build da Vercel: publica só o painel, ligado ao Supabase pelas variáveis
+vercel.json                # manda a Vercel rodar o build acima e publicar a pasta public/
+.env.example               # modelo das variáveis do Supabase (copie para .env, que não vai para o git)
 assets/
   logo.png / logo_crop.png / logo_b64.txt
   fonts/                   # IBM Plex Sans (variável) + Mono 400/500/600, subconjunto latin (OFL)
@@ -185,8 +193,11 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas e identidade;
   esvazia a cadeia de crédito
 - **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura
-- **Salvar:** `window.storage` (chave `dre_state`, `shared=true`)
-- **Baixar HTML:** grava o estado num `<script id="estado-salvo">` no `<head>`, inserido pelo DOM
+- **Salvar no banco** (com Supabase configurado): barra abaixo do cabeçalho com Empresa, Competência,
+  situação ("Salvo às 10:32" / "Alterações não salvas") e botão **Salvar** (ou Ctrl+S). Ver a seção
+  "Banco de dados". Sem Supabase, a barra avisa "Modo local" e o menu mantém o `window.storage`
+- **Baixar HTML:** grava o estado num `<script id="estado-salvo">` no `<head>`, inserido pelo DOM, e
+  tira a configuração do banco — o arquivo funciona sozinho para quem não tem login
 
 ### Como a tela atualiza
 `render()` monta a estrutura (troca de aba, adicionar/remover linha, detalhamento).
@@ -195,9 +206,11 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 Campos: `data-b` = caminho no estado, `data-f` = formato (`brl`, `base`, `pct`, `pct0`, `txt`).
 Parser pt-BR `num()`: com vírgula, ela é o decimal; sem vírgula, o ponto é decimal.
 
-### Restrição importante
-**Não usar `localStorage`/`sessionStorage`** — não funcionam no ambiente de artifacts.
-Estado vive em memória + `window.storage`.
+### Armazenamento no navegador
+O painel publicado roda na Vercel, então usa `localStorage` só para a **sessão de login**
+(`dre.sessao`) e a **última empresa/mês aberta** (`dre.ultimo`), sempre dentro de `try/catch`
+(objeto `guarda`): se o navegador bloquear, o painel funciona e só pede login de novo.
+Os dados em si ficam no Supabase, nunca no navegador.
 
 ### Modelo de dados (`defaults()`, `v: 2`)
 ```js
@@ -220,6 +233,65 @@ carga tributária), não constante como no handoff — com 15,33% dá os mesmos 
 
 As categorias são **editáveis e ilimitadas** justamente porque o escritório
 atende ramos diferentes — não pode haver "medicamento" hardcoded.
+
+---
+
+## Banco de dados (Supabase)
+
+Tudo o que é preenchido no painel fica salvo **por empresa e por mês**. Só a equipe acessa,
+com e-mail e senha. O painel fala direto com a API do Supabase (sem biblioteca), e quem
+protege os dados é o **RLS** do banco: a chave pública sozinha não lê nada.
+
+### Configurar (uma vez)
+
+1. **Criar o projeto:** supabase.com → New project (região São Paulo, se disponível).
+2. **Criar as tabelas:** SQL Editor → cole `supabase/migrations/20260911120000_estrutura_inicial.sql`
+   inteiro → Run. Para conferir, rode `supabase/scripts/conferir_instalacao.sql`.
+3. **Fechar o cadastro público:** Authentication → Sign In / Providers → desligue
+   "Allow new users to sign up". Assim só entra quem você criar.
+4. **Criar os usuários da equipe:** Authentication → Users → Add user → Create new user
+   (e-mail, senha, marque "Auto Confirm User"). Depois, no SQL Editor, rode
+   `supabase/scripts/adicionar_membro.sql` com o e-mail de cada pessoa. Sem esse passo o
+   login funciona, mas o painel avisa que a pessoa não faz parte da equipe.
+5. **Copiar as chaves:** Project Settings → API → **Project URL** e a chave **anon** ou
+   **publishable**. Nunca use a `service_role`/`secret` — os dois scripts de build recusam.
+6. **Vercel:** Settings → Environment Variables → `SUPABASE_URL` e `SUPABASE_ANON_KEY`
+   (Production e Preview) → Deployments → Redeploy. O log do build confirma
+   "Painel publicado com o banco de dados".
+7. **No computador (opcional):** copie `.env.example` para `.env`, preencha e rode
+   `python src/gerar_dashboard.py` — abre `build/DRE_Dashboard_banco.html` já ligado ao banco.
+
+Com a CLI, os passos 2 e 3 viram: `npx supabase init`, `npx supabase link --project-ref <ref>`,
+`npx supabase db push` (a migração já está em `supabase/migrations/`).
+
+### Tabelas
+
+| Tabela | Conteúdo |
+|---|---|
+| `membros` | quem da equipe acessa (`user_id` do Supabase Auth, nome, papel) |
+| `empresas` | clientes do escritório (nome, CNPJ único, ramo) |
+| `competencias` | um painel por empresa e mês: `periodo` (dia 1), `dados` (jsonb com o estado inteiro, sem a cadeia), `atualizado_em/por` |
+| `parceiros` | cadeia de crédito da empresa: tipo, CNPJ, nome, regime, gera crédito, ordem |
+
+Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro delas:
+- `carregar_painel(empresa, período)` → o mês salvo, o mês mais próximo (modelo para mês novo) e a cadeia.
+- `salvar_painel(empresa, período, dados, parceiros, base)` → grava o mês e a cadeia **numa transação**.
+  `base` é o `atualizado_em` de quando o mês foi aberto: se outra pessoa salvou depois, dá `CONFLITO`
+  e o painel pergunta se sobrescreve ou abre a versão salva (`'-infinity'` = criar mês que não pode existir).
+
+### Como o painel usa
+- Sem login, nenhum dado aparece. A sessão fica guardada e renova sozinha; se cair no meio do
+  trabalho, o painel pede o login e **salva o que estava na tela** depois.
+- **Primeira empresa:** o que está na tela é salvo nela. **Nova empresa** e **novo mês** começam com
+  as categorias e alíquotas (do padrão ou do mês salvo mais próximo) e os valores zerados.
+- Trocar de empresa/mês ou sair com alterações pendentes pergunta antes: salvar, descartar ou cancelar.
+  Fechar a aba com alterações também avisa.
+- A cadeia de crédito é por empresa (vale para todos os meses dela).
+
+### Testes
+Não há Postgres nesta máquina: o SQL foi validado com o parser do Postgres 17 (libpg_query) e o
+painel foi testado contra um servidor que imita o Supabase (login, REST, RPC, conflito, sessão
+expirada). Na primeira instalação real, rode `conferir_instalacao.sql` e faça um salvamento de teste.
 
 ---
 
