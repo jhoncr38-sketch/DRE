@@ -150,13 +150,23 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 (`{{LOGO_B64}}`, `{{FONTS_CSS}}`). Barras em HTML/CSS, sem biblioteca.
 
 - **Cabeçalho e faixa de indicadores** fixos em todas as abas: um número dominante
-  (resultado líquido) e três de apoio
+  (resultado líquido) e dois de apoio — Simples Nacional e CBS a pagar no mês; despesas
+  operacionais e Simples no ano (o lucro operacional bruto fica só na DRE)
 - **Abas:** Resultado · Reforma · CBS · Resumo do cliente (mês) · Anual; setas do teclado navegam
 - **Detalhamento** recolhível (despesas com % base/alíquota/crédito e tributárias)
 - **Estoque e compras** (aba Resultado): compra de mercadoria do mês, inventário, estoque
   atualizado e pagamento a fornecedor; descrições editáveis em "Editar valores"
-- **Compras → créditos:** "Crédito medicamentos" e "Crédito estoque" usam 97% e 3% das compras
-  do mês, como no Excel. A etiqueta "compras"/"base fixa" de cada linha troca o modo sem mudar a base
+- **Receita do PGDAS → débito:** por padrão o débito tem uma linha, "Receita PGDAS", que puxa a
+  receita declarada menos as outras categorias, então o débito sempre fecha com o PGDAS. Categorias
+  podem ser adicionadas e excluídas; com a seção vazia, o "+ adicionar" traz a linha do PGDAS
+  de volta. Avisa quando as categorias passam da receita ou, sem linha PGDAS, quando a soma difere.
+- **Compras → crédito:** a linha "Compras do mês" gera crédito com alíquota própria, padrão 9%, editável
+  e fora das premissas. Linhas de crédito adicionadas saem das compras (legenda "restante das compras")
+  e já vêm com a alíquota das compras; cada uma pode ter base fixa ou ser parte (%) das compras,
+  pela etiqueta "compras"/"base fixa". Avisa quando as linhas passam o valor das compras
+- **Padrão x Excel:** com Receita PGDAS a 8% e compras a 9%, a CBS padrão do Aragão é R$ 2.272,19.
+  Para reproduzir o Excel (R$ 815,54): débito "Medicamentos" 103.685,52 reduzida; créditos
+  60.372,13 reduzida e 1.867,18 a 8%
 - **Premissas** "Alíquota geral" e "reduzida" propagam para as linhas; o rótulo da reduzida
   é o nome da primeira categoria de débito reduzida (ex.: Medicamentos)
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),
@@ -181,15 +191,17 @@ Estado vive em memória + `window.storage`.
 ```js
 monthly.ga = [ [label, valor, %base, alíquota], ... ]   // crédito por item
 monthly.reforma = {
-  aliqGeral, aliqReduzida, cbsSobreEfetiva, saldoCredorAnterior,
-  debitos:  [ [nome, base, alíquota, 'geral'|'reduzida'], ... ],          // categorias de receita
+  aliqGeral, aliqReduzida, aliqCompras, cbsSobreEfetiva, saldoCredorAnterior,
+  debitos:  [ [nome, base, alíquota, 'geral'|'reduzida', 'pgdas'?], ... ], // 'pgdas' = base é a receita
+                                                                           // declarada menos as outras linhas
   creditos: [ [nome, base, alíquota, 'geral'|'reduzida', parte], ... ]   // parte (opcional) = fração
 }                                                                          // das compras; base = compras × parte
 monthly.compraMercadoria = 62239.31
 monthly.estoque = [ [descrição, valor], ... ]   // inventário, estoque atualizado, pagamento a fornecedor
 ```
 Estados salvos no modelo antigo (v1: `creditosCompra`, `creditoGeralAliq`, sem tipo) são
-migrados em `migrar()` e mesclados em profundidade com os padrões.
+migrados em `migrar()` e mesclados em profundidade com os padrões. Estados anteriores à v3
+recebem `aliqCompras = 0`, para o crédito das compras não somar em cima dos créditos já lançados.
 
 "Simples sem a CBS" é **calculado** (Simples × parcela da CBS, campo editável no cartão de
 carga tributária), não constante como no handoff — com 15,33% dá os mesmos 4.140,30.
