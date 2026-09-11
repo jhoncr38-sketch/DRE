@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+build/
+styled_nochart.xlsx
+final.xlsx
+*.tmp
+.DS_Store
+
+# planilhas originais do cliente: não vão para o repositório público
+dados-originais/

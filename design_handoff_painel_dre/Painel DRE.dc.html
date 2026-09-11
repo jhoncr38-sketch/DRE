@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; background:#EFEEEA; -webkit-font-smoothing:antialiased; }
+  a { color:#B3122B; text-decoration:none; }
+  a:hover { color:#7d0c1e; text-decoration:underline; }
+  input { font-family:'IBM Plex Mono',monospace; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif; color:#14161A; background:#EFEEEA; min-height:100vh; padding:28px 24px 64px;">
+  <div style="max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:24px;">
+
+    <header style="display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="width:38px; height:38px; background:#B3122B; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px; letter-spacing:-0.02em;">A</div>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div style="font-size:17px; font-weight:600; letter-spacing:-0.01em;">Aragão Produtos Farmacêuticos</div>
+          <div style="font-size:12px; color:#6E7178; font-family:'IBM Plex Mono',monospace; letter-spacing:0.02em;">DRE · DEZEMBRO 2025</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; background:#E3E2DD; padding:4px; border-radius:2px;">
+        <button onClick="{{ goResultado }}" style="{{ tabResultadoStyle }}">Resultado</button>
+        <button onClick="{{ goReforma }}" style="{{ tabReformaStyle }}">Reforma · CBS</button>
+        <button onClick="{{ goCliente }}" style="{{ tabClienteStyle }}">Resumo do cliente</button>
+      </div>
+    </header>
+
+    <section style="display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:16px;">
+      <div style="background:#14161A; color:#fff; padding:26px 28px; display:flex; flex-direction:column; gap:6px;">
+        <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#9A9DA4; font-family:'IBM Plex Mono',monospace;">Resultado líquido do mês</div>
+        <div style="font-size:52px; font-weight:600; letter-spacing:-0.03em; font-family:'IBM Plex Mono',monospace; line-height:1.05;">{{ f.resultado }}</div>
+        <div style="font-size:13px; color:#C9CCD2;">margem de {{ f.margem }} sobre receita declarada de {{ f.receita }}</div>
+      </div>
+      <div style="display:grid; grid-template-rows:repeat(3,1fr); gap:1px; background:#DAD8D2;">
+        <div style="background:#F8F7F4; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+          <span style="font-size:13px; color:#4A4D53;">Lucro operacional bruto</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600;">{{ f.lucroBruto }} <span style="color:#8A8D94; font-size:12px; font-weight:400;">{{ f.lucroBrutoPct }}</span></span>
+        </div>
+        <div style="background:#F8F7F4; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+          <span style="font-size:13px; color:#4A4D53;">Simples Nacional</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600;">{{ f.simples }} <span style="color:#8A8D94; font-size:12px; font-weight:400;">{{ f.simplesPct }}</span></span>
+        </div>
+        <div style="background:#F8F7F4; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; border-left:3px solid #B3122B;">
+          <span style="font-size:13px; color:#4A4D53;">CBS a pagar <span style="font-size:11px; color:#8A8D94;">(reforma)</span></span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600; color:#B3122B;">{{ f.cbsPagar }}</span>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{ isResultado }}" hint-placeholder-val="{{ true }}">
+      <section style="background:#fff; padding:28px 30px 22px;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:20px;">
+          <div>
+            <h2 style="margin:0; font-size:18px; font-weight:600; letter-spacing:-0.01em;">Demonstração de resultado</h2>
+            <p style="margin:4px 0 0; font-size:13px; color:#6E7178;">Valores do mês e participação sobre a receita.</p>
+          </div>
+          <button onClick="{{ toggleDetalhe }}" style="{{ detalheBtnStyle }}">{{ detalheLabel }}</button>
+        </div>
+
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:12px 0; border-top:1px solid #14161A;">
+          <span style="font-size:15px; font-weight:600;">Receita declarada <span style="font-weight:400; color:#8A8D94; font-size:12px; font-family:'IBM Plex Mono',monospace;">PGDAS</span></span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:17px; font-weight:600;">{{ f.receita }} <span style="color:#8A8D94; font-size:12px; font-weight:400; display:inline-block; width:52px; text-align:right;">100,0%</span></span>
+        </div>
+
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:11px 0; border-top:1px solid #E7E5E0;">
+          <span style="font-size:14px;">( − ) Custo de vendas de produtos / outros</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:15px;">{{ f.custos }} <span style="color:#8A8D94; font-size:12px; display:inline-block; width:52px; text-align:right;">{{ f.custosPct }}</span></span>
+        </div>
+
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:12px 0; border-top:1px solid #E7E5E0; background:#FBF3F4; margin:0 -12px; padding-left:12px; padding-right:12px;">
+          <span style="font-size:15px; font-weight:600; color:#B3122B;">( = ) Lucro operacional bruto</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600; color:#B3122B;">{{ f.lucroBruto }} <span style="font-size:12px; font-weight:400; display:inline-block; width:52px; text-align:right;">{{ f.lucroBrutoPct }}</span></span>
+        </div>
+
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:14px 0 11px; border-top:1px solid #E7E5E0;">
+          <span style="font-size:15px; font-weight:600;">( − ) Despesas gerais e administrativas</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600;">{{ f.despGA }} <span style="color:#8A8D94; font-size:12px; font-weight:400; display:inline-block; width:52px; text-align:right;">{{ f.despGAPct }}</span></span>
+        </div>
+
+        <sc-if value="{{ detalheAberto }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#F8F7F4; padding:6px 14px 10px; margin-bottom:4px;">
+            <div style="display:grid; grid-template-columns:minmax(0,1fr) 110px 62px 70px 92px; gap:10px; padding:8px 0 6px; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#8A8D94; font-family:'IBM Plex Mono',monospace;">
+              <span>Item</span><span style="text-align:right;">Valor</span><span style="text-align:right;">% base</span><span style="text-align:right;">Alíquota</span><span style="text-align:right;">Crédito CBS</span>
+            </div>
+            <sc-for list="{{ despesas }}" as="row" hint-placeholder-count="6">
+              <div style="display:grid; grid-template-columns:minmax(0,1fr) 110px 62px 70px 92px; gap:10px; align-items:center; padding:5px 0; border-top:1px solid #E7E5E0; font-size:13px;">
+                <span style="color:#33363B;">{{ row.nome }}</span>
+                <span style="text-align:right; font-family:'IBM Plex Mono',monospace;">{{ row.valorStr }}</span>
+                <input value="{{ row.base }}" onChange="{{ row.onBase }}" style="width:100%; text-align:right; font-size:13px; padding:2px 0; border:none; border-bottom:1px solid transparent; background:transparent; color:#14161A; outline:none;" style-hover="border-bottom-color:#C7C5BF;" style-focus="border-bottom-color:#B3122B;">
+                <input value="{{ row.aliq }}" onChange="{{ row.onAliq }}" style="width:100%; text-align:right; font-size:13px; padding:2px 0; border:none; border-bottom:1px solid transparent; background:transparent; color:#14161A; outline:none;" style-hover="border-bottom-color:#C7C5BF;" style-focus="border-bottom-color:#B3122B;">
+                <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:500; color:{{ row.creditoColor }};">{{ row.creditoStr }}</span>
+              </div>
+            </sc-for>
+            <div style="display:flex; justify-content:space-between; padding:9px 0 2px; border-top:1px solid #14161A; margin-top:4px; font-size:12px; font-family:'IBM Plex Mono',monospace;">
+              <span style="color:#6E7178;">Crédito de CBS gerado pelas despesas</span>
+              <span style="font-weight:600;">{{ f.creditoGeral }}</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:11px 0; border-top:1px solid #E7E5E0;">
+          <span style="font-size:15px; font-weight:600;">( − ) Despesas tributárias</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:16px; font-weight:600;">{{ f.despTrib }} <span style="color:#8A8D94; font-size:12px; font-weight:400; display:inline-block; width:52px; text-align:right;">{{ f.despTribPct }}</span></span>
+        </div>
+        <sc-if value="{{ detalheAberto }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#F8F7F4; padding:4px 14px 8px; margin-bottom:4px;">
+            <sc-for list="{{ tributarias }}" as="row" hint-placeholder-count="4">
+              <div style="display:flex; justify-content:space-between; padding:5px 0; border-top:1px solid #E7E5E0; font-size:13px;">
+                <span style="color:#33363B;">{{ row.nome }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;">{{ row.valorStr }} <span style="color:#8A8D94; font-size:12px; display:inline-block; width:44px; text-align:right;">{{ row.pctStr }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; background:#14161A; color:#fff; padding:14px 16px; margin:8px -16px 0;">
+          <span style="font-size:15px; font-weight:600;">( = ) Resultado líquido</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:600;">{{ f.resultado }} <span style="font-size:13px; font-weight:400; color:#9A9DA4; display:inline-block; width:52px; text-align:right;">{{ f.margem }}</span></span>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isReforma }}" hint-placeholder-val="{{ false }}">
+      <section style="display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:16px; align-items:start;">
+        <div style="background:#fff; padding:26px 28px;">
+          <h2 style="margin:0; font-size:18px; font-weight:600; letter-spacing:-0.01em;">Memória de cálculo — CBS</h2>
+          <p style="margin:4px 0 18px; font-size:13px; color:#6E7178;">Base × alíquota. Ajuste os campos e tudo recalcula.</p>
+
+          <div style="background:#F8F7F4; padding:14px 16px; margin-bottom:22px; display:flex; align-items:flex-end; gap:28px; flex-wrap:wrap;">
+            <div style="display:flex; flex-direction:column; gap:3px;">
+              <span style="font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#8A8D94; font-family:'IBM Plex Mono',monospace;">Premissas</span>
+              <span style="font-size:12px; color:#6E7178;">Alterar aqui vale para {{ linhasCreditaveis }} e para débitos e créditos.</span>
+            </div>
+            <div style="display:flex; gap:22px; margin-left:auto;">
+              <label style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:11px; color:#6E7178;">Alíquota geral</span>
+                <input value="{{ aliqGeral }}" onChange="{{ onAliqGeral }}" style="width:78px; text-align:right; font-size:15px; font-weight:600; padding:2px 0; border:none; border-bottom:1px solid #C7C5BF; background:transparent; color:#14161A; outline:none;" style-focus="border-bottom-color:#B3122B;">
+              </label>
+              <label style="display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:11px; color:#6E7178;">Medicamentos</span>
+                <input value="{{ aliqMed }}" onChange="{{ onAliqMed }}" style="width:78px; text-align:right; font-size:15px; font-weight:600; padding:2px 0; border:none; border-bottom:1px solid #C7C5BF; background:transparent; color:#14161A; outline:none;" style-focus="border-bottom-color:#B3122B;">
+              </label>
+            </div>
+          </div>
+
+          <div style="font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#8A8D94; font-family:'IBM Plex Mono',monospace; padding-bottom:6px; border-bottom:1px solid #14161A;">Débito — receita tributada</div>
+          <sc-for list="{{ debitos }}" as="row" hint-placeholder-count="2">
+            <div style="display:grid; grid-template-columns:minmax(0,1fr) 118px 74px 104px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #E7E5E0; font-size:13px;">
+              <span>{{ row.nome }}</span>
+              <input value="{{ row.base }}" onChange="{{ row.onBase }}" style="width:100%; text-align:right; font-size:13px; padding:2px 0; border:none; border-bottom:1px solid transparent; background:transparent; color:#14161A; outline:none;" style-hover="border-bottom-color:#C7C5BF;" style-focus="border-bottom-color:#B3122B;">
+              <input value="{{ row.aliq }}" onChange="{{ row.onAliq }}" style="width:100%; text-align:right; font-size:13px; padding:2px 0; border:none; border-bottom:1px solid transparent; background:transparent; color:#14161A; outline:none;" style-hover="border-bottom-color:#C7C5BF;" style-focus="border-bottom-color:#B3122B;">
+              <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:500;">{{ row.valorStr }}</span>
+            </div>
+          </sc-for>
+          <div style="display:flex; justify-content:space-between; padding:10px 0 18px; font-size:14px;">
+            <span style="font-weight:600;">Débito total</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-weight:600;">{{ f.debitoTotal }}</span>
+          </div>
+
+          <div style="font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#8A8D94; font-family:'IBM Plex Mono',monospace; padding-bottom:6px; border-bottom:1px solid #14161A;">Crédito</div>
+          <div style="display:grid; grid-template-columns:minmax(0,1fr) 118px 74px 104px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #E7E5E0; font-size:13px;">
+            <span>Crédito geral (despesas)</span>
+            <span style="text-align:right; font-family:'IBM Plex Mono',monospace; color:#8A8D94; font-size:12px;">{{ f.baseDespesas }}</span>
+            <span style="text-align:right; color:#8A8D94; font-size:11px;">por item</span>
+            <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:500;">{{ f.creditoGeral }}</span>
+          </div>
+          <sc-for list="{{ creditos }}" as="row" hint-placeholder-count="2">
+            <div style="display:grid; grid-template-columns:minmax(0,1fr) 118px 74px 104px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #E7E5E0; font-size:13px;">
+              <span>{{ row.nome }}</span>
+              <input value="{{ row.base }}" onChange="{{ row.onBase }}" style="width:100%; text-align:right; font-size:13px; padding:2px 0; border:none; border-bottom:1px solid transparent; background:transparent; color:#14161A; outline:none;" style-hover="border-bottom-color:#C7C5BF;" style-focus="border-bottom-color:#B3122B;">
+              <input value="{{ row.aliq }}" onChange="{{ row.onAliq }}" style="width:100%; text-align:right; font-size:13px; padding:2px 0; border:none; border-bottom:1px solid transparent; background:transparent; color:#14161A; outline:none;" style-hover="border-bottom-color:#C7C5BF;" style-focus="border-bottom-color:#B3122B;">
+              <span style="text-align:right; font-family:'IBM Plex Mono',monospace; font-weight:500;">{{ row.valorStr }}</span>
+            </div>
+          </sc-for>
+          <div style="display:grid; grid-template-columns:minmax(0,1fr) 118px 74px 104px; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #E7E5E0; font-size:13px;">
+            <span style="color:#4A4D53;">Saldo credor do mês anterior</span>
+            <span></span>
+            <input value="{{ saldoAnterior }}" onChange="{{ onSaldo }}" style="width:100%; text-align:right; font-size:13px; padding:2px 0; border:none; border-bottom:1px solid transparent; background:transparent; color:#14161A; outline:none;" style-hover="border-bottom-color:#C7C5BF;" style-focus="border-bottom-color:#B3122B;">
+            <span style="text-align:right; font-family:'IBM Plex Mono',monospace; color:#8A8D94;">{{ f.saldoAnteriorStr }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; padding:10px 0; font-size:14px;">
+            <span style="font-weight:600;">Crédito total</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-weight:600;">{{ f.creditoTotal }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; margin:8px -16px -6px; background:#B3122B; color:#fff;">
+            <span style="font-size:15px; font-weight:600;">CBS a pagar</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:600;">{{ f.cbsPagar }}</span>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:16px;">
+          <div style="background:#fff; padding:24px 26px;">
+            <h3 style="margin:0 0 2px; font-size:15px; font-weight:600;">Débito, crédito e saldo</h3>
+            <p style="margin:0 0 18px; font-size:12px; color:#6E7178;">Composição do CBS do mês.</p>
+            <sc-for list="{{ barrasCbs }}" as="b" hint-placeholder-count="3">
+              <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px;">
+                  <span style="color:#4A4D53;">{{ b.rotulo }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace; font-weight:500;">{{ b.valorStr }}</span>
+                </div>
+                <div style="height:10px; background:#EFEEEA;">
+                  <div style="height:10px; width:{{ b.largura }}; background:{{ b.cor }};"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="background:#fff; padding:24px 26px;">
+            <h3 style="margin:0 0 2px; font-size:15px; font-weight:600;">Carga tributária — atual × transição</h3>
+            <p style="margin:0 0 6px; font-size:12px; color:#6E7178;">Na transição, a parcela da CBS sai do Simples e passa a ser apurada em separado.</p>
+            <div style="display:flex; align-items:baseline; gap:8px; margin:0 0 18px;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; color:{{ deltaColor }};">{{ deltaCarga }}</span>
+              <span style="font-size:12px; color:#6E7178;">{{ deltaLabel }}</span>
+            </div>
+            <sc-for list="{{ barrasCarga }}" as="b" hint-placeholder-count="3">
+              <div style="display:flex; flex-direction:column; gap:5px; margin-bottom:14px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px;">
+                  <span style="color:#4A4D53;">{{ b.rotulo }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace; font-weight:500;">{{ b.valorStr }}</span>
+                </div>
+                <div style="height:10px; background:#EFEEEA;">
+                  <div style="height:10px; width:{{ b.largura }}; background:{{ b.cor }};"></div>
+                </div>
+              </div>
+            </sc-for>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding-top:14px; border-top:1px solid #E7E5E0;">
+              <span style="font-size:12px; color:#4A4D53;">IBS a pagar (informe)</span>
+              <input value="{{ ibs }}" onChange="{{ onIbs }}" style="width:120px; text-align:right; font-size:14px; font-weight:600; padding:2px 0; border:none; border-bottom:1px solid #C7C5BF; background:transparent; color:#14161A; outline:none;" style-focus="border-bottom-color:#B3122B;">
+            </div>
+            <p style="margin:12px 0 0; font-size:11px; color:#8A8D94; line-height:1.5;">A memória calcula a CBS. O IBS é premissa sua — ao informar, a barra "Na transição" se atualiza.</p>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{ isCliente }}" hint-placeholder-val="{{ false }}">
+      <section style="background:#fff; padding:40px 44px 36px;">
+        <h2 style="margin:0 0 6px; font-size:22px; font-weight:600; letter-spacing:-0.02em;">O mês em quatro números</h2>
+        <p style="margin:0 0 30px; font-size:14px; color:#6E7178; max-width:60ch;">Versão sem detalhamento contábil, para conversa com o cliente.</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1px; background:#fff;">
+          <sc-for list="{{ resumoCliente }}" as="c" hint-placeholder-count="4">
+            <div style="background:#fff; padding:22px 20px; display:flex; flex-direction:column; gap:6px; box-shadow:0 0 0 1px #DAD8D2;">
+              <span style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:#8A8D94; font-family:'IBM Plex Mono',monospace;">{{ c.rotulo }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:26px; font-weight:600; letter-spacing:-0.02em; color:{{ c.cor }};">{{ c.valor }}</span>
+              <span style="font-size:12px; color:#6E7178; line-height:1.45;">{{ c.nota }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:28px; margin-top:32px;">
+          <div>
+            <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Para onde foi a receita</div>
+            <sc-for list="{{ composicao }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px;">
+                  <span style="color:#4A4D53;">{{ c.rotulo }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;">{{ c.pctStr }}</span>
+                </div>
+                <div style="height:8px; background:#EFEEEA;">
+                  <div style="height:8px; width:{{ c.largura }}; background:{{ c.cor }};"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:13px; color:#4A4D53; line-height:1.65;">
+            <div style="font-size:13px; font-weight:600; color:#14161A; margin-bottom:8px;">O que observar</div>
+            A margem líquida do mês foi de {{ f.margem }}. Na transição da reforma, o Simples cai para {{ f.simplesSemCbs }} e a CBS passa a ser apurada em separado, em {{ f.cbsPagar }} — somados, {{ f.naTransicao }}, contra {{ f.simples }} hoje. Os créditos sobre compras e despesas somam {{ f.creditoTotal }}.
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <footer style="display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:11px; color:#8A8D94; font-family:'IBM Plex Mono',monospace; padding-top:4px;">
+      <span>Alexandre Araújo — Consultoria &amp; Contabilidade</span>
+      <span>Valores em reais · competência dez/2025</span>
+    </footer>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+class Component extends DCLogic {
+  state = {
+    tab: 'resultado',
+    detalhe: true,
+    despesas: [
+      ['Retirada de sócio', 0, 0, 0],
+      ['HapVida', 804.29, 0, 0],
+      ['Folha', 12346.56, 0, 0],
+      ['Aluguel', 2700.00, 30, 8],
+      ['Seguro', 125.87, 100, 8],
+      ['Telefone / Internet', 151.26, 100, 8],
+      ['Energia / Cagece', 1946.13, 100, 8],
+      ['Contabilidade', 2100.00, 70, 8],
+      ['Corpvs Segurança', 152.84, 100, 8],
+      ['Taxa de banco e cartões', 2537.14, 100, 8],
+      ['Sistema', 800.00, 100, 8],
+      ['Manutenção, dedetização, equipamentos', 5.00, 100, 8],
+      ['Outras despesas', 181.00, 0, 0]
+    ].map(function (r) { return { nome: r[0], valor: r[1], base: String(r[2]) + '%', aliq: r[3].toFixed(2).replace('.', ',') + '%' }; }),
+    debitos: [
+      { nome: 'Medicamentos', base: '103.685,52', aliq: '3,20%' },
+      { nome: 'Demais itens', base: '2.734,37', aliq: '8,00%' }
+    ],
+    creditos: [
+      { nome: 'Crédito medicamentos', base: '60.372,13', aliq: '3,20%' },
+      { nome: 'Crédito estoque', base: '1.867,18', aliq: '8,00%' }
+    ],
+    saldoAnterior: '0,00',
+    ibs: '0,00',
+    aliqGeral: '8,00%',
+    aliqMed: '3,20%'
+  };
+
+  aplicarAliquotas(campo, valor) {
+    const self = this;
+    this.setState(function (s) {
+      const geral = campo === 'aliqGeral' ? valor : s.aliqGeral;
+      const med = campo === 'aliqMed' ? valor : s.aliqMed;
+      const rep = function (list, i, v) {
+        return list.map(function (r, j) { return j === i ? Object.assign({}, r, { aliq: v }) : r; });
+      };
+      return {
+        [campo]: valor,
+        despesas: s.despesas.map(function (r) {
+          return self.num(r.aliq) > 0 ? Object.assign({}, r, { aliq: geral }) : r;
+        }),
+        debitos: rep(rep(s.debitos, 0, med), 1, geral),
+        creditos: rep(rep(s.creditos, 0, med), 1, geral)
+      };
+    });
+  }
+
+  num(s) {
+    if (typeof s === 'number') return s;
+    let t = String(s).replace(/[^\d,.-]/g, '');
+    t = t.indexOf(',') >= 0 ? t.replace(/\./g, '').replace(',', '.') : t;
+    const v = parseFloat(t);
+    return isNaN(v) ? 0 : v;
+  }
+  brl(v) { return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  pct(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
+
+  setRow(key, i, field, value) {
+    this.setState(function (s) {
+      const list = s[key].map(function (r, j) {
+        return j === i ? Object.assign({}, r, { [field]: value }) : r;
+      });
+      return { [key]: list };
+    });
+  }
+
+  renderVals() {
+    const self = this;
+    const S = this.state;
+    const receita = 106419.89, custos = 58039.60;
+    const tribs = [['Simples Nacional', 4889.93], ['INSS', 986.67], ['FGTS', 987.19], ['SEFAZ', 678.16]];
+    const despTotal = S.despesas.reduce(function (a, r) { return a + r.valor; }, 0);
+    const tribTotal = tribs.reduce(function (a, r) { return a + r[1]; }, 0);
+    const lucroBruto = receita - custos;
+    const resultado = lucroBruto - despTotal - tribTotal;
+
+    const despesas = S.despesas.map(function (r, i) {
+      const credito = r.valor * (self.num(r.base) / 100) * (self.num(r.aliq) / 100);
+      return {
+        nome: r.nome, valorStr: self.brl(r.valor), base: r.base, aliq: r.aliq,
+        creditoStr: self.brl(credito),
+        creditoColor: credito > 0 ? '#14161A' : '#B6B8BC',
+        onBase: function (e) { self.setRow('despesas', i, 'base', e.target.value); },
+        onAliq: function (e) { self.setRow('despesas', i, 'aliq', e.target.value); }
+      };
+    });
+    const creditoGeral = S.despesas.reduce(function (a, r) {
+      return a + r.valor * (self.num(r.base) / 100) * (self.num(r.aliq) / 100);
+    }, 0);
+    const baseDespesas = S.despesas.reduce(function (a, r) {
+      return a + (self.num(r.aliq) > 0 ? r.valor * (self.num(r.base) / 100) : 0);
+    }, 0);
+
+    const mapCalc = function (key) {
+      return S[key].map(function (r, i) {
+        const v = self.num(r.base) * self.num(r.aliq) / 100;
+        return {
+          nome: r.nome, base: r.base, aliq: r.aliq, valorStr: self.brl(v),
+          onBase: function (e) { self.setRow(key, i, 'base', e.target.value); },
+          onAliq: function (e) { self.setRow(key, i, 'aliq', e.target.value); }
+        };
+      });
+    };
+    const debitos = mapCalc('debitos'), creditos = mapCalc('creditos');
+    const debitoTotal = S.debitos.reduce(function (a, r) { return a + self.num(r.base) * self.num(r.aliq) / 100; }, 0);
+    const creditoTotal = S.creditos.reduce(function (a, r) { return a + self.num(r.base) * self.num(r.aliq) / 100; }, creditoGeral + this.num(S.saldoAnterior));
+    const cbsPagar = Math.max(0, debitoTotal - creditoTotal);
+    const simples = 4889.93;
+    const reforma = cbsPagar + this.num(S.ibs);
+
+    const tab = function (name) {
+      const on = S.tab === name;
+      return 'padding:7px 14px; font:500 13px/1 "IBM Plex Sans",sans-serif; border:none; cursor:pointer; border-radius:2px; background:' + (on ? '#14161A' : 'transparent') + '; color:' + (on ? '#fff' : '#4A4D53') + ';';
+    };
+    const bar = function (rot, v, max, cor) {
+      return { rotulo: rot, valorStr: self.brl(v), largura: (max > 0 ? Math.max(2, v / max * 100) : 2) + '%', cor: cor };
+    };
+    const maxCbs = Math.max(debitoTotal, creditoTotal, cbsPagar, 1);
+    const simplesSemCbs = 4140.30;
+    const naTransicao = simplesSemCbs + cbsPagar + this.num(S.ibs);
+    const maxCarga = Math.max(simples, simplesSemCbs, naTransicao, 1);
+
+    return {
+      isResultado: S.tab === 'resultado', isReforma: S.tab === 'reforma', isCliente: S.tab === 'cliente',
+      goResultado: function () { self.setState({ tab: 'resultado' }); },
+      goReforma: function () { self.setState({ tab: 'reforma' }); },
+      goCliente: function () { self.setState({ tab: 'cliente' }); },
+      tabResultadoStyle: tab('resultado'), tabReformaStyle: tab('reforma'), tabClienteStyle: tab('cliente'),
+      detalheAberto: S.detalhe,
+      detalheLabel: S.detalhe ? 'Ocultar detalhamento' : 'Ver detalhamento',
+      detalheBtnStyle: 'padding:7px 13px; font:500 12px/1 "IBM Plex Sans",sans-serif; background:#fff; color:#14161A; border:1px solid #DAD8D2; border-radius:2px; cursor:pointer;',
+      toggleDetalhe: function () { self.setState(function (s) { return { detalhe: !s.detalhe }; }); },
+      despesas: despesas,
+      tributarias: tribs.map(function (t) {
+        return { nome: t[0], valorStr: self.brl(t[1]), pctStr: self.pct(t[1] / receita * 100) };
+      }),
+      debitos: debitos, creditos: creditos,
+      saldoAnterior: S.saldoAnterior, ibs: S.ibs,
+      aliqGeral: S.aliqGeral, aliqMed: S.aliqMed,
+      onAliqGeral: function (e) { self.aplicarAliquotas('aliqGeral', e.target.value); },
+      onAliqMed: function (e) { self.aplicarAliquotas('aliqMed', e.target.value); },
+      linhasCreditaveis: S.despesas.filter(function (r) { return self.num(r.aliq) > 0; }).length + ' de ' + S.despesas.length + ' linhas de despesa',
+      onSaldo: function (e) { self.setState({ saldoAnterior: e.target.value }); },
+      onIbs: function (e) { self.setState({ ibs: e.target.value }); },
+      barrasCbs: [
+        bar('Débito de CBS', debitoTotal, maxCbs, '#14161A'),
+        bar('Crédito de CBS', creditoTotal, maxCbs, '#9A9DA4'),
+        bar('CBS a pagar', cbsPagar, maxCbs, '#B3122B')
+      ],
+      barrasCarga: [
+        bar('Hoje — Simples Nacional integral', simples, maxCarga, '#14161A'),
+        bar('Simples sem a parcela da CBS', simplesSemCbs, maxCarga, '#9A9DA4'),
+        bar('Na transição — Simples reduzido + CBS', naTransicao, maxCarga, '#B3122B')
+      ],
+      deltaCarga: (naTransicao >= simples ? '+' : '−') + this.brl(Math.abs(naTransicao - simples)).replace('R$ ', 'R$ ') + ' (' + this.pct(Math.abs(naTransicao - simples) / simples * 100) + ')',
+      deltaLabel: naTransicao >= simples ? 'a mais que hoje' : 'a menos que hoje',
+      deltaColor: naTransicao >= simples ? '#B3122B' : '#14161A',
+      resumoCliente: [
+        { rotulo: 'Receita', valor: this.brl(receita), nota: 'declarada no PGDAS', cor: '#14161A' },
+        { rotulo: 'Resultado líquido', valor: this.brl(resultado), nota: 'margem de ' + this.pct(resultado / receita * 100), cor: '#14161A' },
+        { rotulo: 'Simples Nacional', valor: this.brl(simples), nota: 'regime atual', cor: '#14161A' },
+        { rotulo: 'CBS a pagar', valor: this.brl(cbsPagar), nota: 'simulação da reforma', cor: '#B3122B' }
+      ],
+      composicao: [
+        { rotulo: 'Custo de vendas', pctStr: this.pct(custos / receita * 100), largura: (custos / receita * 100) + '%', cor: '#14161A' },
+        { rotulo: 'Despesas gerais e administrativas', pctStr: this.pct(despTotal / receita * 100), largura: (despTotal / receita * 100) + '%', cor: '#4A4D53' },
+        { rotulo: 'Despesas tributárias', pctStr: this.pct(tribTotal / receita * 100), largura: (tribTotal / receita * 100) + '%', cor: '#9A9DA4' },
+        { rotulo: 'Resultado líquido', pctStr: this.pct(resultado / receita * 100), largura: (resultado / receita * 100) + '%', cor: '#B3122B' }
+      ],
+      f: {
+        receita: this.brl(receita), custos: this.brl(custos), custosPct: this.pct(custos / receita * 100),
+        lucroBruto: this.brl(lucroBruto), lucroBrutoPct: this.pct(lucroBruto / receita * 100),
+        despGA: this.brl(despTotal), despGAPct: this.pct(despTotal / receita * 100),
+        despTrib: this.brl(tribTotal), despTribPct: this.pct(tribTotal / receita * 100),
+        resultado: this.brl(resultado), margem: this.pct(resultado / receita * 100),
+        simples: this.brl(simples), simplesPct: this.pct(simples / receita * 100),
+        creditoGeral: this.brl(creditoGeral), baseDespesas: this.brl(baseDespesas),
+        debitoTotal: this.brl(debitoTotal), creditoTotal: this.brl(creditoTotal),
+        simplesSemCbs: this.brl(simplesSemCbs), naTransicao: this.brl(naTransicao),
+        cbsPagar: this.brl(cbsPagar), saldoAnteriorStr: this.brl(this.num(S.saldoAnterior))
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
