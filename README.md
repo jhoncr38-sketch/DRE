@@ -153,6 +153,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   (resultado líquido) e três de apoio
 - **Abas:** Resultado · Reforma · CBS · Resumo do cliente (mês) · Anual; setas do teclado navegam
 - **Detalhamento** recolhível (despesas com % base/alíquota/crédito e tributárias)
+- **Estoque e compras** (aba Resultado): compra de mercadoria do mês, inventário, estoque
+  atualizado e pagamento a fornecedor; descrições editáveis em "Editar valores"
+- **Compras → créditos:** "Crédito medicamentos" e "Crédito estoque" usam 97% e 3% das compras
+  do mês, como no Excel. A etiqueta "compras"/"base fixa" de cada linha troca o modo sem mudar a base
 - **Premissas** "Alíquota geral" e "reduzida" propagam para as linhas; o rótulo da reduzida
   é o nome da primeira categoria de débito reduzida (ex.: Medicamentos)
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),
@@ -178,9 +182,11 @@ Estado vive em memória + `window.storage`.
 monthly.ga = [ [label, valor, %base, alíquota], ... ]   // crédito por item
 monthly.reforma = {
   aliqGeral, aliqReduzida, cbsSobreEfetiva, saldoCredorAnterior,
-  debitos:  [ [nome, base, alíquota, 'geral'|'reduzida'], ... ],   // categorias de receita
-  creditos: [ [nome, base, alíquota, 'geral'|'reduzida'], ... ]    // créditos sobre compras
-}
+  debitos:  [ [nome, base, alíquota, 'geral'|'reduzida'], ... ],          // categorias de receita
+  creditos: [ [nome, base, alíquota, 'geral'|'reduzida', parte], ... ]   // parte (opcional) = fração
+}                                                                          // das compras; base = compras × parte
+monthly.compraMercadoria = 62239.31
+monthly.estoque = [ [descrição, valor], ... ]   // inventário, estoque atualizado, pagamento a fornecedor
 ```
 Estados salvos no modelo antigo (v1: `creditosCompra`, `creditoGeralAliq`, sem tipo) são
 migrados em `migrar()` e mesclados em profundidade com os padrões.

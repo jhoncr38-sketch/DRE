@@ -148,13 +148,21 @@
   .grp{font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2); padding-bottom:6px; border-bottom:1px solid var(--ink)}
   .cr{padding:8px 0; border-bottom:1px solid var(--line); font-size:13px}
   .nmwrap{display:flex; align-items:center; gap:4px; min-width:0}
+  .nmcol{display:flex; flex-direction:column; gap:1px; min-width:0}
+  .parte{display:flex; align-items:baseline; gap:6px; font-size:11px; color:var(--muted-2)}
+  .in.mini{width:44px; flex:0 0 44px; font-size:11px}
+  .span2{grid-column:span 2}
+  .li .nm{flex:1 1 auto}
   .ink3{color:var(--ink-3)}
   .mut{color:var(--muted-2)}
   .mut12{color:var(--muted-2); font-size:12px}
   .mut11{color:var(--muted-2); font-size:11px}
-  .row-ctl{display:inline-flex; align-items:center; opacity:0; transition:opacity .15s}
-  .cr:hover .row-ctl, .cr:focus-within .row-ctl, .editando .row-ctl{opacity:1}
-  @media (hover:none){ .row-ctl{opacity:1} }
+  /* controles da linha ficam sobrepostos ao fim do nome e só aparecem no hover/foco: não ocupam espaço */
+  .nmwrap{position:relative}
+  .row-ctl{position:absolute; right:0; top:50%; transform:translateY(-50%); display:inline-flex; align-items:center;
+    background:var(--surface); padding-left:6px; opacity:0; pointer-events:none; transition:opacity .15s}
+  .cr:hover .row-ctl, .cr:focus-within .row-ctl, .editando .row-ctl{opacity:1; pointer-events:auto}
+  @media (hover:none){ .row-ctl{opacity:1; pointer-events:auto} }
   .chip{border:0; background:transparent; font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2); padding:2px 4px; cursor:pointer; white-space:nowrap}
   .chip:hover, .x:hover{color:var(--ink)}
   .x{border:0; background:transparent; color:var(--muted-2); cursor:pointer; font-size:15px; line-height:1; padding:0 4px}
@@ -294,9 +302,14 @@ function defaults(){ return {
       cbsSobreEfetiva: 0.1533,                  // parcela da CBS dentro do Simples (README, pendência 3)
       // [nome, base, alíquota, tipo] — o tipo diz qual premissa a linha segue: 'geral' | 'reduzida'
       debitos: [["Medicamentos",103685.52,0.032,"reduzida"],["Demais itens",2734.37,0.08,"geral"]],
-      creditos: [["Crédito medicamentos",60372.13,0.032,"reduzida"],["Crédito estoque",1867.18,0.08,"geral"]],
+      // créditos têm um 5º item opcional: parte das compras do mês (a base passa a ser compras × parte)
+      creditos: [["Crédito medicamentos",60372.13,0.032,"reduzida",0.97],["Crédito estoque",1867.18,0.08,"geral",0.03]],
       saldoCredorAnterior: 0
     },
+    // posição de estoque e pagamentos: [descrição, valor]
+    estoque: [["Inventário 25/11/2025 — custo total",211166.93],["Inventário 25/11/2025 — preço total",569370.33],
+              ["Estoque atualizado 26/11/2025 — custo total",177250.29],["Estoque atualizado 26/11/2025 — preço total",453222.22],
+              ["Pagamento a fornecedor até dezembro",506100.89]],
     ibs: 0
   }
 };}
@@ -325,8 +338,15 @@ function migrar(s){
       : undefined;
     const debitos = conv(rf.debitos), creditos = conv(rf.creditosCompra);
     const red = (debitos || []).concat(creditos || []).find(r => r[3] === 'reduzida');
-    if(s.monthly) s.monthly.reforma = { aliqGeral: geral, aliqReduzida: red ? red[2] : undefined,
-      cbsSobreEfetiva: rf.cbsSobreEfetiva, debitos, creditos, saldoCredorAnterior: rf.saldoCredorAnterior };
+    if(s.monthly){
+      const mm = s.monthly;
+      mm.reforma = { aliqGeral: geral, aliqReduzida: red ? red[2] : undefined,
+        cbsSobreEfetiva: rf.cbsSobreEfetiva, debitos, creditos, saldoCredorAnterior: rf.saldoCredorAnterior };
+      // v1 guardava estoque em campos soltos; sem eles, a lista fica vazia (não herda os números do padrão)
+      mm.estoque = [['Estoque atualizado — custo total', mm.estoqueCusto], ['Estoque atualizado — preço total', mm.estoquePreco],
+        ['Pagamento a fornecedor', mm.fornecedor]].filter(r => r[1] != null);
+      delete mm.estoqueCusto; delete mm.estoquePreco; delete mm.fornecedor; delete mm.rbt12;
+    }
     if(s.logo === LOGO_DEFAULT) s.logo = null;
     s.v = 2;
   }
@@ -370,7 +390,9 @@ function mix(a, b, t){ const pa = hex(a), pb = hex(b); if(!pa || !pb) return a;
 const soma = arr => (arr || []).reduce((a, r) => a + (+r[1] || 0), 0);
 const linhaSimples = trib => (trib || []).find(r => /^simples nacional/i.test(r[0])) || (trib || [])[0];
 const credLinha = r => (r[1] || 0) * (r[2] || 0) * (r[3] || 0);   // valor × % base × alíquota
-const valorCbs = r => (r[1] || 0) * (r[2] || 0);                  // base × alíquota
+const parteCompras = r => typeof r[4] === 'number' ? r[4] : null;
+const baseLinha = r => parteCompras(r) !== null ? (S.monthly.compraMercadoria || 0) * r[4] : (r[1] || 0);
+const valorCbs = r => baseLinha(r) * (r[2] || 0);                  // base × alíquota
 
 function calcMes(){
   const m = S.monthly, rf = m.reforma, R = m.receita || 0;
@@ -389,9 +411,11 @@ function calcMes(){
   const simplesSemCbs = simples - parcelaCbs;
   const ibs = m.ibs || 0;
   const naTransicao = simplesSemCbs + cbsPagar + ibs;
+  const vinculadas = rf.creditos.filter(r => parteCompras(r) !== null);
   return {R, custos, ga, vendas, trib, lucroBruto, resultado, creditoGeral, baseDespesas, debitoTotal,
     saldoAnterior, creditoTotal, cbsPagar, saldoCredor, simples, efetiva, parcelaCbs, simplesSemCbs, ibs,
-    naTransicao, delta: naTransicao - simples};
+    naTransicao, delta: naTransicao - simples, compras: m.compraMercadoria || 0,
+    nVinculadas: vinculadas.length, rateio: vinculadas.reduce((a, r) => a + r[4], 0)};
 }
 function calcAno(){
   const a = S.annual, R = a.receita || 0;
@@ -471,6 +495,10 @@ function saidas(){
     'm.parcelaInfo': `efetiva ${dec(cm.efetiva, 2, 2)}% · ${brl(cm.parcelaCbs)}`
   });
   V['m.temCredor'] = cm.saldoCredor > 0.004;
+  rf.creditos.forEach((r, i) => { O[`m.cred.${i}.base`] = FMT.base(baseLinha(r)); });
+  O['m.rateio'] = cm.nVinculadas ? `base dos créditos · ${dec(cm.rateio * 100, 0, 2)}% rateado` : 'nenhum crédito vinculado';
+  O['m.compra'] = brl(cm.compras); O['m.compraP'] = P(cm.compras, cm.R);
+  (m.estoque || []).forEach((r, i) => { O[`m.es.${i}.v`] = brl(r[1] || 0); });
   [['debitos', 'deb'], ['creditos', 'cred']].forEach(([g, k]) => rf[g].forEach((r, i) => {
     O[`m.${k}.${i}.val`] = brl(valorCbs(r)); O[`m.${k}.${i}.tipo`] = r[3] === 'reduzida' ? 'reduzida' : 'geral'; }));
   const maxCbs = Math.max(cm.debitoTotal, cm.creditoTotal, cm.cbsPagar, 1);
@@ -619,17 +647,32 @@ function rResultado(){
   h += linha('tot', '( − ) Despesas tributárias', 'm.trib', 'm.tribP');
   if(ui.detalhe) h += lista('monthly.tributarias', m.tributarias, 'm.tr');
   h += linha('res', '( = ) Resultado líquido', 'm.resultado', 'm.margem');
-  return painel('card', 'resultado', h);
+  return painel('card', 'resultado', h) + rEstoque();
+}
+function rEstoque(){
+  const lst = S.monthly.estoque || [], ed = editavel();
+  let h = `<div class="card-h"><div><h2>Estoque e compras</h2><p class="sub">Compras do mês, posição de estoque e pagamentos.</p></div></div>`;
+  h += linha('rec', 'Compra de mercadoria do mês', 'm.compra', 'm.compraP', 'monthly.compraMercadoria');
+  if(lst.length) h += `<div class="det">` + lst.map((r, i) => `<div class="li">` +
+    `<span class="nm">${ed ? inp(`monthly.estoque.${i}.0`, 'txt', `Descrição ${i + 1}`, 'txt') : esc(r[0])}</span>` +
+    `<span class="v">${ed ? inp(`monthly.estoque.${i}.1`, 'brl', r[0], 'val') : o(`m.es.${i}.v`)}</span></div>`).join('') + `</div>`;
+  return `<section class="card" aria-label="Estoque e compras">${h}</section>`;
 }
 
 function linhasCbs(g){
-  const k = g === 'debitos' ? 'deb' : 'cred';
-  return S.monthly.reforma[g].map((r, i) => `<div class="g4 cr">
-    <span class="nmwrap">${inp(`monthly.reforma.${g}.${i}.0`, 'txt', `Nome da linha ${i + 1}`, 'txt')}
-      <span class="row-ctl"><button class="chip" data-act="tipo" data-g="${g}" data-i="${i}" data-o="m.${k}.${i}.tipo" title="Alternar entre alíquota geral e reduzida"></button><button class="x" data-act="rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span>
-    ${inp(`monthly.reforma.${g}.${i}.1`, 'base', r[0] + ' — base')}
+  const k = g === 'debitos' ? 'deb' : 'cred', cred = g === 'creditos';
+  return S.monthly.reforma[g].map((r, i) => {
+    const vinc = cred && parteCompras(r) !== null;
+    const chipCompras = cred ? `<button class="chip" data-act="vinc" data-i="${i}" title="${vinc ? 'Passar a digitar a base' : 'Calcular a base como parte das compras do mês'}">${vinc ? 'compras' : 'base fixa'}</button>` : '';
+    const parte = vinc ? `<span class="parte">${inp(`monthly.reforma.creditos.${i}.4`, 'pct0', r[0] + ' — parte das compras', 'mini')}<span>das compras do mês</span></span>` : '';
+    const base = vinc ? `<span class="r m" data-o="m.cred.${i}.base"></span>` : inp(`monthly.reforma.${g}.${i}.1`, 'base', r[0] + ' — base');
+    return `<div class="g4 cr">
+    <span class="nmcol"><span class="nmwrap">${inp(`monthly.reforma.${g}.${i}.0`, 'txt', `Nome da linha ${i + 1}`, 'txt')}
+      <span class="row-ctl"><button class="chip" data-act="tipo" data-g="${g}" data-i="${i}" data-o="m.${k}.${i}.tipo" title="Alternar entre alíquota geral e reduzida"></button>${chipCompras}<button class="x" data-act="rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span>${parte}</span>
+    ${base}
     ${inp(`monthly.reforma.${g}.${i}.2`, 'pct', r[0] + ' — alíquota')}
-    <span class="cr-v" data-o="m.${k}.${i}.val"></span></div>`).join('');
+    <span class="cr-v" data-o="m.${k}.${i}.val"></span></div>`;
+  }).join('');
 }
 function barra(k, lbl, cor){
   return `<div class="bar"><div class="bar-h"><span>${lbl}</span><span data-o="b.${k}"></span></div>` +
@@ -652,6 +695,7 @@ function rReforma(){
       <div class="sum deb"><span>Débito total</span><span data-o="m.debitoTotal"></span></div>
       <div class="grp">Crédito</div>
       <div class="g4 cr"><span>Crédito geral (despesas)</span><span class="r m mut12" data-o="m.baseDespesas"></span><span class="r mut11">por item</span><span class="cr-v" data-o="m.creditoGeral"></span></div>
+      <div class="g4 cr"><span class="ink3">Compras do mês</span>${inp('monthly.compraMercadoria', 'base', 'Compras do mês')}<span class="r mut11 span2" data-o="m.rateio"></span></div>
       ${linhasCbs('creditos')}
       <button class="add" data-act="add" data-g="creditos">+ adicionar crédito sobre compras</button>
       <div class="g4 cr"><span class="ink3">Saldo credor do mês anterior</span><span></span>${inp('monthly.reforma.saldoCredorAnterior', 'base', 'Saldo credor do mês anterior')}<span class="r m mut" data-o="m.saldoAnt"></span></div>
@@ -757,7 +801,7 @@ function limparTudo(){
   const zera = arr => arr.forEach(r => { r[1] = 0; });
   [d.annual, d.monthly].forEach(x => { x.receita = 0; x.compraMercadoria = 0; ['custos', 'ga', 'vendas', 'tributarias'].forEach(g => zera(x[g])); });
   d.annual.resultadoInformado = 0;
-  zera(d.monthly.reforma.debitos); zera(d.monthly.reforma.creditos);
+  zera(d.monthly.reforma.debitos); zera(d.monthly.reforma.creditos); zera(d.monthly.estoque || []);
   d.monthly.reforma.saldoCredorAnterior = 0; d.monthly.ibs = 0;
   d.co = '[Nome da empresa]';
   return d;
@@ -866,6 +910,12 @@ app.addEventListener('click', e => {
     case 'tipo': {
       const r = rf[g][i]; r[3] = r[3] === 'reduzida' ? 'geral' : 'reduzida';
       r[2] = r[3] === 'reduzida' ? rf.aliqReduzida : rf.aliqGeral; refresh(); break;
+    }
+    case 'vinc': {                                   // mantém a mesma base ao trocar de modo
+      const r = rf.creditos[i], compras = S.monthly.compraMercadoria || 0;
+      if(parteCompras(r) !== null){ r[1] = baseLinha(r); r[4] = null; }
+      else r[4] = compras > 0 ? (r[1] || 0) / compras : 0;
+      render(); focar(`[data-act="vinc"][data-i="${i}"]`); break;
     }
     case 'logo-padrao': S.logo = null; refresh(); break;
   }
