@@ -141,12 +141,59 @@ Abaixo, separado por `1px solid line`, o campo **IBS a pagar (informe)** — pre
 ### 5. Aba "Resumo do cliente"
 Cartão branco, `padding:40px 44px 36px`. h2 22px/600 `-0.02em` "O mês em quatro números" + subtítulo com `max-width:60ch`.
 
-Quatro cartões: `repeat(auto-fit, minmax(210px,1fr))`, `gap:1px`, cada um com `box-shadow: 0 0 0 1px #DAD8D2` (a borda vem da sombra, **não** de um fundo cinza no grid — isso evitava células cinzas órfãs quando a última linha ficava incompleta). Conteúdo: rótulo Mono caixa alta → valor 26px Mono/600 → nota 12px `muted`.
+> **A faixa de indicadores muda nesta aba.** O bloco herói preto ("Resultado líquido do mês") é **ocultado** e o grid passa a uma coluna — `grid-template-columns` vira `minmax(0,1fr)`, com as três linhas (Lucro operacional bruto, Simples Nacional, CBS a pagar) ocupando a largura toda. Nas abas Resultado e Reforma o herói continua. Motivo: o valor já aparece nos cards logo abaixo; estava duplicado na mesma dobra.
+
+**Quatro cartões:** `repeat(auto-fit, minmax(210px,1fr))`, `gap:1px`, cada um com `box-shadow: 0 0 0 1px #DAD8D2` (a borda vem da sombra, **não** de um fundo cinza no grid — isso evita células cinzas órfãs quando a última linha fica incompleta). Conteúdo: rótulo Mono caixa alta → valor 26px Mono/600 → nota 12px `muted`.
 Receita · Resultado líquido · Simples Nacional · **CBS a pagar** (em `brand`)
 
-Abaixo, duas colunas `repeat(auto-fit, minmax(240px,1fr))`, `gap:28px`:
+**Duas colunas** `repeat(auto-fit, minmax(240px,1fr))`, `gap:28px`:
 - **Para onde foi a receita** — quatro barras de 8px somando 100%: Custo de vendas (`ink`), Despesas gerais e administrativas (`ink-3`), Despesas tributárias (`muted-3`), Resultado líquido (`brand`)
 - **O que observar** — parágrafo 13px `ink-3`, `line-height:1.65`, com os números interpolados do cálculo ao vivo (nunca texto fixo)
+
+> ⚠ **Decisão pendente:** o protótipo mostra dois tratamentos lado a lado, marcados **A** e **B**, em dois lugares (composição da receita e cadeia de crédito). **Implemente apenas um de cada** e remova os rótulos A/B — eles são andaime de comparação, não parte do design. Os rótulos são um quadrado de 16px em `ink` (A) ou `brand` (B) com a letra em Mono 9px branca.
+>
+> - Composição da receita — **A**: as quatro barras de 8px. **B**: donut de 132px (`conic-gradient`, anel de 30px, furo branco) com a margem em 19px Mono/600 `brand` no centro e legenda à direita (quadrado 9px + rótulo + percentual Mono alinhado à direita).
+> - Cadeia de crédito — **A**: barras por regime. **B**: pizza de 108px gera/não gera com legenda ao lado.
+
+---
+
+### 5.1 Cadeia de crédito (dentro do Resumo do cliente)
+Bloco separado por `margin-top:36px; padding-top:28px; border-top:1px solid #E7E5E0`.
+
+**Cabeçalho** — `space-between`, quebra em telas estreitas:
+- Esquerda (`max-width:52ch`): h3 15px/600 "Cadeia de crédito" + parágrafo 13px `muted` que **responde à pergunta em vez de contar registros**: "3 dos 4 fornecedores geram crédito de CBS para a empresa. O regime tributário de cada um define o direito ao crédito."
+- Direita: alternador **Fornecedores / Clientes** — trilho `#F2F1ED`, `padding:4px`, `gap:6px`; ativo: fundo branco + `box-shadow: 0 0 0 1px #DAD8D2`, texto `ink`; inativo: transparente, texto `muted`. Cada botão leva a contagem em Mono com `opacity:0.6`.
+
+> Eram dois cartões de contagem lado a lado, um deles com borda preta grossa que parecia seleção acidental. São o mesmo conjunto de dados em dois estados — logo, um alternador, não dois cartões.
+
+**Gráfico** (só quando há linhas) — mesmo vocabulário de "Para onde foi a receita": uma linha por regime, `max-width:520px`, `margin-bottom:10px` entre linhas. Rótulo 12px `ink-3` à esquerda, contagem Mono 12px à direita, trilho de 8px `canvas` abaixo. A barra pode ter **dois segmentos**: parte `ink` (gera crédito) e parte `brand` (não gera), ambas medidas sobre o **total geral de cadastros**, não sobre o grupo — é isso que mantém todas as linhas na mesma escala. Legenda embaixo (`margin-top:12px`, 11px `muted-2`), com quadrados de 9px; **cada item da legenda só aparece se existir pelo menos um cadastro daquela categoria**.
+
+**Faixa de alerta** (só quando há CNPJ inválido) — `padding:10px 14px`, fundo `brand-wash`, `border-left:3px solid brand`. Título 13px/600 `brand` com plural correto ("1 CNPJ não confere" / "3 CNPJs não conferem") + explicação 12px `muted`: "Confira antes de usar o crédito na apuração."
+
+> Antes a legenda ("Gera crédito: …") e o aviso de CNPJ estavam concatenados numa linha corrida só. São coisas diferentes: o aviso é um problema a resolver e sobe para uma faixa própria; a legenda é referência e desce para o rodapé da tabela.
+
+**Tabela** — grid de 5 colunas `200px minmax(0,1fr) 170px 130px 28px`, `gap:12px`. Cabeçalho Mono 10px caixa alta com divisória `1px solid ink`; linhas com `padding:9px 0`, divisória `line` e `:hover { background:#FAF9F7 }`.
+
+| Coluna | Tratamento |
+|---|---|
+| CNPJ | Mono 13px. Ponto de 5px antes do número: `line-2` quando válido, `brand` quando inválido; o próprio número fica em `brand` quando inválido |
+| Nome | 13px `ink` |
+| Regime tributário | 13px `muted` |
+| Gera crédito | "Sim" em `ink`/400; "Não" em `brand`/600 |
+| (ação) | Botão × de 22px, `#C7C5BF`, `:hover` `brand` sobre `brand-wash` |
+
+> Três mudanças aqui: o ícone "!" em caixa saiu (o problema está no dado, então o dado fica vermelho); os quadradinhos verdes saíram (verde não existe na paleta) e só a **exceção** ganha peso — "Não" em vermelho e negrito, "Sim" neutro; o botão de remover tem alvo fixo em todas as linhas, em vez de aparecer só no hover.
+
+**Rodapé da tabela** — `space-between`, `padding-top:12px`: botão de texto "+ adicionar fornecedor" (13px/500 `brand`, sublinha no hover) e a legenda 11px `muted-2` (`max-width:62ch`), que muda conforme a visão:
+- Fornecedores: "Gera crédito: a compra deste fornecedor dá direito a crédito de CBS para a empresa."
+- Clientes: "Gera crédito: a venda para este cliente permite que ele aproveite o crédito da CBS."
+
+**Estado vazio** (lista sem itens) — `padding:38px 24px`, fundo `surface-2`, centralizado: título 14px/600, parágrafo 12px `muted` (`max-width:46ch`) explicando **por que vale cadastrar** — "Cadastrar os clientes mostra quanto da receita vai para quem aproveita o crédito da CBS — e quanto vai para consumidor final, que não aproveita." — e um botão sólido `ink` "+ adicionar cliente". Quando o estado vazio aparece, o subtítulo do cabeçalho **não** repete o mesmo texto: ele passa a explicar o conceito ("Quem vende e quem compra da empresa. O regime tributário de cada um define se há direito a crédito na reforma.").
+
+**Concordância — obrigatória em todos os rótulos desta seção.** Três eixos combinam:
+1. **Singular/plural por contagem:** `0 de 1 cliente aproveita` (nunca "dos 1 clientes aproveitam"); `1 de 2 gera crédito` (nunca "1 de 2 geram").
+2. **Vocabulário por visão:** fornecedor *gera crédito* / cliente *aproveita o crédito*. Vale para o subtítulo, a legenda do gráfico, a nota de cada regime e o texto do botão de adicionar. Não misture os dois verbos na mesma tela.
+3. **Caso "todos" e caso "nenhum":** "todos geram crédito" / "nenhum gera crédito" (e as versões de cliente), com o singular "gera crédito" quando o grupo tem um membro só.
 
 ### 6. Rodapé
 Mono 11px `muted-2`, `space-between`: "Alexandre Araújo — Consultoria & Contabilidade" · "Valores em reais · competência dez/2025"
@@ -216,6 +263,9 @@ saldoAnterior  string   ('0,00')
 ibs            string   ('0,00')
 aliqGeral      string   ('8,00%')
 aliqMed        string   ('3,20%')
+cadeia         'fornecedores' | 'clientes'
+fornecedores   [{ cnpj, nome, regime, credito: bool, cnpjOk: bool }]
+clientes       [] (mesma forma)
 ```
 Valores editáveis são **strings** (preservam o que o usuário digitou); a conversão acontece no cálculo.
 
@@ -252,6 +302,18 @@ Débito  Demais itens          base   2734.37   aliq 8,00%
 Crédito Crédito medicamentos  base  60372.13   aliq 3,20%
 Crédito Crédito estoque       base   1867.18   aliq 8,00%
 ```
+
+### Cadeia de crédito — dados iniciais
+```
+06.862.627/0001-38  teste     Simples Nacional   gera crédito   CNPJ ok
+06.862.627/0001-30  teste 01  Lucro Real         gera crédito   CNPJ inválido
+06.862.627/0001-31  teste 03  Lucro Presumido    gera crédito   CNPJ inválido
+06.862.627/0001-36  teste 04  Simples Nacional   não gera       CNPJ inválido
+clientes: vazio
+```
+São dados de teste — substitua pelos reais. A validação de CNPJ está apenas sinalizada (`cnpjOk`), **não implementada**: implemente o cálculo dos dígitos verificadores.
+
+Agrupamento por regime na ordem fixa Simples Nacional → Lucro Presumido → Lucro Real; regimes fora dessa lista entram depois, na ordem em que aparecem. Regimes sem nenhum cadastro não são exibidos.
 
 ### Fórmulas
 ```
@@ -317,3 +379,6 @@ Levantadas na conversa, ainda em aberto:
 2. Decomposição do delta de carga: quanto vem de débito, de crédito perdido, do IBS
 3. Redundância entre as abas Resultado e Reforma (as mesmas despesas aparecem nas duas)
 4. Exportação do "Resumo do cliente" como PDF de uma página
+5. Escolher entre A e B nos dois gráficos e remover o perdedor (ver seção 5)
+6. Ponderar a cadeia de crédito por **valor de compra** por fornecedor, não por número de cadastros — hoje o gráfico conta cabeças, e o que decide o crédito é quanto se compra de cada um
+7. Validação real de CNPJ (dígitos verificadores)

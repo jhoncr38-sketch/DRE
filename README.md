@@ -184,12 +184,22 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   é o nome da primeira categoria de débito reduzida (ex.: Medicamentos)
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),
   Modo apresentação, Imprimir, Salvar, Baixar HTML, Restaurar padrão, Limpar tudo
-- **Cadeia de crédito** (fim do Resumo do cliente): cartões "Fornecedores" e "Clientes" com a contagem
-  e quantos geram crédito; clicar abre a lista (uma por vez, começa fechada). Cada linha tem CNPJ
-  (formatado, com dígito verificador conferido, aceita o CNPJ alfanumérico), nome, regime e
-  "gera crédito" Sim / Parcial / Não, sempre manual. Os dados ficam em `cadeia.fornecedores` e
-  `cadeia.clientes` (`[cnpj, nome, regime, 'sim'|'parcial'|'nao'|'']`), começam vazios e só são
-  guardados por Salvar ou Baixar HTML — nunca no código
+- **Resumo do cliente** (handoff seção 5): a faixa de indicadores esconde o bloco herói (o resultado
+  já está nos cartões) e fica só com as linhas; "Para onde foi a receita" foi retirado e "O que
+  observar" ocupa a largura toda
+- **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráfico opção A):
+  - cabeçalho com a frase que responde "quantos geram crédito" e o alternador Fornecedores / Clientes
+    com as contagens; concordância obrigatória (singular/plural; fornecedor *gera crédito*, cliente
+    *aproveita o crédito*; "todos" e "nenhum") em `resumoCadeia()`
+  - gráfico: uma barra por regime (Simples → Presumido → Real → demais), segmentos gera / parcial /
+    não gera medidos sobre o total de cadastros; legenda só com as categorias que existem (`graficoCadeia()`)
+  - faixa de alerta quando há CNPJ que não confere (dígito verificador, aceita o alfanumérico)
+  - tabela: CNPJ com ponto (vermelho e número em vermelho se inválido), nome, regime em cinza, gera
+    crédito Sim / **Parcial** (mantido a pedido, fora do handoff) / **Não em vermelho e negrito** /
+    A definir; campos parecem texto até passar o mouse; × sempre visível; rodapé com
+    "+ adicionar" e a legenda da visão; estado vazio explicando por que cadastrar
+  - dados em `cadeia.fornecedores` e `cadeia.clientes` (`[cnpj, nome, regime, 'sim'|'parcial'|'nao'|'']`),
+    começam vazios e ficam no banco (tabela `parceiros`) ou no Baixar HTML — nunca no código
 - **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas e identidade;
   esvazia a cadeia de crédito
 - **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura

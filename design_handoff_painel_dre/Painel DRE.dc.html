@@ -36,12 +36,14 @@
       </div>
     </header>
 
-    <section style="display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:16px;">
-      <div style="background:#14161A; color:#fff; padding:26px 28px; display:flex; flex-direction:column; gap:6px;">
-        <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#9A9DA4; font-family:'IBM Plex Mono',monospace;">Resultado líquido do mês</div>
-        <div style="font-size:52px; font-weight:600; letter-spacing:-0.03em; font-family:'IBM Plex Mono',monospace; line-height:1.05;">{{ f.resultado }}</div>
-        <div style="font-size:13px; color:#C9CCD2;">margem de {{ f.margem }} sobre receita declarada de {{ f.receita }}</div>
-      </div>
+    <section style="display:grid; grid-template-columns:{{ faixaCols }}; gap:16px;">
+      <sc-if value="{{ mostraHeroi }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#14161A; color:#fff; padding:26px 28px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#9A9DA4; font-family:'IBM Plex Mono',monospace;">Resultado líquido do mês</div>
+          <div style="font-size:52px; font-weight:600; letter-spacing:-0.03em; font-family:'IBM Plex Mono',monospace; line-height:1.05;">{{ f.resultado }}</div>
+          <div style="font-size:13px; color:#C9CCD2;">margem de {{ f.margem }} sobre receita declarada de {{ f.receita }}</div>
+        </div>
+      </sc-if>
       <div style="display:grid; grid-template-rows:repeat(3,1fr); gap:1px; background:#DAD8D2;">
         <div style="background:#F8F7F4; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
           <span style="font-size:13px; color:#4A4D53;">Lucro operacional bruto</span>
@@ -260,6 +262,7 @@
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:28px; margin-top:32px;">
           <div>
             <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Para onde foi a receita</div>
+            <div style="display:flex; align-items:center; gap:7px; margin-bottom:12px;"><span style="width:16px; height:16px; background:#14161A; color:#fff; font:600 9px/16px 'IBM Plex Mono',monospace; text-align:center;">A</span><span style="font-size:11px; color:#8A8D94;">barras (atual)</span></div>
             <sc-for list="{{ composicao }}" as="c" hint-placeholder-count="4">
               <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
                 <div style="display:flex; justify-content:space-between; font-size:12px;">
@@ -271,11 +274,134 @@
                 </div>
               </div>
             </sc-for>
+
+            <div style="display:flex; align-items:center; gap:7px; margin:22px 0 12px;"><span style="width:16px; height:16px; background:#B3122B; color:#fff; font:600 9px/16px 'IBM Plex Mono',monospace; text-align:center;">B</span><span style="font-size:11px; color:#8A8D94;">donut</span></div>
+            <div style="display:flex; align-items:center; gap:22px; flex-wrap:wrap;">
+              <div style="position:relative; width:132px; height:132px; flex:none;">
+                <div style="position:absolute; inset:0; border-radius:50%; background:{{ donutReceita }};"></div>
+                <div style="position:absolute; inset:30px; border-radius:50%; background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;">
+                  <span style="font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:600; color:#B3122B; letter-spacing:-0.02em;">{{ f.margem }}</span>
+                  <span style="font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:#8A8D94; font-family:'IBM Plex Mono',monospace;">margem</span>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px; min-width:0;">
+                <sc-for list="{{ composicao }}" as="c" hint-placeholder-count="4">
+                  <div style="display:flex; align-items:baseline; gap:8px;">
+                    <span style="width:9px; height:9px; background:{{ c.cor }}; flex:none;"></span>
+                    <span style="font-size:12px; color:#4A4D53;">{{ c.rotulo }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; margin-left:auto;">{{ c.pctStr }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
           </div>
           <div style="font-size:13px; color:#4A4D53; line-height:1.65;">
             <div style="font-size:13px; font-weight:600; color:#14161A; margin-bottom:8px;">O que observar</div>
             A margem líquida do mês foi de {{ f.margem }}. Na transição da reforma, o Simples cai para {{ f.simplesSemCbs }} e a CBS passa a ser apurada em separado, em {{ f.cbsPagar }} — somados, {{ f.naTransicao }}, contra {{ f.simples }} hoje. Os créditos sobre compras e despesas somam {{ f.creditoTotal }}.
           </div>
+        </div>
+
+        <div style="margin-top:36px; padding-top:28px; border-top:1px solid #E7E5E0;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:20px;">
+            <div style="max-width:52ch;">
+              <h3 style="margin:0 0 4px; font-size:15px; font-weight:600;">Cadeia de crédito</h3>
+              <p style="margin:0; font-size:13px; color:#6E7178; line-height:1.5;">{{ cadeiaResumo }}</p>
+            </div>
+            <div style="display:flex; gap:6px; background:#F2F1ED; padding:4px; border-radius:2px;">
+              <button onClick="{{ goFornecedores }}" style="{{ cadeiaFornStyle }}">Fornecedores <span style="font-family:'IBM Plex Mono',monospace; opacity:0.6;">{{ nFornecedores }}</span></button>
+              <button onClick="{{ goClientes }}" style="{{ cadeiaClieStyle }}">Clientes <span style="font-family:'IBM Plex Mono',monospace; opacity:0.6;">{{ nClientes }}</span></button>
+            </div>
+          </div>
+
+          <sc-if value="{{ temGrafico }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; gap:44px; align-items:flex-start; flex-wrap:wrap; margin-bottom:22px;">
+            <div style="flex:1 1 340px; max-width:520px;">
+              <div style="display:flex; align-items:center; gap:7px; margin-bottom:12px;"><span style="width:16px; height:16px; background:#14161A; color:#fff; font:600 9px/16px 'IBM Plex Mono',monospace; text-align:center;">A</span><span style="font-size:11px; color:#8A8D94;">barras por regime (atual)</span></div>
+              <sc-for list="{{ regimes }}" as="g" hint-placeholder-count="3">
+                <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
+                  <div style="display:flex; justify-content:space-between; gap:12px; font-size:12px;">
+                    <span style="color:#4A4D53;">{{ g.nome }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;">{{ g.valorStr }}</span>
+                  </div>
+                  <div style="display:flex; height:8px; background:#EFEEEA;">
+                    <div style="width:{{ g.larguraSim }}; background:#14161A;"></div>
+                    <div style="width:{{ g.larguraNao }}; background:#B3122B;"></div>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; font-size:11px; color:#8A8D94; margin-top:12px;">
+                <sc-if value="{{ temComCredito }}" hint-placeholder-val="{{ true }}">
+                  <span style="display:flex; align-items:center; gap:6px;"><span style="width:9px; height:9px; background:#14161A;"></span>{{ legendaSim }}</span>
+                </sc-if>
+                <sc-if value="{{ temSemCredito }}" hint-placeholder-val="{{ true }}">
+                  <span style="display:flex; align-items:center; gap:6px;"><span style="width:9px; height:9px; background:#B3122B;"></span>{{ legendaNao }}</span>
+                </sc-if>
+              </div>
+            </div>
+
+            <div style="flex:0 0 auto;">
+              <div style="display:flex; align-items:center; gap:7px; margin-bottom:12px;"><span style="width:16px; height:16px; background:#B3122B; color:#fff; font:600 9px/16px 'IBM Plex Mono',monospace; text-align:center;">B</span><span style="font-size:11px; color:#8A8D94;">pizza gera / não gera</span></div>
+              <div style="display:flex; align-items:center; gap:20px;">
+                <div style="width:108px; height:108px; border-radius:50%; background:{{ pizzaCadeia }}; flex:none;"></div>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                  <sc-if value="{{ temComCredito }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                      <span style="width:9px; height:9px; background:#14161A; flex:none;"></span>
+                      <span style="font-size:12px; color:#4A4D53;">{{ legendaSim }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ pizzaSimPct }}</span>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ temSemCredito }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex; align-items:baseline; gap:8px;">
+                      <span style="width:9px; height:9px; background:#B3122B; flex:none;"></span>
+                      <span style="font-size:12px; color:#4A4D53;">{{ legendaNao }}</span>
+                      <span style="font-family:'IBM Plex Mono',monospace; font-size:12px;">{{ pizzaNaoPct }}</span>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ temAlerta }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; align-items:baseline; gap:10px; padding:10px 14px; margin-bottom:14px; background:#FBF3F4; border-left:3px solid #B3122B;">
+              <span style="font-size:13px; color:#B3122B; font-weight:600;">{{ alertaTitulo }}</span>
+              <span style="font-size:12px; color:#6E7178;">Confira antes de usar o crédito na apuração.</span>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ temLinhas }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="display:grid; grid-template-columns:200px minmax(0,1fr) 170px 130px 28px; gap:12px; padding-bottom:7px; border-bottom:1px solid #14161A; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:#8A8D94; font-family:'IBM Plex Mono',monospace;">
+                <span>CNPJ</span><span>Nome</span><span>Regime tributário</span><span>Gera crédito</span><span></span>
+              </div>
+              <sc-for list="{{ linhasCadeia }}" as="row" hint-placeholder-count="4">
+                <div style="display:grid; grid-template-columns:200px minmax(0,1fr) 170px 130px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid #E7E5E0;" style-hover="background:#FAF9F7;">
+                  <span style="display:flex; align-items:center; gap:7px; font-family:'IBM Plex Mono',monospace; font-size:13px; color:{{ row.cnpjColor }};">
+                    <span style="width:5px; height:5px; border-radius:50%; background:{{ row.cnpjDot }}; flex:none;"></span>
+                    {{ row.cnpj }}
+                  </span>
+                  <span style="font-size:13px; color:#14161A;">{{ row.nome }}</span>
+                  <span style="font-size:13px; color:#6E7178;">{{ row.regime }}</span>
+                  <span style="font-size:13px; font-weight:{{ row.creditoPeso }}; color:{{ row.creditoCor }};">{{ row.creditoLabel }}</span>
+                  <button onClick="{{ row.onRemover }}" style="width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:none; background:transparent; color:#C7C5BF; font-size:15px; line-height:1; cursor:pointer; border-radius:2px;" style-hover="color:#B3122B; background:#FBF3F4;">×</button>
+                </div>
+              </sc-for>
+              <div style="display:flex; align-items:baseline; justify-content:space-between; gap:20px; flex-wrap:wrap; padding-top:12px;">
+                <button onClick="{{ onAdicionar }}" style="padding:0; border:none; background:transparent; font:500 13px/1 'IBM Plex Sans',sans-serif; color:#B3122B; cursor:pointer;" style-hover="text-decoration:underline;">+ adicionar {{ cadeiaSingular }}</button>
+                <span style="font-size:11px; color:#8A8D94; line-height:1.5; max-width:62ch;">{{ cadeiaLegenda }}</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ vazio }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:38px 24px; text-align:center; background:#F8F7F4;">
+              <div style="font-size:14px; font-weight:600; color:#14161A; margin-bottom:5px;">Nenhum cliente cadastrado</div>
+              <p style="margin:0 auto 16px; font-size:12px; color:#6E7178; max-width:46ch; line-height:1.55;">Cadastrar os clientes mostra quanto da receita vai para quem aproveita o crédito da CBS — e quanto vai para consumidor final, que não aproveita.</p>
+              <button onClick="{{ onAdicionar }}" style="padding:8px 16px; background:#14161A; color:#fff; border:none; border-radius:2px; font:500 13px/1 'IBM Plex Sans',sans-serif; cursor:pointer;">+ adicionar cliente</button>
+            </div>
+          </sc-if>
         </div>
       </section>
     </sc-if>
@@ -318,7 +444,15 @@ class Component extends DCLogic {
     saldoAnterior: '0,00',
     ibs: '0,00',
     aliqGeral: '8,00%',
-    aliqMed: '3,20%'
+    aliqMed: '3,20%',
+    cadeia: 'fornecedores',
+    fornecedores: [
+      { cnpj: '06.862.627/0001-38', nome: 'teste', regime: 'Simples Nacional', credito: true, cnpjOk: true },
+      { cnpj: '06.862.627/0001-30', nome: 'teste 01', regime: 'Lucro Real', credito: true, cnpjOk: false },
+      { cnpj: '06.862.627/0001-31', nome: 'teste 03', regime: 'Lucro Presumido', credito: true, cnpjOk: false },
+      { cnpj: '06.862.627/0001-36', nome: 'teste 04', regime: 'Simples Nacional', credito: false, cnpjOk: false }
+    ],
+    clientes: []
   };
 
   aplicarAliquotas(campo, valor) {
@@ -410,6 +544,58 @@ class Component extends DCLogic {
     const bar = function (rot, v, max, cor) {
       return { rotulo: rot, valorStr: self.brl(v), largura: (max > 0 ? Math.max(2, v / max * 100) : 2) + '%', cor: cor };
     };
+    const pill = function (on) {
+      return 'display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 "IBM Plex Sans",sans-serif; border:none; cursor:pointer; border-radius:2px; background:' + (on ? '#fff' : 'transparent') + '; color:' + (on ? '#14161A' : '#6E7178') + '; box-shadow:' + (on ? '0 0 0 1px #DAD8D2' : 'none') + ';';
+    };
+    const lista = S[S.cadeia];
+    const alertas = lista.filter(function (r) { return !r.cnpjOk; }).length;
+    const comCredito = lista.filter(function (r) { return r.credito; }).length;
+const ehForn = S.cadeia === 'fornecedores';
+    let cadeiaResumo;
+    if (lista.length === 0) {
+      cadeiaResumo = 'Quem vende e quem compra da empresa. O regime tributário de cada um define se há direito a crédito na reforma.';
+    } else if (lista.length === 1) {
+      cadeiaResumo = comCredito + ' de 1 ' + (ehForn ? 'fornecedor gera crédito de CBS para a empresa' : 'cliente aproveita o crédito da CBS') + '. O regime tributário define o direito ao crédito.';
+    } else {
+      cadeiaResumo = comCredito + ' dos ' + lista.length + ' ' + (ehForn ? 'fornecedores geram crédito de CBS para a empresa' : 'clientes aproveitam o crédito da CBS') + '. O regime tributário de cada um define o direito ao crédito.';
+    }
+    const semCredito = lista.length - comCredito;
+    const regimesOrdem = ['Simples Nacional', 'Lucro Presumido', 'Lucro Real'];
+    const regimesVistos = lista.map(function (r) { return r.regime; });
+    const regimes = regimesOrdem.concat(regimesVistos.filter(function (n) { return regimesOrdem.indexOf(n) < 0; }))
+      .filter(function (n, i, a) { return a.indexOf(n) === i && regimesVistos.indexOf(n) >= 0; })
+      .map(function (nome) {
+        const membros = lista.filter(function (r) { return r.regime === nome; });
+        const sim = membros.filter(function (r) { return r.credito; }).length;
+        return {
+          nome: nome,
+          contagem: membros.length === 1 ? '1 cadastro' : membros.length + ' cadastros',
+          nota: sim === membros.length
+            ? (membros.length === 1 ? (ehForn ? 'gera crédito' : 'aproveita') : (ehForn ? 'todos geram crédito' : 'todos aproveitam'))
+            : (sim === 0
+              ? (ehForn ? 'nenhum gera crédito' : 'nenhum aproveita')
+              : sim + ' de ' + membros.length + (sim === 1 ? (ehForn ? ' gera crédito' : ' aproveita') : (ehForn ? ' geram crédito' : ' aproveitam'))),
+          notaCor: sim === membros.length ? '#6E7178' : '#B3122B',
+          valorStr: String(membros.length),
+          larguraSim: (sim / lista.length * 100) + '%',
+          larguraNao: ((membros.length - sim) / lista.length * 100) + '%'
+        };
+      });
+    const linhasCadeia = lista.map(function (r, i) {
+      return {
+        cnpj: r.cnpj, nome: r.nome, regime: r.regime,
+        cnpjColor: r.cnpjOk ? '#14161A' : '#B3122B',
+        cnpjDot: r.cnpjOk ? '#DAD8D2' : '#B3122B',
+        creditoLabel: r.credito ? 'Sim' : 'Não',
+        creditoCor: r.credito ? '#14161A' : '#B3122B',
+        creditoPeso: r.credito ? '400' : '600',
+        onRemover: function () {
+          self.setState(function (s) {
+            return { [s.cadeia]: s[s.cadeia].filter(function (_, j) { return j !== i; }) };
+          });
+        }
+      };
+    });
     const maxCbs = Math.max(debitoTotal, creditoTotal, cbsPagar, 1);
     const simplesSemCbs = 4140.30;
     const naTransicao = simplesSemCbs + cbsPagar + this.num(S.ibs);
@@ -417,6 +603,8 @@ class Component extends DCLogic {
 
     return {
       isResultado: S.tab === 'resultado', isReforma: S.tab === 'reforma', isCliente: S.tab === 'cliente',
+      mostraHeroi: S.tab !== 'cliente',
+      faixaCols: S.tab === 'cliente' ? 'minmax(0,1fr)' : 'minmax(0,1.35fr) minmax(0,1fr)',
       goResultado: function () { self.setState({ tab: 'resultado' }); },
       goReforma: function () { self.setState({ tab: 'reforma' }); },
       goCliente: function () { self.setState({ tab: 'cliente' }); },
@@ -450,12 +638,59 @@ class Component extends DCLogic {
       deltaCarga: (naTransicao >= simples ? '+' : '−') + this.brl(Math.abs(naTransicao - simples)).replace('R$ ', 'R$ ') + ' (' + this.pct(Math.abs(naTransicao - simples) / simples * 100) + ')',
       deltaLabel: naTransicao >= simples ? 'a mais que hoje' : 'a menos que hoje',
       deltaColor: naTransicao >= simples ? '#B3122B' : '#14161A',
+      nFornecedores: S.fornecedores.length,
+      nClientes: S.clientes.length,
+      cadeiaSingular: S.cadeia === 'fornecedores' ? 'fornecedor' : 'cliente',
+      goFornecedores: function () { self.setState({ cadeia: 'fornecedores' }); },
+      goClientes: function () { self.setState({ cadeia: 'clientes' }); },
+      cadeiaFornStyle: pill(S.cadeia === 'fornecedores'),
+      cadeiaClieStyle: pill(S.cadeia === 'clientes'),
+      cadeiaResumo: cadeiaResumo,
+      cadeiaLegenda: S.cadeia === 'fornecedores'
+        ? 'Gera crédito: a compra deste fornecedor dá direito a crédito de CBS para a empresa.'
+        : 'Gera crédito: a venda para este cliente permite que ele aproveite o crédito da CBS.',
+      temGrafico: lista.length > 0,
+      graficoSimLargura: (comCredito / Math.max(lista.length, 1) * 100) + '%',
+      graficoNaoLargura: (semCredito / Math.max(lista.length, 1) * 100) + '%',
+      pizzaCadeia: 'conic-gradient(#14161A 0turn ' + (comCredito / Math.max(lista.length, 1)) + 'turn, #B3122B ' + (comCredito / Math.max(lista.length, 1)) + 'turn 1turn)',
+      pizzaSimPct: this.pct(comCredito / Math.max(lista.length, 1) * 100),
+      pizzaNaoPct: this.pct(semCredito / Math.max(lista.length, 1) * 100),
+      temComCredito: comCredito > 0,
+      legendaSim: ehForn ? 'gera crédito' : 'aproveita o crédito',
+      legendaNao: ehForn ? 'não gera' : 'não aproveita',
+      graficoSimLabel: comCredito + (ehForn ? (comCredito === 1 ? ' gera crédito' : ' geram crédito') : (comCredito === 1 ? ' aproveita' : ' aproveitam')),
+      graficoNaoLabel: semCredito + (ehForn
+        ? (semCredito === 1 ? ' não gera' : ' não geram')
+        : (semCredito === 1 ? ' não aproveita' : ' não aproveitam')),
+      temSemCredito: semCredito > 0,
+      regimes: regimes,
+      temAlerta: alertas > 0,
+      alertaTitulo: alertas === 1 ? '1 CNPJ não confere' : alertas + ' CNPJs não conferem',
+      temLinhas: lista.length > 0,
+      vazio: lista.length === 0,
+      linhasCadeia: linhasCadeia,
+      onAdicionar: function () {
+        self.setState(function (s) {
+          const nova = { cnpj: '00.000.000/0000-00', nome: 'Novo ' + (s.cadeia === 'fornecedores' ? 'fornecedor' : 'cliente'), regime: 'Simples Nacional', credito: false, cnpjOk: true };
+          return { [s.cadeia]: s[s.cadeia].concat([nova]) };
+        });
+      },
       resumoCliente: [
         { rotulo: 'Receita', valor: this.brl(receita), nota: 'declarada no PGDAS', cor: '#14161A' },
         { rotulo: 'Resultado líquido', valor: this.brl(resultado), nota: 'margem de ' + this.pct(resultado / receita * 100), cor: '#14161A' },
         { rotulo: 'Simples Nacional', valor: this.brl(simples), nota: 'regime atual', cor: '#14161A' },
         { rotulo: 'CBS a pagar', valor: this.brl(cbsPagar), nota: 'simulação da reforma', cor: '#B3122B' }
       ],
+      donutReceita: (function () {
+        const partes = [[custos, '#14161A'], [despTotal, '#4A4D53'], [tribTotal, '#9A9DA4'], [resultado, '#B3122B']];
+        let acc = 0;
+        const stops = partes.map(function (p) {
+          const ini = acc / receita;
+          acc += p[0];
+          return p[1] + ' ' + ini + 'turn ' + (acc / receita) + 'turn';
+        });
+        return 'conic-gradient(' + stops.join(', ') + ')';
+      })(),
       composicao: [
         { rotulo: 'Custo de vendas', pctStr: this.pct(custos / receita * 100), largura: (custos / receita * 100) + '%', cor: '#14161A' },
         { rotulo: 'Despesas gerais e administrativas', pctStr: this.pct(despTotal / receita * 100), largura: (despTotal / receita * 100) + '%', cor: '#4A4D53' },

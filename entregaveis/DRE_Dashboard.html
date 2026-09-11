@@ -245,44 +245,71 @@
   .present .barra{display:none}
   @media print{ .barra, #modal{display:none !important} }
 
-  /* Cadeia de crédito (resumo do cliente) */
-  .cadeia{margin-top:36px; padding-top:26px; border-top:1px solid var(--line)}
-  .cli .cadeia .cad-sub{margin:0 0 16px; font-size:12px; max-width:none}
-  .cad-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr)); gap:1px}
-  .cad-card{display:flex; flex-direction:column; gap:4px; text-align:left; padding:16px 18px; background:var(--surface); border:0; box-shadow:0 0 0 1px var(--line-2); cursor:pointer; color:var(--ink)}
-  .cad-card:hover{background:var(--surface-2)}
-  .cad-card[aria-expanded="true"]{box-shadow:0 0 0 1px var(--ink); position:relative; z-index:1}
-  .cad-top{display:flex; justify-content:space-between; align-items:center; gap:8px}
-  .cad-top .cap{font-size:10px; letter-spacing:.1em; color:var(--muted-2)}
-  .chev{font-size:11px; color:var(--muted-2)}
-  .cad-n{font-size:16px; font-weight:600}
-  .cad-c{font-size:12px; color:var(--muted)}
-  .cad-lista{margin-top:14px}
-  .cad-dica{margin:0 0 6px}
-  .cad-row{display:grid; grid-template-columns:170px minmax(0,1fr) 200px 150px 20px; gap:10px; align-items:center; padding:7px 0; border-top:1px solid var(--line); font-size:13px}
-  .cad-row.gh{border-top:0; padding:8px 0 4px; font-size:10px}
+  /* Resumo do cliente: sem o bloco herói (o resultado já está nos cartões) */
+  .hero.so-linhas{grid-template-columns:minmax(0,1fr)}
+  .obs-largo{margin-top:32px; max-width:78ch}
+
+  /* Cadeia de crédito (resumo do cliente) — handoff 5.1 */
+  .cadeia{margin-top:36px; padding-top:28px; border-top:1px solid var(--line)}
+  .cad-h{display:flex; align-items:flex-start; justify-content:space-between; gap:16px 24px; flex-wrap:wrap; margin-bottom:20px}
+  .cad-h-txt{max-width:52ch}
+  .cad-h-txt h3{margin:0 0 4px}
+  .cad-h-txt p{margin:0; font-size:13px; color:var(--muted); line-height:1.5}
+  .cad-alt{display:flex; gap:6px; background:#F2F1ED; padding:4px; border-radius:2px}
+  .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--muted); cursor:pointer}
+  .cad-aba[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--line-2)}
+  .cad-aba .m{opacity:.6}
+  .cad-grafico{max-width:520px; margin-bottom:22px}
+  .cg-linha{display:flex; flex-direction:column; gap:4px; margin-bottom:10px}
+  .cg-linha .bar-h > span:first-child{color:var(--ink-3)}
+  .cg-linha .bar-h > span:last-child{font-family:var(--mono)}
+  .cg-trilho{display:flex; height:8px; background:var(--canvas)}
+  .cg-trilho > span{display:block; height:100%}
+  .cg-sim, .cg-q.cg-sim{background:var(--fill)}
+  .cg-parcial, .cg-q.cg-parcial{background:var(--muted-3)}
+  .cg-nao, .cg-q.cg-nao{background:var(--brand)}
+  .cg-legenda{display:flex; align-items:center; gap:6px 16px; flex-wrap:wrap; margin-top:12px; font-size:11px; color:var(--muted-2)}
+  .cg-item{display:flex; align-items:center; gap:6px}
+  .cg-q{width:9px; height:9px; flex:none}
+  .cg-q.cg-def{box-shadow:inset 0 0 0 1px var(--line-3)}
+  .cad-alerta{display:flex; align-items:baseline; gap:4px 10px; flex-wrap:wrap; padding:10px 14px; margin-bottom:14px; background:var(--brand-wash); border-left:3px solid var(--brand)}
+  .cad-alerta strong{font-size:13px; font-weight:600; color:var(--brand)}
+  .cad-alerta span{font-size:12px; color:var(--muted)}
+  .cad-vazio{padding:38px 24px; text-align:center; background:var(--surface-2)}
+  .cad-vazio-t{font-size:14px; font-weight:600; color:var(--ink); margin-bottom:5px}
+  .cad-vazio p{margin:0 auto 16px; font-size:12px; color:var(--muted); max-width:46ch; line-height:1.55}
+  .cad-vazio .btn.prim{padding:8px 16px; font-size:13px}
+  .cad-pe{display:flex; align-items:baseline; justify-content:space-between; gap:8px 20px; flex-wrap:wrap; padding-top:12px}
+  .cad-pe span{font-size:11px; color:var(--muted-2); line-height:1.5; max-width:62ch}
+  .cad-mais{padding:0; border:0; background:transparent; font:500 13px/1 var(--sans); color:var(--brand); cursor:pointer}
+  .cad-mais:hover{text-decoration:underline}
+  /* tabela: os campos parecem texto e só mostram o traço ao passar o mouse ou editar */
+  .cad-row{display:grid; grid-template-columns:200px minmax(0,1fr) 170px 130px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
+  .cad-row:not(.gh):hover{background:#FAF9F7}
+  .cad-row.gh{padding:0 0 7px; border-bottom-color:var(--ink); font-size:10px}
   .cad-row.gh > span{text-align:left}
-  .cad-row .in{text-align:left; border-bottom-color:var(--line-3)}
-  .cad-row .in:focus{border-bottom-color:var(--brand)}
-  .cad-cnpj{display:flex; flex-direction:column; gap:1px; min-width:0}
-  .cad-err{font-size:11px; color:var(--ink-3)}
-  .cad-cnpj:focus-within .cad-err{display:none}
-  .sel{width:100%; min-width:0; font:inherit; font-size:13px; color:var(--ink); background:transparent; border:0; border-bottom:1px solid var(--line-3); border-radius:0; padding:2px 0; outline:none; cursor:pointer}
+  .cad-row .in{text-align:left}
+  .cad-cnpj{display:flex; align-items:center; gap:7px; min-width:0}
+  .cad-cnpj .ponto{width:5px; height:5px; border-radius:50%; background:var(--line-2); flex:none}
+  .cad-cnpj.inv .ponto{background:var(--brand)}
+  .cad-cnpj.inv .in{color:var(--brand)}
+  .sel-wrap{position:relative; display:flex; align-items:center; min-width:0}
+  .sel{appearance:none; -webkit-appearance:none; width:100%; min-width:0; font:inherit; font-size:13px; color:var(--ink); background:transparent; border:0; border-bottom:1px solid transparent; border-radius:0; padding:2px 16px 2px 0; outline:none; cursor:pointer; text-overflow:ellipsis}
+  .sel:hover{border-bottom-color:var(--line-3)}
   .sel:focus{border-bottom-color:var(--brand)}
-  .segc{display:inline-flex; box-shadow:0 0 0 1px var(--line-2); justify-self:start}
-  .segc button{border:0; background:transparent; font:500 11px/1 var(--sans); padding:6px 9px; color:var(--ink-3); cursor:pointer}
-  .segc button + button{box-shadow:-1px 0 0 var(--line-2)}
-  .segc button:hover{color:var(--ink)}
-  .segc button.on{color:#fff}
-  .segc button.on.sim{background:var(--ok)}
-  .segc button.on.parcial{background:var(--ink-3)}
-  .segc button.on.nao{background:var(--fill)}
-  .cad-x{border:0; background:transparent; color:var(--muted-2); cursor:pointer; font-size:15px; line-height:1; padding:0}
-  .cad-x:hover{color:var(--ink)}
-  .vazio{padding:12px 0; font-size:13px; color:var(--muted); border-top:1px solid var(--line)}
-  .present .sel, .present .segc button{pointer-events:none}
-  .present .sel{border-bottom-color:transparent; appearance:none}
-  .present .cad-x{display:none}
+  .sel:has(option[value=""]:checked){color:var(--muted-2)}
+  .sel option{color:var(--ink)}
+  .sel-wrap::after{content:"▾"; position:absolute; right:2px; font-size:10px; color:var(--muted-2); pointer-events:none; opacity:0; transition:opacity .15s}
+  .cad-row:hover .sel-wrap::after, .sel-wrap:focus-within::after{opacity:1}
+  .regime .sel{color:var(--muted)}
+  .cred.sim .sel{color:var(--ink)}                                   /* só a exceção ganha peso */
+  .cred.parcial .sel{color:var(--ink-3)}
+  .cred.nao .sel{color:var(--brand); font-weight:600}
+  .cad-x{width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:0; border-radius:2px; background:transparent; color:var(--line-3); cursor:pointer; font-size:15px; line-height:1; padding:0}
+  .cad-x:hover{color:var(--brand); background:var(--brand-wash)}
+  @media (hover:none){ .sel-wrap::after{opacity:1} }
+  .present .sel{pointer-events:none}
+  .present .sel-wrap::after, .present .cad-x, .present .cad-mais, .present .cad-vazio .btn{display:none}
   .present .cad-row .in::placeholder{color:transparent}
   .hint.deb-hint{margin:-8px 0 16px; font-size:12px; color:var(--ink-3)}
 
@@ -324,7 +351,7 @@
     .g5 > :first-child, .g4 > :first-child{grid-column:1 / -1}
     .g5.gh > :first-child{display:none}
     /* cadeia de crédito: nome em cima; CNPJ e regime; depois o crédito */
-    .cad-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 20px; grid-template-areas:"nome nome x" "cnpj regime regime" "cred cred cred"; row-gap:8px}
+    .cad-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px; grid-template-areas:"nome nome x" "cnpj cnpj cnpj" "regime cred cred"; row-gap:6px; padding:8px 0}
     .cad-row > :nth-child(1){grid-area:cnpj}
     .cad-row > :nth-child(2){grid-area:nome}
     .cad-row > :nth-child(3){grid-area:regime}
@@ -573,6 +600,41 @@ function propagar(tipo){
 }
 
 /* ---------- textos ---------- */
+// Cadeia de crédito — concordância: singular/plural pela contagem; fornecedor "gera crédito", cliente "aproveita o crédito"
+function resumoCadeia(lst, forn){
+  const n = lst.length;
+  if(!n) return 'Quem vende e quem compra da empresa. O regime tributário de cada um define se há direito a crédito na reforma.';
+  const conta = v => lst.filter(r => (r[3] || '') === v).length;
+  const sim = conta('sim'), parcial = conta('parcial');
+  const verbo = q => forn ? (q === 1 ? 'gera' : 'geram') : (q === 1 ? 'aproveita' : 'aproveitam');
+  const objeto = forn ? 'crédito de CBS para a empresa' : 'o crédito da CBS';
+  const quem = forn ? (n === 1 ? 'fornecedor' : 'fornecedores') : (n === 1 ? 'cliente' : 'clientes');
+  let frase = n === 1 ? `${sim} de 1 ${quem} ${verbo(1)} ${objeto}.`
+    : sim === n ? `Todos os ${n} ${quem} ${verbo(n)} ${objeto}.`
+    : sim === 0 ? `Nenhum dos ${n} ${quem} ${verbo(1)} ${objeto}.`
+    : `${sim} dos ${n} ${quem} ${verbo(sim)} ${objeto}.`;
+  if(parcial) frase += forn ? ` ${parcial} ${verbo(parcial)} crédito parcial.` : ` ${parcial} ${verbo(parcial)} parcialmente.`;
+  return frase + (n === 1 ? ' O regime tributário define o direito ao crédito.' : ' O regime tributário de cada um define o direito ao crédito.');
+}
+// uma barra por regime (Simples → Presumido → Real → demais), segmentos medidos sobre o total de cadastros
+function graficoCadeia(lst, forn){
+  const n = lst.length, conta = (arr, v) => arr.filter(r => (r[3] || '') === v).length;
+  const ordem = ['Simples Nacional', 'Lucro Presumido', 'Lucro Real'], vistos = lst.map(r => r[2] || '');
+  const nomes = ordem.concat(vistos.filter(x => !ordem.includes(x))).filter((x, i, a) => a.indexOf(x) === i && vistos.includes(x));
+  const larg = q => (n ? q / n * 100 : 0) + '%';
+  const linhas = nomes.map(nome => {
+    const grupo = lst.filter(r => (r[2] || '') === nome);
+    return `<div class="cg-linha"><div class="bar-h"><span>${esc(nome || 'Regime não informado')}</span><span>${grupo.length}</span></div>` +
+      `<div class="cg-trilho" aria-hidden="true"><span class="cg-sim" style="width:${larg(conta(grupo, 'sim'))}"></span>` +
+      `<span class="cg-parcial" style="width:${larg(conta(grupo, 'parcial'))}"></span><span class="cg-nao" style="width:${larg(conta(grupo, 'nao'))}"></span></div></div>`;
+  }).join('');
+  const legenda = [['sim', forn ? 'gera crédito' : 'aproveita o crédito'], ['parcial', forn ? 'gera crédito parcial' : 'aproveita parcialmente'],
+    ['nao', forn ? 'não gera' : 'não aproveita'], ['', 'a definir']]
+    .filter(([v]) => conta(lst, v) > 0)                            // só aparece o que existe
+    .map(([v, rotulo]) => `<span class="cg-item"><span class="cg-q cg-${v || 'def'}"></span>${rotulo}</span>`).join('');
+  return linhas + `<div class="cg-legenda">${legenda}</div>`;
+}
+
 function textoObservar(c){
   const margem = pct(c.R ? c.resultado / c.R * 100 : 0);
   let t = `A margem líquida do mês foi de ${margem}. `;
@@ -589,7 +651,7 @@ function textoObservar(c){
 /* ---------- saídas: todo texto calculado da tela, por chave ---------- */
 function saidas(){
   const cm = calcMes(), ca = calcAno(), m = S.monthly, a = S.annual, rf = m.reforma;
-  const O = {}, W = {}, C = {}, V = {};
+  const O = {}, W = {}, C = {}, V = {}, H = {};                         // H: trechos de HTML sem campos (gráficos)
   const P = (v, R) => pct(R ? v / R * 100 : 0);
   const P2 = (v, R) => dec(R ? v / R * 100 : 0, 2, 2) + '%';          // faixa de indicadores: duas casas
   const larg = (v, max) => (max > 0 ? Math.max(2, Math.max(0, v) / max * 100) : 2) + '%';
@@ -669,8 +731,6 @@ function saidas(){
   O['c.nRec'] = 'declarada no PGDAS'; O['c.nRes'] = 'margem de ' + P(cm.resultado, cm.R);
   O['c.nSim'] = 'regime atual';
   O['c.nCbs'] = credor ? 'vai para o mês seguinte' : 'simulação da reforma';
-  [['custos', cm.custos], ['ga', cm.ga], ['vendas', cm.vendas], ['trib', cm.trib], ['res', cm.resultado]]
-    .forEach(([k, v]) => { O['c.' + k] = P(v, cm.R); W['c.' + k] = parte(v, cm.R); });
   O['c.obs'] = textoObservar(cm);
 
   // ano
@@ -693,24 +753,22 @@ function saidas(){
   const cem = v => 'R$ ' + dec(ca.R ? v / ca.R * 100 : 0, 2, 2);
   O['a.leitura1'] = `De cada R$ 100,00 que entram pela venda, ${cem(ca.custos)} vão para a mercadoria, ${cem(ca.ga + ca.vendas)} para as despesas de funcionamento e ${cem(ca.trib)} para impostos e taxas. Sobram ${cem(ca.calculado)} de lucro — margem de ${P(ca.calculado, ca.R)}.`;
   O['a.leitura2'] = `No exercício, a empresa vendeu ${brl(ca.R)} e comprou ${brl(a.compraMercadoria || 0)} em mercadoria.`;
-  // cadeia de crédito: contagens dos cartões e estado de cada linha
+  // cadeia de crédito: contadores do alternador, estado de cada linha e a visão aberta
   ['fornecedores', 'clientes'].forEach(g => {
-    const lst = (S.cadeia && S.cadeia[g]) || [], n = lst.length;
-    const conta = v => lst.filter(r => (r[3] || '') === v).length;
-    const sim = conta('sim'), parcial = conta('parcial'), nao = conta('nao'), aDefinir = n - sim - parcial - nao;
-    const partes = [];
-    if(sim) partes.push(`${sim} ${sim === 1 ? 'gera' : 'geram'} crédito`);
-    if(parcial) partes.push(`${parcial} parcial`);
-    if(nao) partes.push(`${nao} não ${nao === 1 ? 'gera' : 'geram'}`);
-    if(aDefinir) partes.push(`${aDefinir} a definir`);
-    O[`cad.${g}.n`] = n === 0 ? 'nenhum cadastrado' : `${n} ${n === 1 ? 'cadastrado' : 'cadastrados'}`;
-    O[`cad.${g}.c`] = n === 0 ? 'clique para cadastrar' : partes.join(' · ');
-    lst.forEach((r, i) => {
+    const lista = (S.cadeia && S.cadeia[g]) || [];
+    O[`cad.${g}.qtd`] = String(lista.length);
+    lista.forEach((r, i) => {
       V[`cad.${g}.${i}.inv`] = !!limpaCnpj(r[0]) && !cnpjValido(r[0]);
       ['sim', 'parcial', 'nao'].forEach(v => { V[`cad.${g}.${i}.${v}`] = r[3] === v; });
     });
   });
-  return {O, W, C, V};
+  const visao = ui.cadeia || 'fornecedores', lst = (S.cadeia && S.cadeia[visao]) || [];
+  O['cad.resumo'] = resumoCadeia(lst, visao === 'fornecedores');
+  const invalidos = lst.filter(r => limpaCnpj(r[0]) && !cnpjValido(r[0])).length;
+  O['cad.alerta'] = invalidos === 1 ? '1 CNPJ não confere' : `${invalidos} CNPJs não conferem`;
+  V['cad.temAlerta'] = invalidos > 0;
+  H['cad.grafico'] = graficoCadeia(lst, visao === 'fornecedores');
+  return {O, W, C, V, H};
 }
 
 /* ---------- montagem das telas (estrutura; os valores entram em refresh) ---------- */
@@ -780,8 +838,9 @@ function rHeroi(){
     ? linhaH('Despesas operacionais', 'a.despesas', 'a.despesasP') + linhaH('Simples Nacional', 'a.simples', 'a.simplesP')
     : linhaH('Simples Nacional', 'm.simples', 'm.simplesP') +
       linhaH(o('m.cbsRotulo'), 'm.cbsRes', '', 'cbs', ' <span class="suf">(reforma)</span>', 'data-cls="credito:m.temCredor"');
-  return `<section class="hero" aria-label="Indicadores">
-    <div class="hero-main"><div class="cap" data-o="h.cap"></div><div class="hero-val" data-o="h.val"></div><div class="hero-ctx" data-o="h.ctx"></div></div>
+  const soLinhas = ui.tab === 'cliente';          // no Resumo do cliente o resultado já está nos cartões logo abaixo
+  return `<section class="hero${soLinhas ? ' so-linhas' : ''}" aria-label="Indicadores">
+    ${soLinhas ? '' : `<div class="hero-main"><div class="cap" data-o="h.cap"></div><div class="hero-val" data-o="h.val"></div><div class="hero-ctx" data-o="h.ctx"></div></div>`}
     <div class="hero-side">${lado}</div></section>`;
 }
 
@@ -914,52 +973,56 @@ function rCliente(){
   return painel('cli', 'cliente', `<h2>O mês em quatro números</h2>
     <p class="sub">Versão sem detalhamento contábil, para conversa com o cliente.</p>
     <div class="cards">${cartao('Receita', 'm.receita', 'c.nRec')}${cartao('Resultado líquido', 'm.resultado', 'c.nRes')}${cartao('Simples Nacional', 'm.simples', 'c.nSim')}${cartao(o('m.cbsRotulo'), 'm.cbsRes', 'c.nCbs', 'brand', 'data-cls="credito:m.temCredor"')}</div>
-    <div class="two">
-      <div><h4>Para onde foi a receita</h4>
-        ${barraComp('c.custos', 'Custo de vendas', 'c-ink')}${barraComp('c.ga', 'Despesas gerais e administrativas', 'c-ink3')}
-        ${S.monthly.vendas.length ? barraComp('c.vendas', 'Despesas com vendas', 'c-mut') : ''}
-        ${barraComp('c.trib', 'Despesas tributárias', 'c-mut')}${barraComp('c.res', 'Resultado líquido', 'c-brand')}</div>
-      <div class="obs"><h4>O que observar</h4><p data-o="c.obs"></p></div>
-    </div>
+    <div class="obs obs-largo"><h4>O que observar</h4><p data-o="c.obs"></p></div>
     ${rCadeia()}`);
 }
 const REGIMES = ['Simples Nacional', 'Simples Nacional – IBS/CBS por fora', 'MEI', 'Lucro Presumido', 'Lucro Real', 'Pessoa física', 'Imune / isento', 'Outro'];
 function rCadeia(){
-  const aberta = ui.cadeia;                      // null | 'fornecedores' | 'clientes' — só uma lista aberta por vez
-  const cartao = (g, titulo) => `<button class="cad-card" data-act="cadeia" data-id="${g}" aria-expanded="${aberta === g}">
-      <span class="cad-top"><span class="cap">${titulo}</span><span class="chev" aria-hidden="true">${aberta === g ? '▾' : '▸'}</span></span>
-      <span class="cad-n" data-o="cad.${g}.n"></span><span class="cad-c" data-o="cad.${g}.c"></span></button>`;
-  let lista = '';
-  if(aberta){
-    const g = aberta, sing = g === 'fornecedores' ? 'fornecedor' : 'cliente', ro = ui.present ? ' disabled' : '';
-    const dica = g === 'fornecedores'
-      ? 'Gera crédito: a compra deste fornecedor dá direito a crédito para a empresa.'
-      : 'Gera crédito: a venda para este cliente dá direito a crédito para ele.';
-    const linhas = S.cadeia[g].map((r, i) => {
+  // um alternador (mesmo conjunto de dados em dois estados): fornecedores ou clientes
+  const g = ui.cadeia || 'fornecedores', forn = g === 'fornecedores', sing = forn ? 'fornecedor' : 'cliente';
+  const lst = S.cadeia[g], ro = ui.present ? ' disabled' : '';
+  const botao = (id, rotulo) => `<button class="cad-aba" data-act="cadeia" data-id="${id}" aria-pressed="${g === id}">${rotulo} <span class="m" data-o="cad.${id}.qtd"></span></button>`;
+  let corpo;
+  if(!lst.length){
+    corpo = `<div class="cad-vazio">
+      <div class="cad-vazio-t">Nenhum ${sing} cadastrado</div>
+      <p>${forn
+        ? 'Cadastrar os fornecedores mostra quanto das compras gera crédito de CBS para a empresa — e quanto vem de quem não gera.'
+        : 'Cadastrar os clientes mostra quanto da receita vai para quem aproveita o crédito da CBS — e quanto vai para consumidor final, que não aproveita.'}</p>
+      <button class="btn prim" data-act="cad-add" data-g="${g}">+ adicionar ${sing}</button>
+    </div>`;
+  } else {
+    const linhas = lst.map((r, i) => {
       const p = `cadeia.${g}.${i}`, nome = r[1] || `${sing} ${i + 1}`;
-      const opcoes = ['', ...REGIMES].map(x => `<option value="${esc(x)}"${(r[2] || '') === x ? ' selected' : ''}>${x || 'Regime…'}</option>`).join('');
-      const seg = [['sim', 'Sim'], ['parcial', 'Parcial'], ['nao', 'Não']].map(([v, l]) =>
-        `<button class="${v}" data-act="cred" data-g="${g}" data-i="${i}" data-val="${v}" aria-pressed="${r[3] === v}" data-cls="on:cad.${g}.${i}.${v}"${ro}>${l}</button>`).join('');
+      const regimes = ['', ...REGIMES].map(x => `<option value="${esc(x)}"${(r[2] || '') === x ? ' selected' : ''}>${x || 'Regime…'}</option>`).join('');
+      const creditos = [['', 'A definir'], ['sim', 'Sim'], ['parcial', 'Parcial'], ['nao', 'Não']]
+        .map(([v, l]) => `<option value="${v}"${(r[3] || '') === v ? ' selected' : ''}>${l}</option>`).join('');
       return `<div class="cad-row">
-        <span class="cad-cnpj">${inp(`${p}.0`, 'cnpj', 'CNPJ — ' + nome, 'cnpj', 'placeholder="00.000.000/0000-00"')}<span class="cad-err" data-v="cad.${g}.${i}.inv">CNPJ inválido</span></span>
+        <span class="cad-cnpj" data-cls="inv:cad.${g}.${i}.inv"><span class="ponto" aria-hidden="true"></span>${inp(`${p}.0`, 'cnpj', 'CNPJ — ' + nome, 'cnpj', 'placeholder="CNPJ"')}</span>
         ${inp(`${p}.1`, 'txt', `Nome do ${sing} ${i + 1}`, 'txt', 'placeholder="Nome"')}
-        <select class="sel" data-b="${p}.2" data-f="txt" aria-label="Regime — ${esc(nome)}"${ro}>${opcoes}</select>
-        <span class="segc" role="group" aria-label="Gera crédito — ${esc(nome)}">${seg}</span>
+        <span class="sel-wrap regime"><select class="sel" data-b="${p}.2" data-f="txt" aria-label="Regime tributário — ${esc(nome)}"${ro}>${regimes}</select></span>
+        <span class="sel-wrap cred" data-cls="sim:cad.${g}.${i}.sim parcial:cad.${g}.${i}.parcial nao:cad.${g}.${i}.nao"><select class="sel" data-b="${p}.3" data-f="txt" aria-label="Gera crédito — ${esc(nome)}"${ro}>${creditos}</select></span>
         <button class="cad-x" data-act="cad-rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(nome)}" title="Remover">×</button>
       </div>`;
     }).join('');
-    lista = `<div class="cad-lista">
-      <p class="hint cad-dica">${dica}</p>
-      <div class="cad-row gh"><span>CNPJ</span><span>Nome</span><span>Regime</span><span>Gera crédito</span><span></span></div>
-      ${linhas || `<div class="vazio">Nenhum ${sing} cadastrado.</div>`}
-      <button class="add" data-act="cad-add" data-g="${g}">+ adicionar ${sing}</button>
-    </div>`;
+    corpo = `<div class="cad-grafico" data-h="cad.grafico"></div>
+      <div class="cad-alerta" data-v="cad.temAlerta" role="status"><strong data-o="cad.alerta"></strong><span>Confira antes de usar o crédito na apuração.</span></div>
+      <div class="cad-tabela">
+        <div class="cad-row gh"><span>CNPJ</span><span>Nome</span><span>Regime tributário</span><span>Gera crédito</span><span></span></div>
+        ${linhas}
+        <div class="cad-pe">
+          <button class="cad-mais" data-act="cad-add" data-g="${g}">+ adicionar ${sing}</button>
+          <span>${forn ? 'Gera crédito: a compra deste fornecedor dá direito a crédito de CBS para a empresa.'
+                       : 'Gera crédito: a venda para este cliente permite que ele aproveite o crédito da CBS.'}</span>
+        </div>
+      </div>`;
   }
   return `<div class="cadeia">
-    <h4>Cadeia de crédito</h4>
-    <p class="sub cad-sub">Quem vende e quem compra da empresa — o regime de cada um define se há crédito na reforma.</p>
-    <div class="cad-cards">${cartao('fornecedores', 'Fornecedores')}${cartao('clientes', 'Clientes')}</div>
-    ${lista}
+    <div class="cad-h">
+      <div class="cad-h-txt"><h3>Cadeia de crédito</h3><p data-o="cad.resumo"></p></div>
+      <div class="cad-alt" role="group" aria-label="Mostrar">${botao('fornecedores', 'Fornecedores')}${botao('clientes', 'Clientes')}</div>
+    </div>
+    ${corpo}
   </div>`;
 }
 function rAnual(){
@@ -1040,12 +1103,15 @@ function refresh(){
   const brand = hex(S.brand) ? S.brand : '#B3122B', fill = hex(S.fill) ? S.fill : '#14161A';
   root.setProperty('--fill', fill); root.setProperty('--brand', brand);
   root.setProperty('--brand-dark', mix(brand, '#000000', .3)); root.setProperty('--brand-wash', mix(brand, '#ffffff', .95));
-  const {O, W, C, V} = saidas();
+  const {O, W, C, V, H} = saidas();
+  app.querySelectorAll('[data-h]').forEach(el => { const v = H[el.dataset.h]; if(v !== undefined && el._h !== v){ el._h = v; el.innerHTML = v; } });
   app.querySelectorAll('[data-o]').forEach(el => { const v = O[el.dataset.o]; if(v !== undefined && el.textContent !== v) el.textContent = v; });
   app.querySelectorAll('[data-w]').forEach(el => { if(W[el.dataset.w] !== undefined) el.style.width = W[el.dataset.w]; });
   app.querySelectorAll('[data-oc]').forEach(el => { el.style.color = C[el.dataset.oc] || ''; });
   app.querySelectorAll('[data-v]').forEach(el => { el.hidden = !V[el.dataset.v]; });
-  app.querySelectorAll('[data-cls]').forEach(el => { const [cls, k] = el.dataset.cls.split(':'); el.classList.toggle(cls, !!V[k]); });
+  app.querySelectorAll('[data-cls]').forEach(el => el.dataset.cls.split(' ').forEach(par => {   // "classe:chave classe2:chave2"
+    const [cls, k] = par.split(':'); el.classList.toggle(cls, !!V[k]);
+  }));
   app.querySelectorAll('input[data-b], select[data-b]').forEach(el => {
     if(el === document.activeElement) return;                 // não mexe no campo que está sendo digitado
     const s = FMT[el.dataset.f](getPath(el.dataset.b));
@@ -1285,7 +1351,7 @@ async function abrirMes(empresaId, periodo, op){
   S.mesLabel = rotuloMes(periodo);
   Object.assign(banco, {empresaId, periodo, erro: '', salvoEm: null, instantaneo: novo ? null : instantaneo()});
   guarda.gravar('dre.ultimo', {empresaId, periodo});
-  ui.menu = false; ui.cadeia = null;
+  ui.menu = false;
   render();
   if(novo) await salvarBanco();
 }
@@ -1521,16 +1587,12 @@ app.addEventListener('click', e => {
       render(); focar(`[data-act="vinc"][data-g="${g}"][data-i="${i}"]`); break;
     }
     case 'logo-padrao': S.logo = null; refresh(); break;
-    case 'cadeia': ui.cadeia = ui.cadeia === b.dataset.id ? null : b.dataset.id; render(); focar(`[data-act="cadeia"][data-id="${b.dataset.id}"]`); break;
+    case 'cadeia': ui.cadeia = b.dataset.id; render(); focar(`[data-act="cadeia"][data-id="${b.dataset.id}"]`); break;
     case 'cad-add':
       S.cadeia[g].push(['', '', '', '']); render();
       { const n = app.querySelector(`input[data-b="cadeia.${g}.${S.cadeia[g].length - 1}.0"]`); if(n) n.focus(); }
       break;
     case 'cad-rm': S.cadeia[g].splice(i, 1); render(); break;
-    case 'cred': {                                   // clicar na opção marcada volta para "a definir"
-      const r = S.cadeia[g][i], v = b.dataset.val; r[3] = r[3] === v ? '' : v;
-      render(); focar(`[data-act="cred"][data-g="${g}"][data-i="${i}"][data-val="${v}"]`); break;
-    }
   }
 });
 document.addEventListener('click', e => {
@@ -1555,7 +1617,7 @@ window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e
 
 /* ---------- início ---------- */
 let S = defaults();
-const ui = {tab: 'resultado', detalhe: true, memoria: true, cadeia: null, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'resultado', detalhe: true, memoria: true, cadeia: 'fornecedores', editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
