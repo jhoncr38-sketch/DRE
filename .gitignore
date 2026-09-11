@@ -8,3 +8,6 @@ final.xlsx
 
 # planilhas originais do cliente: não vão para o repositório público
 dados-originais/
+
+# gerado pela Vercel no deploy (vercel.json): só o painel, como index.html
+public/

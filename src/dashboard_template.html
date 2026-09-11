@@ -15,6 +15,7 @@
     --brand:#B3122B; --brand-dark:#7d0c1e; --brand-wash:#FBF3F4;
     --canvas:#EFEEEA; --surface:#FFFFFF; --surface-2:#F8F7F4; --rail:#E3E2DD;
     --line:#E7E5E0; --line-2:#DAD8D2; --line-3:#C7C5BF; --on-fill:#C9CCD2;
+    --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
     --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
     --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
@@ -82,6 +83,8 @@
   .hero-row .val{font-family:var(--mono); font-size:16px; font-weight:600; white-space:nowrap; margin-left:auto}
   .hero-row.cbs{border-left:3px solid var(--brand)}
   .hero-row.cbs .val{color:var(--brand)}
+  .hero-row.cbs.credito{border-left-color:var(--ok)}
+  .hero-row.cbs.credito .val{color:var(--ok)}
   .pct-s{color:var(--muted-2); font-size:12px; font-weight:400}
 
   /* DRE */
@@ -146,6 +149,9 @@
   .prem-f label{display:flex; flex-direction:column; gap:2px}
   .prem-f label > span{font-size:11px; color:var(--muted)}
   .grp{font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2); padding-bottom:6px; border-bottom:1px solid var(--ink)}
+  .memo .card-h{margin-bottom:0}
+  .resumo-cbs{margin-top:18px; border-top:1px solid var(--ink)}
+  .resumo-cbs .sum{border-bottom:1px solid var(--line)}
   .cr{padding:8px 0; border-bottom:1px solid var(--line); font-size:13px}
   .nmwrap{display:flex; align-items:center; gap:4px; min-width:0}
   .nmcol{display:flex; flex-direction:column; gap:1px; min-width:0}
@@ -175,8 +181,10 @@
   .sum.credor{padding-top:0; font-size:13px}
   .sum.credor span{font-weight:400 !important; color:var(--ink-3)}
   .total{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; margin:8px -16px -6px; background:var(--brand); color:#fff}
-  .total span:first-child{font-size:15px; font-weight:600}
-  .total span:last-child{font-family:var(--mono); font-size:19px; font-weight:600; white-space:nowrap}
+  .total > span:first-child{font-size:15px; font-weight:600}
+  .total > span:last-child{font-family:var(--mono); font-size:19px; font-weight:600; white-space:nowrap}
+  .total.credito{background:var(--ok)}
+  .total .suf{margin-left:8px; font-size:12px; font-weight:400; color:rgba(255,255,255,.8)}
   .side{display:flex; flex-direction:column; gap:16px; min-width:0}
   .chart{background:var(--surface); padding:24px 26px}
   .chart .sub{margin:0 0 18px; font-size:12px}
@@ -188,6 +196,8 @@
   .track{height:10px; background:var(--canvas)}
   .fill{height:100%; width:0}
   .c-ink{background:var(--fill)} .c-ink3{background:var(--ink-3)} .c-mut{background:var(--muted-3)} .c-brand{background:var(--brand)}
+  .fill.credito{background:var(--ok)}
+  .kv.brand.credito{color:var(--ok)}
   .delta{display:flex; align-items:baseline; gap:8px; margin:0 0 18px; flex-wrap:wrap}
   .delta .dv{font-family:var(--mono); font-size:20px; font-weight:600}
   .delta .dl2{font-size:12px; color:var(--muted)}
@@ -197,6 +207,46 @@
   .prem2 .in{width:120px; flex:0 0 120px; font-size:14px; font-weight:600; border-bottom-color:var(--line-3)}
   .prem2 .in:focus{border-bottom-color:var(--brand)}
   .hint{margin:12px 0 0; font-size:11px; color:var(--muted-2); line-height:1.5}
+
+  /* Cadeia de crédito (resumo do cliente) */
+  .cadeia{margin-top:36px; padding-top:26px; border-top:1px solid var(--line)}
+  .cli .cadeia .cad-sub{margin:0 0 16px; font-size:12px; max-width:none}
+  .cad-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr)); gap:1px}
+  .cad-card{display:flex; flex-direction:column; gap:4px; text-align:left; padding:16px 18px; background:var(--surface); border:0; box-shadow:0 0 0 1px var(--line-2); cursor:pointer; color:var(--ink)}
+  .cad-card:hover{background:var(--surface-2)}
+  .cad-card[aria-expanded="true"]{box-shadow:0 0 0 1px var(--ink); position:relative; z-index:1}
+  .cad-top{display:flex; justify-content:space-between; align-items:center; gap:8px}
+  .cad-top .cap{font-size:10px; letter-spacing:.1em; color:var(--muted-2)}
+  .chev{font-size:11px; color:var(--muted-2)}
+  .cad-n{font-size:16px; font-weight:600}
+  .cad-c{font-size:12px; color:var(--muted)}
+  .cad-lista{margin-top:14px}
+  .cad-dica{margin:0 0 6px}
+  .cad-row{display:grid; grid-template-columns:170px minmax(0,1fr) 200px 150px 20px; gap:10px; align-items:center; padding:7px 0; border-top:1px solid var(--line); font-size:13px}
+  .cad-row.gh{border-top:0; padding:8px 0 4px; font-size:10px}
+  .cad-row.gh > span{text-align:left}
+  .cad-row .in{text-align:left; border-bottom-color:var(--line-3)}
+  .cad-row .in:focus{border-bottom-color:var(--brand)}
+  .cad-cnpj{display:flex; flex-direction:column; gap:1px; min-width:0}
+  .cad-err{font-size:11px; color:var(--ink-3)}
+  .cad-cnpj:focus-within .cad-err{display:none}
+  .sel{width:100%; min-width:0; font:inherit; font-size:13px; color:var(--ink); background:transparent; border:0; border-bottom:1px solid var(--line-3); border-radius:0; padding:2px 0; outline:none; cursor:pointer}
+  .sel:focus{border-bottom-color:var(--brand)}
+  .segc{display:inline-flex; box-shadow:0 0 0 1px var(--line-2); justify-self:start}
+  .segc button{border:0; background:transparent; font:500 11px/1 var(--sans); padding:6px 9px; color:var(--ink-3); cursor:pointer}
+  .segc button + button{box-shadow:-1px 0 0 var(--line-2)}
+  .segc button:hover{color:var(--ink)}
+  .segc button.on{color:#fff}
+  .segc button.on.sim{background:var(--ok)}
+  .segc button.on.parcial{background:var(--ink-3)}
+  .segc button.on.nao{background:var(--fill)}
+  .cad-x{border:0; background:transparent; color:var(--muted-2); cursor:pointer; font-size:15px; line-height:1; padding:0}
+  .cad-x:hover{color:var(--ink)}
+  .vazio{padding:12px 0; font-size:13px; color:var(--muted); border-top:1px solid var(--line)}
+  .present .sel, .present .segc button{pointer-events:none}
+  .present .sel{border-bottom-color:transparent; appearance:none}
+  .present .cad-x{display:none}
+  .present .cad-row .in::placeholder{color:transparent}
   .hint.deb-hint{margin:-8px 0 16px; font-size:12px; color:var(--ink-3)}
 
   /* Resumo do cliente e bloco anual */
@@ -236,6 +286,14 @@
     .g4{grid-template-columns:minmax(0,1.2fr) 64px minmax(0,1fr); gap:2px 8px}
     .g5 > :first-child, .g4 > :first-child{grid-column:1 / -1}
     .g5.gh > :first-child{display:none}
+    /* cadeia de crédito: nome em cima; CNPJ e regime; depois o crédito */
+    .cad-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 20px; grid-template-areas:"nome nome x" "cnpj regime regime" "cred cred cred"; row-gap:8px}
+    .cad-row > :nth-child(1){grid-area:cnpj}
+    .cad-row > :nth-child(2){grid-area:nome}
+    .cad-row > :nth-child(3){grid-area:regime}
+    .cad-row > :nth-child(4){grid-area:cred}
+    .cad-row > :nth-child(5){grid-area:x}
+    .cad-row.gh{display:none}
   }
   @media (max-width:560px){
     .page{padding:20px 16px 48px}
@@ -247,7 +305,7 @@
   @media print{
     body{background:#fff}
     .page{padding:0}
-    .nav, .panel, .toast, .row-ctl, .add{display:none !important}
+    .nav, .panel, .toast, .row-ctl, .add, .card-h .btn{display:none !important}
     .hero, .card, .memo, .chart, .cli{break-inside:avoid}
     .in{border-bottom-color:transparent !important}
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
@@ -270,6 +328,8 @@ function defaults(){ return {
   anoLabel: "Exercício anual",
   footer: "Alexandre Araújo — Consultoria & Contabilidade",
   logo: null,                                   // null = logo padrão do escritório
+  // cadeia de crédito: [CNPJ, nome, regime, gera crédito ('sim' | 'parcial' | 'nao' | '')] — começa vazia
+  cadeia: { fornecedores: [], clientes: [] },
   annual: {
     receita: 1187289.06,
     custos: [["Custo de medicamentos, produtos e outros",696475.30],["Produtos vencidos",3160.96]],
@@ -378,9 +438,24 @@ const FMT = {                                   // estado -> texto do campo
   base: v => dec(+v || 0, 2, 2),
   pct:  v => dec((+v || 0) * 100, 2, 2) + '%',
   pct0: v => dec((+v || 0) * 100, 0, 2) + '%',
-  txt:  v => v == null ? '' : String(v)
+  txt:  v => v == null ? '' : String(v),
+  cnpj: v => fmtCnpj(v)
 };
-const PARSE = { brl:num, base:num, pct: s => num(s) / 100, pct0: s => num(s) / 100, txt: s => s };
+const PARSE = { brl:num, base:num, pct: s => num(s) / 100, pct0: s => num(s) / 100, txt: s => s, cnpj: s => limpaCnpj(s) };
+// CNPJ numérico ou alfanumérico (RFB, a partir de jul/2026): 12 posições A-Z/0-9 + 2 dígitos verificadores
+const limpaCnpj = s => String(s || '').toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 14);
+const fmtCnpj = v => { const s = limpaCnpj(v); return s.length === 14 ? s.replace(/^(.{2})(.{3})(.{3})(.{4})(.{2})$/, '$1.$2.$3/$4-$5') : s; };
+function cnpjValido(v){
+  const s = limpaCnpj(v);
+  if(!/^[0-9A-Z]{12}[0-9]{2}$/.test(s) || /^(.)\1{13}$/.test(s)) return false;
+  const dv = base => {                            // pesos 2..9 da direita para a esquerda; valor = código ASCII − 48
+    let soma = 0, peso = 2;
+    for(let i = base.length - 1; i >= 0; i--){ soma += (base.charCodeAt(i) - 48) * peso; peso = peso === 9 ? 2 : peso + 1; }
+    const r = soma % 11; return r < 2 ? 0 : 11 - r;
+  };
+  const d1 = dv(s.slice(0, 12)), d2 = dv(s.slice(0, 12) + d1);
+  return s.slice(12) === `${d1}${d2}`;
+}
 function getPath(p){ return p.split('.').reduce((o, k) => o == null ? undefined : o[k], S); }
 function setPath(p, v){ const ks = p.split('.'); let o = S; for(let i = 0; i < ks.length - 1; i++) o = o[ks[i]]; o[ks[ks.length - 1]] = v; }
 function competencia(lbl){
@@ -475,6 +550,7 @@ function saidas(){
   const cm = calcMes(), ca = calcAno(), m = S.monthly, a = S.annual, rf = m.reforma;
   const O = {}, W = {}, C = {}, V = {};
   const P = (v, R) => pct(R ? v / R * 100 : 0);
+  const P2 = (v, R) => dec(R ? v / R * 100 : 0, 2, 2) + '%';          // faixa de indicadores: duas casas
   const larg = (v, max) => (max > 0 ? Math.max(2, Math.max(0, v) / max * 100) : 2) + '%';
   const parte = (v, R) => (R > 0 ? Math.max(0, Math.min(100, v / R * 100)) : 0) + '%';
   const itens = (arr, k, R) => arr.forEach((r, i) => { O[`${k}.${i}.v`] = brl(r[1] || 0); O[`${k}.${i}.p`] = P(r[1] || 0, R); });
@@ -497,7 +573,7 @@ function saidas(){
     'm.ga': brl(cm.ga), 'm.gaP': P(cm.ga, cm.R), 'm.vendas': brl(cm.vendas), 'm.vendasP': P(cm.vendas, cm.R),
     'm.trib': brl(cm.trib), 'm.tribP': P(cm.trib, cm.R),
     'm.resultado': brl(cm.resultado), 'm.margem': P(cm.resultado, cm.R),
-    'm.simples': brl(cm.simples), 'm.simplesP': P(cm.simples, cm.R), 'm.cbsPagar': brl(cm.cbsPagar)
+    'm.simples': brl(cm.simples), 'm.simplesP': P2(cm.simples, cm.R), 'm.cbsPagar': brl(cm.cbsPagar)
   });
   itens(m.custos, 'm.cu', cm.R); itens(m.vendas, 'm.ve', cm.R); itens(m.tributarias, 'm.tr', cm.R);
   m.ga.forEach((r, i) => { const c = credLinha(r);
@@ -534,9 +610,13 @@ function saidas(){
     : (rf.debitos.length && Math.abs(db.soma - cm.R) >= 0.01
         ? `A soma das categorias (${brl(db.soma)}) difere da receita declarada no PGDAS (${brl(cm.R)}) em ${brl(Math.abs(db.soma - cm.R))}.` : '');
   V['m.debHint'] = O['m.debHint'] !== '';
-  const maxCbs = Math.max(cm.debitoTotal, cm.creditoTotal, cm.cbsPagar, 1);
+  // crédito maior que o débito: a CBS vira "CBS Crédito" (verde) com o saldo que vai para o mês seguinte
+  const credor = V['m.temCredor'];
+  O['m.cbsRotulo'] = credor ? 'CBS Crédito' : 'CBS a pagar';
+  O['m.cbsRes'] = brl(credor ? cm.saldoCredor : cm.cbsPagar);
+  const maxCbs = Math.max(cm.debitoTotal, cm.creditoTotal, cm.cbsPagar, cm.saldoCredor, 1);
   const maxCarga = Math.max(cm.simples, cm.simplesSemCbs, cm.naTransicao, 1);
-  [['deb', cm.debitoTotal, maxCbs], ['cred', cm.creditoTotal, maxCbs], ['cbs', cm.cbsPagar, maxCbs],
+  [['deb', cm.debitoTotal, maxCbs], ['cred', cm.creditoTotal, maxCbs], ['cbs', credor ? cm.saldoCredor : cm.cbsPagar, maxCbs],
    ['hoje', cm.simples, maxCarga], ['sem', cm.simplesSemCbs, maxCarga], ['trans', cm.naTransicao, maxCarga]]
     .forEach(([k, v, mx]) => { O['b.' + k] = brl(v); W['b.' + k] = larg(v, mx); });
   const sobe = cm.delta >= 0;
@@ -547,7 +627,7 @@ function saidas(){
   // resumo do cliente
   O['c.nRec'] = 'declarada no PGDAS'; O['c.nRes'] = 'margem de ' + P(cm.resultado, cm.R);
   O['c.nSim'] = 'regime atual';
-  O['c.nCbs'] = cm.saldoCredor > 0.004 ? 'saldo credor de ' + brl(cm.saldoCredor) : 'simulação da reforma';
+  O['c.nCbs'] = credor ? 'vai para o mês seguinte' : 'simulação da reforma';
   [['custos', cm.custos], ['ga', cm.ga], ['vendas', cm.vendas], ['trib', cm.trib], ['res', cm.resultado]]
     .forEach(([k, v]) => { O['c.' + k] = P(v, cm.R); W['c.' + k] = parte(v, cm.R); });
   O['c.obs'] = textoObservar(cm);
@@ -560,8 +640,8 @@ function saidas(){
     'a.gat': brl(ca.ga), 'a.gatP': P(ca.ga, ca.R), 'a.vendas': brl(ca.vendas), 'a.vendasP': P(ca.vendas, ca.R),
     'a.trib': brl(ca.trib), 'a.tribP': P(ca.trib, ca.R),
     'a.resultado': brl(ca.resultado), 'a.margem': P(ca.resultado, ca.R),
-    'a.despesas': brl(ca.despesas), 'a.despesasP': P(ca.despesas, ca.R),
-    'a.simples': brl(ca.simples), 'a.simplesP': P(ca.simples, ca.R)
+    'a.despesas': brl(ca.despesas), 'a.despesasP': P2(ca.despesas, ca.R),
+    'a.simples': brl(ca.simples), 'a.simplesP': P2(ca.simples, ca.R)
   });
   itens(a.custos, 'a.cu', ca.R); itens(a.ga, 'a.ga', ca.R); itens(a.vendas, 'a.ve', ca.R); itens(a.tributarias, 'a.tr', ca.R);
   V['a.temDiff'] = Math.abs(ca.diff) >= 0.01;
@@ -572,6 +652,23 @@ function saidas(){
   const cem = v => 'R$ ' + dec(ca.R ? v / ca.R * 100 : 0, 2, 2);
   O['a.leitura1'] = `De cada R$ 100,00 que entram pela venda, ${cem(ca.custos)} vão para a mercadoria, ${cem(ca.ga + ca.vendas)} para as despesas de funcionamento e ${cem(ca.trib)} para impostos e taxas. Sobram ${cem(ca.calculado)} de lucro — margem de ${P(ca.calculado, ca.R)}.`;
   O['a.leitura2'] = `No exercício, a empresa vendeu ${brl(ca.R)} e comprou ${brl(a.compraMercadoria || 0)} em mercadoria.`;
+  // cadeia de crédito: contagens dos cartões e estado de cada linha
+  ['fornecedores', 'clientes'].forEach(g => {
+    const lst = (S.cadeia && S.cadeia[g]) || [], n = lst.length;
+    const conta = v => lst.filter(r => (r[3] || '') === v).length;
+    const sim = conta('sim'), parcial = conta('parcial'), nao = conta('nao'), aDefinir = n - sim - parcial - nao;
+    const partes = [];
+    if(sim) partes.push(`${sim} ${sim === 1 ? 'gera' : 'geram'} crédito`);
+    if(parcial) partes.push(`${parcial} parcial`);
+    if(nao) partes.push(`${nao} não ${nao === 1 ? 'gera' : 'geram'}`);
+    if(aDefinir) partes.push(`${aDefinir} a definir`);
+    O[`cad.${g}.n`] = n === 0 ? 'nenhum cadastrado' : `${n} ${n === 1 ? 'cadastrado' : 'cadastrados'}`;
+    O[`cad.${g}.c`] = n === 0 ? 'clique para cadastrar' : partes.join(' · ');
+    lst.forEach((r, i) => {
+      V[`cad.${g}.${i}.inv`] = !!limpaCnpj(r[0]) && !cnpjValido(r[0]);
+      ['sim', 'parcial', 'nao'].forEach(v => { V[`cad.${g}.${i}.${v}`] = r[3] === v; });
+    });
+  });
   return {O, W, C, V};
 }
 
@@ -579,7 +676,7 @@ function saidas(){
 const o = (k, cls) => `<span${cls ? ` class="${cls}"` : ''} data-o="${k}"></span>`;
 function inp(path, f, label, cls, extra){
   return `<input class="in ${cls || ''}" data-b="${path}" data-f="${f}" aria-label="${esc(label)}"` +
-    ` inputmode="${f === 'txt' ? 'text' : 'decimal'}" autocomplete="off" spellcheck="false"${ui.present ? ' readonly' : ''} ${extra || ''}>`;
+    ` inputmode="${f === 'txt' || f === 'cnpj' ? 'text' : 'decimal'}" autocomplete="off" spellcheck="false"${ui.present ? ' readonly' : ''} ${extra || ''}>`;
 }
 const editavel = () => ui.editando && !ui.present;
 const semTags = s => String(s).replace(/<[^>]+>/g, '');
@@ -633,12 +730,12 @@ function rPersonalizar(){
     </div></section>`;
 }
 function rHeroi(){
-  const linhaH = (lbl, kv, kp, cls, suf) => `<div class="hero-row ${cls || ''}"><span class="lbl">${lbl}${suf || ''}</span>` +
+  const linhaH = (lbl, kv, kp, cls, suf, attrs) => `<div class="hero-row ${cls || ''}" ${attrs || ''}><span class="lbl">${lbl}${suf || ''}</span>` +
     `<span class="val">${o(kv)}${kp ? ' ' + o(kp, 'pct-s') : ''}</span></div>`;
   const lado = ui.tab === 'anual'
     ? linhaH('Despesas operacionais', 'a.despesas', 'a.despesasP') + linhaH('Simples Nacional', 'a.simples', 'a.simplesP')
     : linhaH('Simples Nacional', 'm.simples', 'm.simplesP') +
-      linhaH('CBS a pagar', 'm.cbsPagar', '', 'cbs', ' <span class="suf">(reforma)</span>');
+      linhaH(o('m.cbsRotulo'), 'm.cbsRes', '', 'cbs', ' <span class="suf">(reforma)</span>', 'data-cls="credito:m.temCredor"');
   return `<section class="hero" aria-label="Indicadores">
     <div class="hero-main"><div class="cap" data-o="h.cap"></div><div class="hero-val" data-o="h.val"></div><div class="hero-ctx" data-o="h.ctx"></div></div>
     <div class="hero-side">${lado}</div></section>`;
@@ -710,14 +807,22 @@ function linhasCbs(g){
     <span class="cr-v" data-o="m.${k}.${i}.val"></span></div>`;
   }).join('');
 }
-function barra(k, lbl, cor){
+function barra(k, lbl, cor, attrs){
   return `<div class="bar"><div class="bar-h"><span>${lbl}</span><span data-o="b.${k}"></span></div>` +
-    `<div class="track" aria-hidden="true"><div class="fill ${cor}" data-w="b.${k}"></div></div></div>`;
+    `<div class="track" aria-hidden="true"><div class="fill ${cor}" data-w="b.${k}" ${attrs || ''}></div></div></div>`;
 }
 function rReforma(){
+  const aberta = ui.memoria;
+  // memória fechada: só os totais e a CBS a pagar; aberta: premissas e linha a linha
+  const resumo = `<div class="resumo-cbs">
+      <div class="sum"><span>Débito total</span><span data-o="m.debitoTotal"></span></div>
+      <div class="sum"><span>Crédito total</span><span data-o="m.creditoTotal"></span></div>
+    </div>`;
   const memo = `<div class="memo">
-    <h2>Memória de cálculo — CBS</h2><p class="sub">Base × alíquota. Ajuste os campos e tudo recalcula.</p>
-    <div class="prem">
+    <div class="card-h"><div><h2>Memória de cálculo — CBS</h2>
+      <p class="sub">${aberta ? 'Base × alíquota. Ajuste os campos e tudo recalcula.' : 'Mostrando só os totais. Abra a memória para ver e ajustar linha a linha.'}</p></div>
+      <button class="btn" data-act="memoria" aria-expanded="${aberta}">${aberta ? 'Ocultar memória' : 'Ver memória'}</button></div>
+    ${!aberta ? resumo : `<div class="prem">
       <div class="prem-t"><span class="cap">Premissas</span><span>Alterar aqui vale para <span data-o="m.linhas"></span> e para débitos e créditos.</span></div>
       <div class="prem-f">
         <label><span>Alíquota geral</span>${inp('monthly.reforma.aliqGeral', 'pct', 'Alíquota geral', 'main', 'data-premissa="geral"')}</label>
@@ -737,13 +842,12 @@ function rReforma(){
       <button class="add" data-act="add" data-g="creditos">+ adicionar crédito sobre compras</button>
       <div class="g4 cr"><span class="ink3">Saldo credor do mês anterior</span><span></span>${inp('monthly.reforma.saldoCredorAnterior', 'base', 'Saldo credor do mês anterior')}<span class="r m mut" data-o="m.saldoAnt"></span></div>
       <div class="sum"><span>Crédito total</span><span data-o="m.creditoTotal"></span></div>
-      <div class="sum credor" data-v="m.temCredor"><span>Saldo credor a transportar para o mês seguinte</span><span data-o="m.saldoCredor"></span></div>
-    </div></div>
-    <div class="total"><span>CBS a pagar</span><span data-o="m.cbsPagar"></span></div>
+    </div></div>`}
+    <div class="total" data-cls="credito:m.temCredor"><span><span data-o="m.cbsRotulo"></span><span class="suf" data-v="m.temCredor">vai para o mês seguinte</span></span><span data-o="m.cbsRes"></span></div>
   </div>`;
   const lado = `<div class="side">
     <div class="chart"><h3>Débito, crédito e saldo</h3><p class="sub">Composição do CBS do mês.</p>
-      ${barra('deb', 'Débito de CBS', 'c-ink')}${barra('cred', 'Crédito de CBS', 'c-mut')}${barra('cbs', 'CBS a pagar', 'c-brand')}</div>
+      ${barra('deb', 'Débito de CBS', 'c-ink')}${barra('cred', 'Crédito de CBS', 'c-mut')}${barra('cbs', o('m.cbsRotulo'), 'c-brand', 'data-cls="credito:m.temCredor"')}</div>
     <div class="chart"><h3>Carga tributária — atual × transição</h3>
       <p class="sub s6">Na transição, a parcela da CBS sai do Simples e passa a ser apurada em separado.</p>
       <div class="delta"><span class="dv" data-o="m.delta" data-oc="m.delta"></span><span class="dl2" data-o="m.deltaLbl"></span></div>
@@ -762,17 +866,57 @@ function barraComp(k, lbl, cor){
     `<div class="track" aria-hidden="true"><div class="fill ${cor}" data-w="${k}"></div></div></div>`;
 }
 function rCliente(){
-  const cartao = (cap, k, nota, cls) => `<div class="kc"><span class="cap">${cap}</span><span class="kv ${cls || ''}" data-o="${k}"></span><span class="note" data-o="${nota}"></span></div>`;
+  const cartao = (cap, k, nota, cls, attrs) => `<div class="kc"><span class="cap">${cap}</span><span class="kv ${cls || ''}" data-o="${k}" ${attrs || ''}></span><span class="note" data-o="${nota}"></span></div>`;
   return painel('cli', 'cliente', `<h2>O mês em quatro números</h2>
     <p class="sub">Versão sem detalhamento contábil, para conversa com o cliente.</p>
-    <div class="cards">${cartao('Receita', 'm.receita', 'c.nRec')}${cartao('Resultado líquido', 'm.resultado', 'c.nRes')}${cartao('Simples Nacional', 'm.simples', 'c.nSim')}${cartao('CBS a pagar', 'm.cbsPagar', 'c.nCbs', 'brand')}</div>
+    <div class="cards">${cartao('Receita', 'm.receita', 'c.nRec')}${cartao('Resultado líquido', 'm.resultado', 'c.nRes')}${cartao('Simples Nacional', 'm.simples', 'c.nSim')}${cartao(o('m.cbsRotulo'), 'm.cbsRes', 'c.nCbs', 'brand', 'data-cls="credito:m.temCredor"')}</div>
     <div class="two">
       <div><h4>Para onde foi a receita</h4>
         ${barraComp('c.custos', 'Custo de vendas', 'c-ink')}${barraComp('c.ga', 'Despesas gerais e administrativas', 'c-ink3')}
         ${S.monthly.vendas.length ? barraComp('c.vendas', 'Despesas com vendas', 'c-mut') : ''}
         ${barraComp('c.trib', 'Despesas tributárias', 'c-mut')}${barraComp('c.res', 'Resultado líquido', 'c-brand')}</div>
       <div class="obs"><h4>O que observar</h4><p data-o="c.obs"></p></div>
-    </div>`);
+    </div>
+    ${rCadeia()}`);
+}
+const REGIMES = ['Simples Nacional', 'Simples Nacional – IBS/CBS por fora', 'MEI', 'Lucro Presumido', 'Lucro Real', 'Pessoa física', 'Imune / isento', 'Outro'];
+function rCadeia(){
+  const aberta = ui.cadeia;                      // null | 'fornecedores' | 'clientes' — só uma lista aberta por vez
+  const cartao = (g, titulo) => `<button class="cad-card" data-act="cadeia" data-id="${g}" aria-expanded="${aberta === g}">
+      <span class="cad-top"><span class="cap">${titulo}</span><span class="chev" aria-hidden="true">${aberta === g ? '▾' : '▸'}</span></span>
+      <span class="cad-n" data-o="cad.${g}.n"></span><span class="cad-c" data-o="cad.${g}.c"></span></button>`;
+  let lista = '';
+  if(aberta){
+    const g = aberta, sing = g === 'fornecedores' ? 'fornecedor' : 'cliente', ro = ui.present ? ' disabled' : '';
+    const dica = g === 'fornecedores'
+      ? 'Gera crédito: a compra deste fornecedor dá direito a crédito para a empresa.'
+      : 'Gera crédito: a venda para este cliente dá direito a crédito para ele.';
+    const linhas = S.cadeia[g].map((r, i) => {
+      const p = `cadeia.${g}.${i}`, nome = r[1] || `${sing} ${i + 1}`;
+      const opcoes = ['', ...REGIMES].map(x => `<option value="${esc(x)}"${(r[2] || '') === x ? ' selected' : ''}>${x || 'Regime…'}</option>`).join('');
+      const seg = [['sim', 'Sim'], ['parcial', 'Parcial'], ['nao', 'Não']].map(([v, l]) =>
+        `<button class="${v}" data-act="cred" data-g="${g}" data-i="${i}" data-val="${v}" aria-pressed="${r[3] === v}" data-cls="on:cad.${g}.${i}.${v}"${ro}>${l}</button>`).join('');
+      return `<div class="cad-row">
+        <span class="cad-cnpj">${inp(`${p}.0`, 'cnpj', 'CNPJ — ' + nome, 'cnpj', 'placeholder="00.000.000/0000-00"')}<span class="cad-err" data-v="cad.${g}.${i}.inv">CNPJ inválido</span></span>
+        ${inp(`${p}.1`, 'txt', `Nome do ${sing} ${i + 1}`, 'txt', 'placeholder="Nome"')}
+        <select class="sel" data-b="${p}.2" data-f="txt" aria-label="Regime — ${esc(nome)}"${ro}>${opcoes}</select>
+        <span class="segc" role="group" aria-label="Gera crédito — ${esc(nome)}">${seg}</span>
+        <button class="cad-x" data-act="cad-rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(nome)}" title="Remover">×</button>
+      </div>`;
+    }).join('');
+    lista = `<div class="cad-lista">
+      <p class="hint cad-dica">${dica}</p>
+      <div class="cad-row gh"><span>CNPJ</span><span>Nome</span><span>Regime</span><span>Gera crédito</span><span></span></div>
+      ${linhas || `<div class="vazio">Nenhum ${sing} cadastrado.</div>`}
+      <button class="add" data-act="cad-add" data-g="${g}">+ adicionar ${sing}</button>
+    </div>`;
+  }
+  return `<div class="cadeia">
+    <h4>Cadeia de crédito</h4>
+    <p class="sub cad-sub">Quem vende e quem compra da empresa — o regime de cada um define se há crédito na reforma.</p>
+    <div class="cad-cards">${cartao('fornecedores', 'Fornecedores')}${cartao('clientes', 'Clientes')}</div>
+    ${lista}
+  </div>`;
 }
 function rAnual(){
   const a = S.annual;
@@ -814,7 +958,8 @@ function refresh(){
   app.querySelectorAll('[data-w]').forEach(el => { if(W[el.dataset.w] !== undefined) el.style.width = W[el.dataset.w]; });
   app.querySelectorAll('[data-oc]').forEach(el => { el.style.color = C[el.dataset.oc] || ''; });
   app.querySelectorAll('[data-v]').forEach(el => { el.hidden = !V[el.dataset.v]; });
-  app.querySelectorAll('input[data-b]').forEach(el => {
+  app.querySelectorAll('[data-cls]').forEach(el => { const [cls, k] = el.dataset.cls.split(':'); el.classList.toggle(cls, !!V[k]); });
+  app.querySelectorAll('input[data-b], select[data-b]').forEach(el => {
     if(el === document.activeElement) return;                 // não mexe no campo que está sendo digitado
     const s = FMT[el.dataset.f](getPath(el.dataset.b));
     if(el.value.toLowerCase() !== s.toLowerCase()) el.value = s;
@@ -841,6 +986,7 @@ function limparTudo(){
   zera(d.monthly.reforma.debitos); zera(d.monthly.reforma.creditos); zera(d.monthly.estoque || []);
   d.monthly.reforma.saldoCredorAnterior = 0; d.monthly.ibs = 0;
   d.co = '[Nome da empresa]';
+  d.cadeia = { fornecedores: [], clientes: [] };
   return d;
 }
 async function salvar(){
@@ -896,6 +1042,7 @@ app.addEventListener('change', e => {
     const rd = new FileReader(); rd.onload = () => { S.logo = rd.result; refresh(); }; rd.readAsDataURL(f);
     return;
   }
+  if(t.matches('select[data-b]')){ setPath(t.dataset.b, t.value); refresh(); return; }
   if(!t.matches('input[data-b]') || t.type === 'color') return;
   if(t.dataset.f === 'txt' && t.dataset.b.startsWith('monthly.reforma') && !t.value.trim()) setPath(t.dataset.b, '(sem nome)');
   t.value = FMT[t.dataset.f](getPath(t.dataset.b));
@@ -921,6 +1068,7 @@ app.addEventListener('click', e => {
     case 'tab': irPara(b.dataset.id); break;
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;
     case 'detalhe': ui.detalhe = !ui.detalhe; render(); focar('[data-act="detalhe"]'); break;
+    case 'memoria': ui.memoria = !ui.memoria; render(); focar('[data-act="memoria"]'); break;
     case 'editar': ui.editando = !ui.editando; ui.menu = false; render();
       toast(ui.editando ? 'Edição ligada — clique nos valores da DRE' : 'Edição desligada'); break;
     case 'personalizar': ui.personalizar = !ui.personalizar; ui.menu = false; render(); break;
@@ -964,6 +1112,16 @@ app.addEventListener('click', e => {
       render(); focar(`[data-act="vinc"][data-g="${g}"][data-i="${i}"]`); break;
     }
     case 'logo-padrao': S.logo = null; refresh(); break;
+    case 'cadeia': ui.cadeia = ui.cadeia === b.dataset.id ? null : b.dataset.id; render(); focar(`[data-act="cadeia"][data-id="${b.dataset.id}"]`); break;
+    case 'cad-add':
+      S.cadeia[g].push(['', '', '', '']); render();
+      { const n = app.querySelector(`input[data-b="cadeia.${g}.${S.cadeia[g].length - 1}.0"]`); if(n) n.focus(); }
+      break;
+    case 'cad-rm': S.cadeia[g].splice(i, 1); render(); break;
+    case 'cred': {                                   // clicar na opção marcada volta para "a definir"
+      const r = S.cadeia[g][i], v = b.dataset.val; r[3] = r[3] === v ? '' : v;
+      render(); focar(`[data-act="cred"][data-g="${g}"][data-i="${i}"][data-val="${v}"]`); break;
+    }
   }
 });
 document.addEventListener('click', e => {
@@ -975,7 +1133,7 @@ document.addEventListener('keydown', e => {
 
 /* ---------- início ---------- */
 let S = defaults();
-const ui = {tab: 'resultado', detalhe: true, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'resultado', detalhe: true, memoria: true, cadeia: null, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){ await carregar(); render(); })();
 </script>

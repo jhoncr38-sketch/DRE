@@ -154,6 +154,11 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   operacionais e Simples no ano (o lucro operacional bruto fica só na DRE)
 - **Abas:** Resultado · Reforma · CBS · Resumo do cliente (mês) · Anual; setas do teclado navegam
 - **Detalhamento** recolhível (despesas com % base/alíquota/crédito e tributárias)
+- **Memória de cálculo da CBS** recolhível ("Ocultar memória"): fechada, mostra só débito total,
+  crédito total e a faixa da CBS; aberta, as premissas e linha a linha
+- **CBS Crédito:** quando o crédito passa do débito, a CBS aparece em verde (`--ok #1D7A4E`) como
+  "CBS Crédito", com o saldo que vai para o mês seguinte — na faixa da memória, no indicador do topo,
+  no Resumo do cliente e no gráfico de débito e crédito. Nunca aparece CBS a pagar negativa
 - **Estoque e compras** (aba Resultado): compra de mercadoria do mês, inventário, estoque
   atualizado e pagamento a fornecedor; descrições editáveis em "Editar valores"
 - **Receita do PGDAS → débito:** por padrão o débito tem uma linha, "Receita PGDAS", que puxa a
@@ -171,7 +176,14 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   é o nome da primeira categoria de débito reduzida (ex.: Medicamentos)
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),
   Modo apresentação, Imprimir, Salvar, Baixar HTML, Restaurar padrão, Limpar tudo
-- **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas e identidade
+- **Cadeia de crédito** (fim do Resumo do cliente): cartões "Fornecedores" e "Clientes" com a contagem
+  e quantos geram crédito; clicar abre a lista (uma por vez, começa fechada). Cada linha tem CNPJ
+  (formatado, com dígito verificador conferido, aceita o CNPJ alfanumérico), nome, regime e
+  "gera crédito" Sim / Parcial / Não, sempre manual. Os dados ficam em `cadeia.fornecedores` e
+  `cadeia.clientes` (`[cnpj, nome, regime, 'sim'|'parcial'|'nao'|'']`), começam vazios e só são
+  guardados por Salvar ou Baixar HTML — nunca no código
+- **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas e identidade;
+  esvazia a cadeia de crédito
 - **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura
 - **Salvar:** `window.storage` (chave `dre_state`, `shared=true`)
 - **Baixar HTML:** grava o estado num `<script id="estado-salvo">` no `<head>`, inserido pelo DOM
