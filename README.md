@@ -213,6 +213,16 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   da memória da Reforma — editar em uma vale para a outra
 - **Simples Nacional do mês** — `rSimplesMes()`, cartão **acima da DRE**: anexo do Simples (`anexo`, da
   empresa) e receita dos 12 meses (`monthly.rbt12`, do mês), com a faixa e a alíquota efetiva ao lado
+- **Receita dos 12 meses zerada** (`baseRbt12()`): são **dois casos diferentes**, e só quem preenche
+  sabe qual é — por isso aparece um campo **Situação** ao lado, só quando o RBT12 está zerado
+  (`monthly.inicioAtividade`):
+  - **Sem movimento** (padrão): a empresa existe há mais de 12 meses e não faturou. O RBT12 é zero
+    mesmo, e zero é a **1ª faixa** do anexo — onde não há parcela a deduzir, então a efetiva é a
+    alíquota nominal. A tela mostra "*1ª faixa · efetiva 15,50% · sem receita nos 12 meses*"
+  - **Início de atividade**: a faixa sai da **receita do próprio mês × 12**, a proporcionalização da
+    LC 123/2006 (art. 18, §2º) e da Resolução CGSN 140/2018 (art. 21). A tela mostra "*2ª faixa ·
+    efetiva 16,48% · início de atividade: receita do mês × 12*"
+  - informar o RBT12 volta a mandar em qualquer caso, e o campo Situação some
 - **Apuração do mês** — `rApuracaoSimples()`, **fora da tela por enquanto** (decisão do usuário: entra
   depois, no fim da DRE, quando receitas e despesas já foram demonstradas). O cálculo continua valendo
   (`segregacao()`, `dasBase`) e alimenta o quadro Convencional × Híbrido. Quando voltar, traz: receita

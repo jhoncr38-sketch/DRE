@@ -237,6 +237,7 @@
   .seg-campo{display:flex; flex-direction:column; gap:2px; min-width:0}
   .seg-campo > span:first-child{font-size:11px; color:var(--muted)}
   .seg-campo .sel-wrap, .seg-campo .in{width:150px}
+  .seg-campo.larga .sel-wrap{width:172px}       /* "Início de atividade" não cabe em 150px */
   .seg-campo .sel, .seg-campo .in{font-size:14px; font-weight:600; text-align:left; border-bottom-color:var(--line-3)}
   .seg-campo .sel-wrap::after{opacity:1}
   .seg-faixa{font-family:var(--mono); font-size:12px; color:var(--ink-3); padding-bottom:4px}
@@ -519,6 +520,7 @@ function defaults(){ return {
   monthly: {
     receita: 106419.89,
     rbt12: 1179636.95,                          // receita bruta dos 12 meses anteriores (faixa do Simples)
+    inicioAtividade: '',                        // com rbt12 zerado: '' = sem movimento (1ª faixa), 'sim' = receita × 12
     custos: [["Custo de vendas de produtos / outros",58039.60]],
     // [item, valor, % da base com direito a crédito, alíquota CBS]
     ga: [["Retirada de sócio",0,0,0],["HapVida",804.29,0,0],["Folha",12346.56,0,0],
@@ -789,10 +791,11 @@ const LIMITE_SN = 4800000, TETO_ISS = 0.05;
 // alíquotas sobre a receita: total do DAS e as partes de ICMS, ISS, PIS/Cofins (CBS a partir de 2027) e a CBS da simulação
 function simplesFaixa(anexo, rbt12, ano){
   const A = ANEXOS[anexo];
-  if(!A || !(rbt12 > 0)) return null;
+  if(!A || !(rbt12 >= 0)) return null;
   if(rbt12 > LIMITE_SN) return {excluida: true};
   const n = A.faixas.findIndex(x => rbt12 <= x[0]), f = A.faixas[n];
-  const ef = x => (rbt12 * x[1] - x[2]) / rbt12;
+  // sem receita acumulada a empresa está na 1ª faixa, onde não há parcela a deduzir: vale a nominal
+  const ef = x => rbt12 > 0 ? (rbt12 * x[1] - x[2]) / rbt12 : x[1];
   const fed = ef(f), loc = n < 5 ? f : A.faixas[4], el = ef(loc);          // 6ª faixa: ICMS e ISS seguem calculados pela 5ª
   const icms = el * loc[3], iss = el * loc[4];
   const excesso = A.redist && iss > TETO_ISS ? iss - TETO_ISS : 0;           // ISS acima de 5% vai para os tributos federais
@@ -812,9 +815,22 @@ function aliqSituacao(f, sit){
   return f.total - (st ? f.icms : 0) - (mono ? f.pc : 0) - (sit === 'iss' ? f.iss : 0);
 }
 // DAS e CBS dentro do DAS de cada linha de receita (as mesmas linhas do débito da CBS)
+// Com a receita dos 12 meses zerada há dois casos, e só quem preenche sabe qual é:
+//   • início de atividade: RBT12 proporcionalizado — receita do mês × 12 (LC 123/2006 art. 18 §2º;
+//     Resolução CGSN 140/2018 art. 21)
+//   • empresa que passou os 12 meses sem movimento: o RBT12 é zero mesmo, e zero é a 1ª faixa
+function baseRbt12(){
+  const informado = +S.monthly.rbt12 || 0;
+  if(informado > 0) return {valor: informado, inicio: false, parado: false};
+  const R = somaDebitos();
+  if(S.monthly.inicioAtividade && R > 0) return {valor: R * 12, inicio: true, parado: false};
+  return {valor: 0, inicio: false, parado: true};
+}
 function segregacao(){
-  const f = simplesFaixa(S.anexo, +S.monthly.rbt12 || 0, anoCompetencia());
+  const base = baseRbt12();
+  const f = simplesFaixa(S.anexo, base.valor, anoCompetencia());
   if(!f || f.excluida) return f;
+  f.inicio = base.inicio; f.parado = base.parado;
   const linhas = S.monthly.reforma.debitos.map(r => {
     const sit = r[5] || '', b = +r[1] || 0, mono = sit === 'mono' || sit === 'stmono';
     return {das: b * aliqSituacao(f, sit), cbs: mono ? 0 : b * f.cbs};
@@ -1028,9 +1044,15 @@ function saidas(){
   // receita por tipo: faixa do Simples, DAS de cada tipo e conferência com o DAS declarado
   const sg = cm.seg, temTab = !!(sg && !sg.excluida);
   O['r.faixa'] = !ANEXOS[S.anexo] ? 'escolha o anexo para calcular o DAS de cada tipo'
-    : !(+m.rbt12 > 0) ? 'informe a receita dos 12 meses para calcular o DAS de cada tipo'
-    : sg.excluida ? 'acima de R$ 4,8 milhões: fora do Simples Nacional'
-    : `${sg.faixa}ª faixa · efetiva ${dec(sg.total * 100, 2, 2)}%${sg.sexta ? ' · ICMS e ISS pela 5ª faixa' : ''}`;
+    : sg && sg.excluida ? 'acima de R$ 4,8 milhões: fora do Simples Nacional'
+    : !temTab ? 'informe a receita dos 12 meses ou a do mês para calcular o DAS de cada tipo'
+    : `${sg.faixa}ª faixa · efetiva ${dec(sg.total * 100, 2, 2)}%` +
+      (sg.inicio ? ' · início de atividade: receita do mês × 12' : '') +
+      (sg.parado ? ' · sem receita nos 12 meses' : '') +
+      (sg.sexta ? ' · ICMS e ISS pela 5ª faixa' : '');
+  // o campo "Situação" só existe enquanto não há receita dos 12 meses: por data-v, some na hora em que
+  // o valor é digitado (render() só acontece depois, e até lá a tela dizia "sem movimento" com valor)
+  V['r.semRbt12'] = !(+m.rbt12 > 0);
   const difDas = temTab ? cm.simples - sg.das : 0;
   V['r.temTabela'] = temTab;
   // a conferência só aparece com DAS declarado: em mês em branco não há o que comparar
@@ -1068,6 +1090,11 @@ function saidas(){
       : cm.delta > 0 ? 'O convencional sai mais barato no mês' : 'O híbrido sai mais barato no mês',
     'k.dif': brl(Math.abs(cm.delta)),
     'k.equilibrio': textoEquilibrio(cm, true),
+    // zero no quadro não explica nada: diga o que falta para o DAS existir
+    'k.semDas': !ANEXOS[S.anexo]
+      ? 'Sem o anexo do Simples o painel não calcula o DAS. Escolha o anexo no cartão "Simples Nacional do mês", no topo — ou lance o DAS declarado na linha "Simples Nacional" das despesas tributárias.'
+      : cm.R <= 0.004 ? 'Sem receita declarada no mês não há DAS a comparar.'
+      : 'DAS zerado: confira a receita dos 12 meses e a situação no DAS de cada linha de receita.',
     // carga tributária do mês em cada regime: todas as despesas tributárias, trocando o DAS pelo par DAS sem CBS + CBS
     'k.cargaConv': `Tributos do mês: ${brl(cm.trib)} · ${P2(cm.trib, cm.R)} da receita`,
     'k.cargaHib': `Tributos do mês: ${brl(cm.trib + cm.delta)} · ${P2(cm.trib + cm.delta, cm.R)} da receita`,
@@ -1085,6 +1112,7 @@ function saidas(){
     .forEach(([k, v]) => { W[k] = (maxTot > 0 ? Math.max(0, v) / maxTot * 100 : 0) + '%'; });
   V['k.hibrido'] = cm.delta < -0.004;
   V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
+  V['k.semDas'] = cm.dasBase <= 0.004;
 
   // ano
   Object.assign(O, {
@@ -1296,6 +1324,7 @@ function rSimplesMes(){
     <div class="seg-prem">
       <label class="seg-campo"><span>Anexo do Simples</span><span class="sel-wrap"><select class="sel" data-b="anexo" data-f="txt" aria-label="Anexo do Simples Nacional"${ro}>${opcoesSel(anexos, S.anexo || '')}</select></span></label>
       <label class="seg-campo"><span>Receita dos últimos 12 meses</span>${inp('monthly.rbt12', 'brl', 'Receita dos últimos 12 meses')}</label>
+      <label class="seg-campo larga" data-v="r.semRbt12"><span>Situação</span><span class="sel-wrap"><select class="sel" data-b="monthly.inicioAtividade" data-f="txt" aria-label="Situação da empresa sem receita nos 12 meses"${ro}>${opcoesSel([['', 'Sem movimento'], ['sim', 'Início de atividade']], S.monthly.inicioAtividade || '')}</select></span></label>
       <span class="seg-faixa" data-o="r.faixa"></span>
       <span class="seg-nota" data-v="r.temRbt"><span data-o="r.rbtNota"></span><button class="lk" type="button" data-act="rbt12" data-o="r.rbtBt"></button></span>
     </div>
@@ -1324,6 +1353,7 @@ function rComparativo(){
     <div class="cmp-l">${regime('Simples convencional', 'CBS dentro do DAS', 'k.convDas', 'k.convCbs', 'k.cargaConv')}${cel('k.dasConv')}${cel('k.cbsConv', 'k.cbsConvInfo')}${cel('k.totConv', 'k.efetConv')}</div>
     <div class="cmp-l">${regime('Regime híbrido', 'DAS sem a CBS e CBS por fora', 'k.hibDas', 'k.hibCbs', 'k.cargaHib')}${cel('k.dasHib')}${cel('k.cbsHib', 'k.cbsHibInfo')}${cel('k.totHib', 'k.efetHib')}</div>
     <div class="dl res cmp-res" data-cls="hibrido:k.hibrido"><span class="l" data-o="k.decisao"></span><span class="v" data-o="k.dif"></span></div>
+    <div class="flag" data-v="k.semDas" data-o="k.semDas"></div>
     <p class="cmp-eq" data-v="k.temVariacao" data-o="k.variacao"></p>
     <p class="cmp-eq" data-v="k.temEquilibrio" data-o="k.equilibrio"></p>
   </section>`;
