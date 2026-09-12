@@ -213,6 +213,14 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   da memória da Reforma — editar em uma vale para a outra
 - **Simples Nacional do mês** — `rSimplesMes()`, cartão **acima da DRE**: anexo do Simples (`anexo`, da
   empresa) e receita dos 12 meses (`monthly.rbt12`, do mês), com a faixa e a alíquota efetiva ao lado
+- **Mais de uma atividade, mais de um anexo** (`anexoLinha()`, `anexoEmpresa()`): cada linha de receita
+  tem o seu anexo, escolhido embaixo do nome na tabela (`r[6]`). A **receita dos 12 meses é uma só**,
+  então a **faixa é a mesma** para todos — o que muda é a alíquota efetiva e a fatia da CBS, que saem
+  da tabela de cada anexo. O DAS é a soma linha a linha, e o rótulo lista uma efetiva por anexo com
+  receita no mês ("*5ª faixa · I 9,91% · V 19,88%*"); com um anexo só, volta a "*efetiva 9,91%*".
+  **Sem migração:** linha sem anexo próprio usa o da empresa, então mês salvo antes disso não muda de
+  número. O **Fator R** (Anexo V ↔ III pela folha) **não é calculado** — decisão do usuário: o
+  enquadramento é o que ele escolher na linha
 - **Receita dos 12 meses zerada** (`baseRbt12()`): são **dois casos diferentes**, e só quem preenche
   sabe qual é — por isso aparece um campo **Situação** ao lado, só quando o RBT12 está zerado
   (`monthly.inicioAtividade`):

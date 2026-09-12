@@ -231,6 +231,9 @@
 
   /* Receita por tipo (detalhamento da receita) e Simples Nacional do mês */
   .grec{display:grid; grid-template-columns:minmax(0,1fr) 124px 170px 156px 100px; gap:10px; align-items:center}
+  /* o anexo fica embaixo do nome da linha: atividade diferente, tabela diferente, sem coluna nova */
+  .grec .anx .sel{font-size:11px; color:var(--muted); padding:0}
+  .grec .anx::after{font-size:9px}
   .grec > :nth-child(3){padding-left:14px}                              /* seletor afastado do número à esquerda */
   .gr:hover .row-ctl, .gr:focus-within .row-ctl, .li:hover .row-ctl, .li:focus-within .row-ctl{opacity:1; pointer-events:auto}
   .seg-prem{display:flex; align-items:flex-end; flex-wrap:wrap; gap:10px 28px; padding:8px 0 12px}
@@ -826,16 +829,30 @@ function baseRbt12(){
   if(S.monthly.inicioAtividade && R > 0) return {valor: R * 12, inicio: true, parado: false};
   return {valor: 0, inicio: false, parado: true};
 }
+// Empresa com mais de uma atividade é tributada em mais de um anexo. A receita dos 12 meses é uma só —
+// logo a faixa é a mesma —, mas a alíquota efetiva e a fatia da CBS saem da tabela de cada anexo.
+// Linha sem anexo próprio usa o da empresa: mês salvo antes disso continua com os mesmos números.
+const anexoLinha = r => (r && ANEXOS[r[6]]) ? r[6] : anexoEmpresa();
+function anexoEmpresa(){
+  if(ANEXOS[S.anexo]) return S.anexo;
+  const r = (S.monthly.reforma.debitos || []).find(x => ANEXOS[x[6]]);   // sem anexo na empresa, vale o da 1ª linha
+  return r ? r[6] : '';
+}
 function segregacao(){
-  const base = baseRbt12();
-  const f = simplesFaixa(S.anexo, base.valor, anoCompetencia());
-  if(!f || f.excluida) return f;
-  f.inicio = base.inicio; f.parado = base.parado;
+  const base = baseRbt12(), ano = anoCompetencia(), cache = {};
+  const faixaDe = a => a in cache ? cache[a] : (cache[a] = simplesFaixa(a, base.valor, ano));
+  const ref = faixaDe(anexoEmpresa());
+  if(!ref || ref.excluida) return ref;
+  ref.inicio = base.inicio; ref.parado = base.parado;
+  const efetivas = {};
   const linhas = S.monthly.reforma.debitos.map(r => {
+    const a = anexoLinha(r), f = faixaDe(a) || ref;
     const sit = r[5] || '', b = +r[1] || 0, mono = sit === 'mono' || sit === 'stmono';
-    return {das: b * aliqSituacao(f, sit), cbs: mono ? 0 : b * f.cbs};
+    if(b > 0.004) efetivas[a] = f.total;                                 // só entra no rótulo o anexo com receita
+    return {das: b * aliqSituacao(f, sit), cbs: mono ? 0 : b * f.cbs, anexo: a, efetiva: f.total};
   });
-  return Object.assign(f, {linhas, das: linhas.reduce((a, x) => a + x.das, 0), cbs: linhas.reduce((a, x) => a + x.cbs, 0)});
+  return Object.assign(ref, {linhas, efetivas,
+    das: linhas.reduce((a, x) => a + x.das, 0), cbs: linhas.reduce((a, x) => a + x.cbs, 0)});
 }
 
 function calcAno(){
@@ -1046,7 +1063,11 @@ function saidas(){
   O['r.faixa'] = !ANEXOS[S.anexo] ? 'escolha o anexo para calcular o DAS de cada tipo'
     : sg && sg.excluida ? 'acima de R$ 4,8 milhões: fora do Simples Nacional'
     : !temTab ? 'informe a receita dos 12 meses ou a do mês para calcular o DAS de cada tipo'
-    : `${sg.faixa}ª faixa · efetiva ${dec(sg.total * 100, 2, 2)}%` +
+    : `${sg.faixa}ª faixa · ` + (() => {                 // uma efetiva por anexo com receita no mês
+        const us = Object.keys(sg.efetivas || {});
+        return us.length > 1 ? us.map(a => `${a} ${dec(sg.efetivas[a] * 100, 2, 2)}%`).join(' · ')
+                             : `efetiva ${dec((us.length ? sg.efetivas[us[0]] : sg.total) * 100, 2, 2)}%`;
+      })() +
       (sg.inicio ? ' · início de atividade: receita do mês × 12' : '') +
       (sg.parado ? ' · sem receita nos 12 meses' : '') +
       (sg.sexta ? ' · ICMS e ISS pela 5ª faixa' : '');
@@ -1294,13 +1315,15 @@ const opcoesSel = (lista, atual) => lista.map(([v, l]) => `<option value="${v}"$
 // receita por tipo: as linhas do débito da CBS, com a situação no DAS e o tipo da CBS por fora
 function detReceita(){
   const rf = S.monthly.reforma, ro = ui.present ? ' disabled' : '';
+  const anexos = [['', 'Escolha o anexo…']].concat(Object.keys(ANEXOS).map(k => [k, `${k} · ${ANEXOS[k].nome}`]));
   let h = `<div class="det seg"><div class="scroll-x">
     <div class="grec gh"><span>Tipo de receita</span><span>Receita</span><span class="esq">No DAS</span><span class="esq">CBS por fora</span><span>Débito CBS</span></div>`;
   rf.debitos.forEach((r, i) => {
     const tipo = TIPOS.some(([v]) => v === r[3]) ? r[3] : 'geral';
     h += `<div class="grec gr">
       <span class="nmcol"><span class="nmwrap"><span class="nm">${NOME_RECEITA}</span>
-        <span class="row-ctl"><button class="x" data-act="rm" data-g="debitos" data-i="${i}" aria-label="Remover receita ${i + 1}" title="Remover linha">×</button></span></span></span>
+        <span class="row-ctl"><button class="x" data-act="rm" data-g="debitos" data-i="${i}" aria-label="Remover receita ${i + 1}" title="Remover linha">×</button></span></span>
+        <span class="sel-wrap anx"><select class="sel" data-b="monthly.reforma.debitos.${i}.6" data-f="txt" aria-label="Anexo do Simples — receita ${i + 1}"${ro}>${opcoesSel(anexos, anexoLinha(r))}</select></span></span>
       ${inp(`monthly.reforma.debitos.${i}.1`, 'base', `Receita ${i + 1}`)}
       <span class="sel-wrap"><select class="sel" data-sit data-i="${i}" aria-label="No DAS — receita ${i + 1}"${ro}>${opcoesSel(SITUACOES, r[5] || '')}</select></span>
       <span class="cbscol"><span class="sel-wrap"><select class="sel" data-tipo data-g="debitos" data-i="${i}" aria-label="CBS por fora — receita ${i + 1}"${ro}>${opcoesSel(TIPOS, tipo)}</select></span><small class="m" data-o="m.deb.${i}.aliq"></small></span>
