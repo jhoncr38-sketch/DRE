@@ -292,8 +292,9 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     `produto`/`servico` cai em "Escolha…" em vez de aparecer como lixo
   - gráficos por **quantidade de itens** em cada faixa (decisão do usuário): uma barra por faixa e a
     pizza com a proporção, nas mesmas cores (mais escuro = mais imposto; alíquota zero em `brand`)
-  - dados em `produtos` (`[nome, tipo, natureza, NCM, NBS, cClassTrib]`), por mês — o mês novo herda do
-    modelo e "Limpar tudo" preserva
+  - dados em `produtos` (`[nome, tipo, natureza, NCM, NBS, cClassTrib]`), **por empresa** (tabela
+    `produtos`, como a cadeia): o que for cadastrado em agosto aparece em junho. Segue também dentro do
+    estado do mês, que é o que vale enquanto o banco não tiver a migração; "Limpar tudo" preserva
 - **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas, identidade
   **e o cadastro da empresa** — cadeia de crédito e produtos ficam, porque são estrutura e custam caro
   para refazer (CNPJ, NCM, NBS). Para começar do zero existe "+ Nova empresa", que nasce sem os dois
@@ -356,7 +357,8 @@ protege os dados é o **RLS** do banco: a chave pública sozinha não lê nada.
 1. **Criar o projeto:** supabase.com → New project (região São Paulo, se disponível).
 2. **Criar as tabelas:** SQL Editor → cole `supabase/migrations/20260911120000_estrutura_inicial.sql`
    inteiro → Run; depois o mesmo com `20260912120000_resumo_e_heranca.sql` (resumo do mês,
-   herança e a função `resumos`). Para conferir, rode `supabase/scripts/conferir_instalacao.sql`.
+   herança e a função `resumos`) e `20260912130000_produtos_por_empresa.sql` (catálogo por empresa,
+   com backfill do que já estava salvo). Para conferir, rode `supabase/scripts/conferir_instalacao.sql`.
    Enquanto a segunda migração não for aplicada o painel continua funcionando — só não herda
    nada no mês novo e a aba Anual não soma os meses.
 3. **Fechar o cadastro público:** Authentication → Sign In / Providers → desligue
@@ -384,6 +386,7 @@ Com a CLI, os passos 2 e 3 viram: `npx supabase init`, `npx supabase link --proj
 | `empresas` | clientes do escritório (nome, CNPJ único, ramo) |
 | `competencias` | um painel por empresa e mês: `periodo` (dia 1), `dados` (jsonb com o estado inteiro, sem a cadeia), `resumo` (números já calculados do mês), `atualizado_em/por` |
 | `parceiros` | cadeia de crédito da empresa: tipo, CNPJ, nome, regime, gera crédito, ordem |
+| `produtos` | catálogo da empresa: nome, tipo da alíquota, produto/serviço, NCM, NBS, cClassTrib, ordem |
 
 O `resumo` é gravado pelo próprio painel a cada salvamento (`resumoDe()`): receita, DAS, Simples, CBS,
 saldo credor, resultado, custos, despesas, compras, alíquota efetiva, RBT12, anexo e faixa. É ele que

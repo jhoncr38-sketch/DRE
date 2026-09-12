@@ -2064,6 +2064,10 @@ async function abrirMes(empresaId, periodo, op){
     S.co = (banco.empresas.find(e => e.id === empresaId) || {}).nome || S.co;
     banco.base = '-infinity';                      // no banco, "este mês ainda não pode existir"
   }
+  // catálogo é da empresa, não do mês (como a cadeia). Lista vazia no banco não apaga o que veio no
+  // estado: pode ser um mês salvo antes da migração, e ele grava o catálogo no próximo salvamento.
+  if(Array.isArray(r.produtos) && r.produtos.length)
+    S.produtos = r.produtos.map(p => [p[0] || '', p[1] || 'geral', p[2] || '', p[3] || '', p[4] || '', p[5] || '']);
   S.mesLabel = rotuloMes(periodo);
   Object.assign(banco, {empresaId, periodo, erro: '', salvoEm: null, instantaneo: novo ? null : instantaneo()});
   guarda.gravar('dre.ultimo', {empresaId, periodo});
@@ -2108,11 +2112,13 @@ async function salvarBanco(forcar){
     // recusa o parâmetro — nesse caso salva sem ele e não tenta de novo nesta sessão.
     const corpo = {p_empresa_id: banco.empresaId, p_periodo: banco.periodo, p_dados: dados,
                    p_parceiros: parceiros, p_base: forcar ? null : banco.base};
-    if(!banco.semResumo) corpo.p_resumo = resumoDe(S);
+    // o catálogo vai para a tabela da empresa e continua no estado do mês, que é o que vale
+    // enquanto o banco não tiver a migração
+    if(!banco.semResumo){ corpo.p_resumo = resumoDe(S); corpo.p_produtos = dados.produtos || []; }
     try { banco.base = await sb('rpc/salvar_painel', {metodo: 'POST', corpo}); }
     catch(err){
       if(banco.semResumo || !(err.status === 404 || err.status === 400)) throw err;
-      banco.semResumo = true; delete corpo.p_resumo;
+      banco.semResumo = true; delete corpo.p_resumo; delete corpo.p_produtos;
       banco.base = await sb('rpc/salvar_painel', {metodo: 'POST', corpo});
     }
     banco.instantaneo = enviado; banco.salvoEm = new Date(); banco.salvando = false;
