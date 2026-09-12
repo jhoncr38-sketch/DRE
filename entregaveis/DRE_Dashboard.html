@@ -321,7 +321,13 @@
   .cad-h-txt{max-width:52ch}
   .cad-h-txt h3{margin:0 0 4px}
   .cad-h-txt p{margin:0; font-size:13px; color:var(--muted); line-height:1.5}
-  .cli > .cadeia:first-child{margin-top:0; padding-top:0; border-top:0}   /* primeiro bloco da aba: sem risco solto no topo */
+  .cli-blocos > .cadeia:first-child{margin-top:0; padding-top:0; border-top:0}   /* primeiro bloco da aba: sem risco solto no topo */
+  .cad-ctl{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
+  /* com os dois cadastros recolhidos sobra só gráfico: os blocos cabem lado a lado */
+  @media (min-width:1140px){
+    .cli-blocos:not(:has(.cadeia:not(.so-grafico))){display:grid; grid-template-columns:1fr 1fr; gap:40px}
+    .cli-blocos:not(:has(.cadeia:not(.so-grafico))) > .cadeia{margin-top:0; padding-top:0; border-top:0}
+  }
   .cad-alt{display:flex; gap:6px; background:#F2F1ED; padding:4px; border-radius:2px}
   .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--muted); cursor:pointer}
   .cad-aba[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--line-2)}
@@ -1214,6 +1220,9 @@ function lista(base, arr, k){
     (editavel() ? inp(`${base}.${i}.1`, 'brl', r[0], 'val') : o(`${k}.${i}.v`)) + o(`${k}.${i}.p`, 'p') + `</span></div>`).join('') + `</div>`;
 }
 const btnDetalhe = () => `<button class="btn" data-act="detalhe" aria-expanded="${ui.detalhe}">${ui.detalhe ? 'Ocultar detalhamento' : 'Ver detalhamento'}</button>`;
+// tabela de cadastro de um bloco da aba do cliente: recolhida por padrão, e sempre recolhida em apresentação
+const cadastroAberto = id => !ui.present && !!ui.cadastro[id];
+const btnCadastro = id => `<button class="btn cad-ver" data-act="cadastro" data-id="${id}" aria-expanded="${cadastroAberto(id)}">${cadastroAberto(id) ? 'Ocultar cadastro' : 'Ver cadastro'}</button>`;
 const painel = (cls, tab, html) => `<section class="${cls}" id="painel" role="tabpanel" aria-labelledby="tab-${tab}">${html}</section>`;
 
 function detDespesas(){
@@ -1408,7 +1417,7 @@ function barraComp(k, lbl, cor){
 // Os quatro cartões e o "O que observar" saíram a pedido do usuário: os mesmos números já estão na
 // faixa de indicadores do topo e no quadro Convencional × Híbrido, no fim da aba Resultado.
 function rCliente(){
-  return painel('cli', 'cliente', `${rCadeia()}${rProdutos()}`);
+  return painel('cli', 'cliente', `<div class="cli-blocos">${rCadeia()}${rProdutos()}</div>`);
 }
 const REGIMES = ['Simples Nacional', 'Simples Nacional – IBS/CBS por fora', 'MEI', 'Lucro Presumido', 'Lucro Real', 'Pessoa física', 'Imune / isento', 'Outro'];
 function rCadeia(){
@@ -1439,9 +1448,10 @@ function rCadeia(){
         <button class="cad-x" data-act="cad-rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(nome)}" title="Remover">×</button>
       </div>`;
     }).join('');
+    // o aviso de CNPJ fica visível mesmo com o cadastro recolhido: é problema a resolver, não detalhe
     corpo = `<div class="cad-grafico" data-h="cad.grafico"></div>
       <div class="cad-alerta" data-v="cad.temAlerta" role="status"><strong data-o="cad.alerta"></strong><span>Confira antes de usar o crédito na apuração.</span></div>
-      <div class="cad-tabela">
+      ${!cadastroAberto('cadeia') ? '' : `<div class="cad-tabela">
         <div class="cad-row gh"><span>CNPJ</span><span>Nome</span><span>Regime tributário</span><span>Gera crédito</span><span></span></div>
         ${linhas}
         <div class="cad-pe">
@@ -1449,12 +1459,15 @@ function rCadeia(){
           <span>${forn ? 'Gera crédito: a compra deste fornecedor dá direito a crédito de CBS para a empresa.'
                        : 'Gera crédito: a venda para este cliente permite que ele aproveite o crédito da CBS.'}</span>
         </div>
-      </div>`;
+      </div>`}`;
   }
-  return `<div class="cadeia">
+  return `<div class="cadeia${lst.length && !cadastroAberto('cadeia') ? ' so-grafico' : ''}">
     <div class="cad-h">
       <div class="cad-h-txt"><h3>Cadeia de crédito</h3><p data-o="cad.resumo"></p></div>
-      <div class="cad-alt" role="group" aria-label="Mostrar">${botao('fornecedores', 'Fornecedores')}${botao('clientes', 'Clientes')}</div>
+      <div class="cad-ctl">
+        <div class="cad-alt" role="group" aria-label="Mostrar">${botao('fornecedores', 'Fornecedores')}${botao('clientes', 'Clientes')}</div>
+        ${lst.length && !ui.present ? btnCadastro('cadeia') : ''}
+      </div>
     </div>
     ${corpo}
   </div>`;
@@ -1492,14 +1505,17 @@ function rProdutos(){
       <button class="cad-x" data-act="pr-rm" data-i="${i}" aria-label="Remover item ${i + 1}" title="Remover item">×</button></div>`;
     }).join('');
     corpo = `<div class="cad-grafico" data-h="pr.grafico"></div>
-      <div class="scroll-x">
+      ${!cadastroAberto('produtos') ? '' : `<div class="scroll-x">
         <div class="gprod gh"><span>Nome</span><span>Tipo</span><span>NCM / NBS</span><span>cClassTrib</span><span>Redução da CBS</span><span>Alíquota reduzida</span><span></span></div>
         ${linhas}
       </div>
-      <button class="cad-mais" data-act="pr-add">+ adicionar produto</button>`;
+      <button class="cad-mais" data-act="pr-add">+ adicionar produto</button>`}`;
   }
-  return `<div class="cadeia">
-    <div class="cad-h"><div class="cad-h-txt"><h3>Produtos e serviços</h3><p data-o="pr.resumo"></p></div></div>
+  return `<div class="cadeia${lst.length && !cadastroAberto('produtos') ? ' so-grafico' : ''}">
+    <div class="cad-h">
+      <div class="cad-h-txt"><h3>Produtos e serviços</h3><p data-o="pr.resumo"></p></div>
+      ${lst.length && !ui.present ? `<div class="cad-ctl">${btnCadastro('produtos')}</div>` : ''}
+    </div>
     ${corpo}
   </div>`;
 }
@@ -2277,6 +2293,7 @@ app.addEventListener('click', e => {
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;
     case 'detalhe': ui.detalhe = !ui.detalhe; render(); focar('[data-act="detalhe"]'); break;
     case 'estoque': ui.estoque = !ui.estoque; render(); focar('[data-act="estoque"]'); break;
+    case 'cadastro': { const id = b.dataset.id; ui.cadastro[id] = !ui.cadastro[id]; render(); focar(`[data-act="cadastro"][data-id="${id}"]`); } break;
     case 'memoria': ui.memoria = !ui.memoria; render(); focar('[data-act="memoria"]'); break;
     case 'editar': ui.editando = !ui.editando; ui.menu = false; render();
       toast(ui.editando ? 'Edição ligada — clique nos valores da DRE' : 'Edição desligada'); break;
@@ -2290,6 +2307,7 @@ app.addEventListener('click', e => {
     case 'senha': ui.menu = false; render(); comErro(alterarSenha); break;
     case 'excluir-mes': ui.menu = false; render(); comErro(excluirMes); break;
     case 'pr-add':
+      ui.cadastro.produtos = true;                   // quem adiciona quer ver a tabela
       S.produtos.push(['', 'geral', 'produto', '', '', '']); render();
       { const n = app.querySelector(`input[data-b="produtos.${S.produtos.length - 1}.0"]`); if(n) n.focus(); }
       break;
@@ -2333,6 +2351,7 @@ app.addEventListener('click', e => {
     case 'logo-padrao': S.logo = null; refresh(); break;
     case 'cadeia': ui.cadeia = b.dataset.id; render(); focar(`[data-act="cadeia"][data-id="${b.dataset.id}"]`); break;
     case 'cad-add':
+      ui.cadastro.cadeia = true;                     // quem adiciona quer ver a tabela
       S.cadeia[g].push(['', '', '', '']); render();
       { const n = app.querySelector(`input[data-b="cadeia.${g}.${S.cadeia[g].length - 1}.0"]`); if(n) n.focus(); }
       break;
@@ -2361,7 +2380,8 @@ window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e
 
 /* ---------- início ---------- */
 let S = defaults();
-const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+// cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
+const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
