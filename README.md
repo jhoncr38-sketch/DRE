@@ -254,8 +254,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     não gera medidos sobre o total de cadastros; legenda só com as categorias que existem (`graficoCadeia()`)
   - faixa de alerta quando há CNPJ que não confere (dígito verificador, aceita o alfanumérico)
   - tabela: CNPJ com ponto (vermelho e número em vermelho se inválido), nome, regime em cinza, gera
-    crédito Sim / **Parcial** (mantido a pedido, fora do handoff) / **Não em vermelho e negrito** /
-    A definir; campos parecem texto até passar o mouse; × sempre visível; rodapé com
+    crédito Sim / **Parcial em vermelho e negrito** (mantido a pedido, fora do handoff) / Não /
+    A definir. O handoff destacava o "Não"; o usuário pediu o vermelho no **parcial**, e a tabela
+    seguiu o gráfico para a tela inteira dizer a mesma coisa;
+    campos parecem texto até passar o mouse; × sempre visível; rodapé com
     "+ adicionar" e a legenda da visão; estado vazio explicando por que cadastrar
   - dados em `cadeia.fornecedores` e `cadeia.clientes` (`[cnpj, nome, regime, 'sim'|'parcial'|'nao'|'']`),
     começam vazios e ficam no banco (tabela `parceiros`) ou no Baixar HTML — nunca no código
