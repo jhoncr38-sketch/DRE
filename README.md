@@ -266,8 +266,9 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   a empresa vende, com as **duas alíquotas calculadas** — nada de digitar percentual:
   - colunas: **Nome**, **Tipo** (Produto / Serviço), **NCM / NBS**, **cClassTrib**, **Redução da CBS**
     e **Alíquota reduzida**
-  - os códigos seguem o tipo: produto mostra o campo de **NCM**; serviço, os de **NBS** e **cClassTrib**;
-    onde não se aplica, um traço. Cada código tem a sua posição na linha (`3` NCM, `4` NBS, `5` cClassTrib),
+  - os códigos seguem o tipo: produto mostra o campo de **NCM**; serviço, o de **NBS**. O **cClassTrib**
+    vale para os dois (é exigido de todo item no layout da NF-e da reforma) e só espera o tipo ser
+    escolhido; enquanto não for, os dois campos ficam com um traço. Cada código tem a sua posição na linha (`3` NCM, `4` NBS, `5` cClassTrib),
     então trocar o tipo não apaga o que já foi digitado no outro. O seletor de tipo é `data-nat` e chama
     `render()` — muda a estrutura da linha, não só os números, e `refresh()` sozinho não redesenharia
   - **Redução da CBS** (cheia, −30%, −60%, −70%, zero) → dá a **alíquota reduzida**, por `aliqTipo()`,

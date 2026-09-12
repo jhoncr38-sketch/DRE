@@ -1477,7 +1477,8 @@ function rProdutos(){
       const traco = '<span class="m mut">—</span>';
       const codigo = nat === 'produto' ? inp(`produtos.${i}.3`, 'txt', `NCM — item ${i + 1}`, 'txt', 'placeholder="NCM"')
         : nat === 'servico' ? inp(`produtos.${i}.4`, 'txt', `NBS — item ${i + 1}`, 'txt', 'placeholder="NBS"') : traco;
-      const classtrib = nat === 'servico' ? inp(`produtos.${i}.5`, 'txt', `cClassTrib — item ${i + 1}`, 'txt', 'placeholder="cClassTrib"') : traco;
+      // cClassTrib vale para produto e serviço (layout da NF-e da reforma); só espera o tipo ser escolhido
+      const classtrib = nat ? inp(`produtos.${i}.5`, 'txt', `cClassTrib — item ${i + 1}`, 'txt', 'placeholder="cClassTrib"') : traco;
       return `<div class="gprod">
       ${inp(`produtos.${i}.0`, 'txt', `Nome do item ${i + 1}`, 'txt', 'placeholder="Nome"')}
       <span class="sel-wrap"><select class="sel" data-nat data-i="${i}" aria-label="Produto ou serviço — item ${i + 1}"${ro}>${opcoesSel(NATUREZAS, nat)}</select></span>
