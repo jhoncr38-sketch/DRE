@@ -334,7 +334,9 @@
   .cad-grafico{display:flex; align-items:flex-start; gap:24px 32px; flex-wrap:wrap; margin-bottom:22px}
   .cg-linhas{flex:1 1 280px; max-width:520px; min-width:0}
   .cg-pizza{display:flex; align-items:center; gap:16px; flex:0 1 auto}
-  .cg-disco{width:108px; height:108px; border-radius:50%; flex:none}
+  /* anel em vez de disco cheio: o mesmo dado com bem menos tinta na tela (handoff 5, opção B) */
+  .cg-disco{width:108px; height:108px; border-radius:50%; flex:none;
+    -webkit-mask:radial-gradient(circle, transparent 53%, #000 54%); mask:radial-gradient(circle, transparent 53%, #000 54%)}
   .cg-linha{display:flex; flex-direction:column; gap:4px; margin-bottom:10px}
   .cg-linha .bar-h > span:first-child{color:var(--ink-3)}
   .cg-linha .bar-h > span:last-child{font-family:var(--mono)}
@@ -749,8 +751,9 @@ function prontoParaCalculo(dados){
 
 /* ---------- reforma: tipos de alíquota e regras de crédito (LC 214/2025) ---------- */
 // tipo da linha de débito/crédito: a reduzida (−60%) tem premissa própria; cheia, −30%, −70% e zero seguem a alíquota geral
-const TIPOS = [['geral', 'Alíquota cheia'], ['red30', 'Redução de 30%'], ['reduzida', 'Redução de 60%'], ['red70', 'Redução de 70%'], ['zero', 'Alíquota zero']];
-const FATOR_TIPO = {red30: 0.7, red70: 0.3, zero: 0};
+const TIPOS = [['geral', 'Alíquota cheia'], ['red30', 'Redução de 30%'], ['red50', 'Redução de 50%'],
+  ['reduzida', 'Redução de 60%'], ['red70', 'Redução de 70%'], ['zero', 'Alíquota zero']];
+const FATOR_TIPO = {red30: 0.7, red50: 0.5, red70: 0.3, zero: 0};
 function aliqTipo(tipo){
   const rf = S.monthly.reforma;
   return tipo === 'reduzida' ? rf.aliqReduzida : (tipo in FATOR_TIPO ? FATOR_TIPO[tipo] : 1) * rf.aliqGeral;
@@ -764,7 +767,8 @@ function normalizarDebitos(rf){
   });
 }
 // regra de crédito da despesa = parte do valor que dá direito a crédito (profissões regulamentadas −30%, locação de imóveis −70%)
-const REGRAS = [[1, 'Integral'], [0.7, 'Redução de 30%'], [0.4, 'Redução de 60%'], [0.3, 'Redução de 70%'], [0, 'Sem crédito']];
+const REGRAS = [[1, 'Integral'], [0.7, 'Redução de 30%'], [0.5, 'Redução de 50%'], [0.4, 'Redução de 60%'],
+  [0.3, 'Redução de 70%'], [0, 'Sem crédito']];
 
 /* ---------- Simples Nacional: faixa e partilha (LC 123/2006; a partir de 2027 com CBS e IBS, LC 214/2025) ---------- */
 // faixa: [receita dos 12 meses até, alíquota nominal, parcela a deduzir, ICMS, ISS, PIS+Cofins (até 2026), CBS (2027 em diante)]
@@ -899,8 +903,10 @@ function graficoCadeia(lst, forn){
 
 /* ---------- produtos e serviços ---------- */
 const NATUREZAS = [['', 'Escolha…'], ['produto', 'Produto'], ['servico', 'Serviço']];
-// mais escuro = mais imposto; a alíquota zero fica com a cor de destaque
-const COR_TIPO = {geral: 'var(--fill)', red30: 'var(--ink-3)', reduzida: 'var(--muted-3)', red70: 'var(--line-3)', zero: 'var(--brand)'};
+// a alíquota cheia é o caso comum e fica no tom mais claro; quanto maior a redução, mais escuro —
+// assim a tinta marca a exceção, e não o padrão (um catálogo quase todo cheio não vira um borrão)
+const COR_TIPO = {geral: 'var(--line-2)', red30: 'var(--muted)', red50: 'var(--ink-3)',
+  reduzida: 'var(--ink-2)', red70: 'var(--fill)', zero: 'var(--brand)'};
 function resumoProdutos(lst){
   const n = lst.length;
   if(!n) return 'O que a empresa vende. Cada produto ou serviço tem a sua redução na CBS, e a alíquota reduzida sai das premissas do mês.';

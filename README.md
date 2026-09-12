@@ -167,8 +167,9 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **Despesas editáveis no detalhamento:** nome e valor de cada despesa são campos (sem precisar de
   "Editar valores"), com "+ adicionar despesa" e × para remover. A despesa nova entra com crédito
   integral pela alíquota geral
-- **Regra de crédito por despesa** (no lugar do "% base"): Integral, Redução de 30% (profissões
-  regulamentadas: contabilidade, advocacia), Redução de 60%, Redução de 70% (aluguel), Sem crédito e
+- **Regra de crédito por despesa e por compra** (no lugar do "% base"): Integral, Redução de 30%
+  (profissões regulamentadas: contabilidade, advocacia), **Redução de 50%**, Redução de 60%,
+  Redução de 70% (aluguel), Sem crédito e
   "Outra parte…" (janela para digitar o %). Por baixo continua a parte da base (`ga[i][2]`):
   "Sem crédito" zera a alíquota; passar a ter crédito entra pela alíquota geral
 - **Memória de cálculo da CBS** recolhível ("Ocultar memória"): fechada, mostra só débito total,
@@ -201,8 +202,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   as premissas. A migração v6 acerta meses salvos com alíquota antiga gravada na linha (ex.: 15,33%, que
   é a parcela da CBS no DAS, não a alíquota da CBS). As linhas de crédito seguem com alíquota própria
 - **Tipo de alíquota** de cada débito e crédito (etiqueta ao passar o mouse): Alíquota cheia,
-  Redução de 30% (geral × 0,7), Redução de 60% (segue a premissa "reduzida"), Redução de 70%
-  (geral × 0,3) e Alíquota zero. Guardado em `r[3]`: `geral`, `red30`, `reduzida`, `red70`, `zero`
+  Redução de 30% (geral × 0,7), **Redução de 50% (geral × 0,5)**, Redução de 60% (segue a premissa
+  "reduzida"), Redução de 70% (geral × 0,3) e Alíquota zero. Guardado em `r[3]`: `geral`, `red30`,
+  `red50`, `reduzida`, `red70`, `zero`. A de 60% é a única que não é fórmula: vem da premissa, porque
+  a lei às vezes dá um número que não é exatamente 40% da cheia (decisão do usuário)
 - **Receita por tipo** (detalhamento da receita, aba Resultado — seção 2 da planilha "Simples CBS
   Convencional vs Híbrido"): tipo, receita, **situação no DAS** (`r[5]`: Integral, ICMS-ST, Monofásico,
   ICMS-ST + monofásico, ISS retido), **tipo da CBS por fora** (com a alíquota da linha embaixo, para não
@@ -260,8 +263,9 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   topo e no quadro Convencional × Híbrido. Saíram com eles `textoObservar()` e `textoClientesCadeia()`
 - **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráficos **A e B**: as barras
   por regime e, ao lado, a pizza de 108px com a proporção do total. O handoff pedia escolher só um;
-  o usuário pediu os dois — as barras quebram por regime, a pizza dá a proporção. A legenda é única,
-  ao lado da pizza, com o percentual de cada categoria):
+  o usuário pediu os dois — as barras quebram por regime, o anel dá a proporção. A legenda é única,
+  ao lado do anel, com o percentual de cada categoria. O disco virou **anel** (`mask` radial) nos dois
+  blocos: mesmo dado com bem menos tinta na tela):
   - cabeçalho com a frase que responde "quantos geram crédito" e o alternador Fornecedores / Clientes
     com as contagens; concordância obrigatória (singular/plural; fornecedor *gera crédito*, cliente
     *aproveita o crédito*; "todos" e "nenhum") em `resumoCadeia()`
@@ -290,8 +294,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     saíram a pedido do usuário — são conversa da apuração do mês, não do cadastro do item
   - a 3ª posição da linha guardou "situação no DAS" na primeira versão do bloco; valor que não seja
     `produto`/`servico` cai em "Escolha…" em vez de aparecer como lixo
-  - gráficos por **quantidade de itens** em cada faixa (decisão do usuário): uma barra por faixa e a
-    pizza com a proporção, nas mesmas cores (mais escuro = mais imposto; alíquota zero em `brand`)
+  - gráficos por **quantidade de itens** em cada faixa (decisão do usuário): uma barra por faixa e um
+    **anel** com a proporção, nas mesmas cores. A escala marca a **exceção**, não o padrão: alíquota
+    cheia no tom mais claro (`line-2`) e, quanto maior a redução, mais escuro, com a alíquota zero em
+    `brand`. Antes era o contrário e um catálogo quase todo cheio virava um disco preto
   - dados em `produtos` (`[nome, tipo, natureza, NCM, NBS, cClassTrib]`), **por empresa** (tabela
     `produtos`, como a cadeia): o que for cadastrado em agosto aparece em junho. Segue também dentro do
     estado do mês, que é o que vale enquanto o banco não tiver a migração; "Limpar tudo" preserva
