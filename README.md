@@ -243,7 +243,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   Modo apresentação, Imprimir, Salvar, Baixar HTML, Restaurar padrão, Limpar tudo
 - **Resumo do cliente** (handoff seção 5): "Para onde foi a receita" foi retirado e "O que
   observar" ocupa a largura toda
-- **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráfico opção A):
+- **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráficos **A e B**: as barras
+  por regime e, ao lado, a pizza de 108px com a proporção do total. O handoff pedia escolher só um;
+  o usuário pediu os dois — as barras quebram por regime, a pizza dá a proporção. A legenda é única,
+  ao lado da pizza, com o percentual de cada categoria):
   - cabeçalho com a frase que responde "quantos geram crédito" e o alternador Fornecedores / Clientes
     com as contagens; concordância obrigatória (singular/plural; fornecedor *gera crédito*, cliente
     *aproveita o crédito*; "todos" e "nenhum") em `resumoCadeia()`
