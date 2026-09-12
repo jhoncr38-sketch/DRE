@@ -318,6 +318,7 @@
   .cad-h-txt{max-width:52ch}
   .cad-h-txt h3{margin:0 0 4px}
   .cad-h-txt p{margin:0; font-size:13px; color:var(--muted); line-height:1.5}
+  .cli > .cadeia:first-child{margin-top:0; padding-top:0; border-top:0}   /* primeiro bloco da aba: sem risco solto no topo */
   .cad-alt{display:flex; gap:6px; background:#F2F1ED; padding:4px; border-radius:2px}
   .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--muted); cursor:pointer}
   .cad-aba[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--line-2)}
@@ -910,20 +911,6 @@ function graficoProdutos(lst){
     </div>`;
 }
 
-function textoObservar(c){
-  const margem = pct(c.R ? c.resultado / c.R * 100 : 0);
-  let t = `A margem líquida do mês foi de ${margem}. `;
-  if(c.saldoCredor > 0.004)
-    t += `Na transição da reforma, o Simples cai para ${brl(c.simplesSemCbs)} e a CBS apurada em separado fica zerada: os créditos superam os débitos e sobram ${brl(c.saldoCredor)} para o mês seguinte`;
-  else
-    t += `Na transição da reforma, o Simples cai para ${brl(c.simplesSemCbs)} e a CBS passa a ser apurada em separado, em ${brl(c.cbsPagar)}`;
-  t += c.ibs > 0.004
-    ? `. Com o IBS informado (${brl(c.ibs)}), somados dão ${brl(c.naTransicao)}, contra ${brl(c.dasBase)} hoje. `
-    : ` — somados, ${brl(c.naTransicao)}, contra ${brl(c.dasBase)} hoje. `;
-  t += `Os créditos sobre compras e despesas somam ${brl(c.creditoTotal)}.`;
-  const eq = textoEquilibrio(c);
-  return eq ? `${t} ${eq}` : t;
-}
 // quanto de crédito separa hoje da CBS por fora — em compras quando há alíquota de compras (o valor em crédito já é o delta)
 // hib: na linguagem do quadro Convencional × Híbrido; sem ele, na do resumo do cliente
 function textoEquilibrio(c, hib){
@@ -938,19 +925,6 @@ function textoEquilibrio(c, hib){
     ? `Para ${quem} empatar com ${ref}, faltariam cerca de ${quanto} no mês.`
     : `${Quem} segue ${barato} que ${ref} mesmo com até ${quanto} a menos no mês.`;
 }
-// clientes da cadeia: quem aproveita crédito recebe o crédito cheio quando a CBS é apurada por fora
-function textoClientesCadeia(){
-  const lst = (S.cadeia && S.cadeia.clientes) || [], n = lst.length;
-  if(!n) return '';
-  const q = lst.filter(r => r[3] === 'sim' || r[3] === 'parcial').length;
-  const cheio = q === 1 ? 'ele passa a receber o crédito cheio' : 'eles passam a receber o crédito cheio';
-  if(n === 1) return q ? `O cliente cadastrado aproveita crédito da CBS: com a CBS apurada por fora, ${cheio}, e não só a parte paga no Simples.`
-                       : 'O cliente cadastrado não aproveita crédito da CBS: para ele, apurar a CBS por fora não muda nada.';
-  if(!q) return `Nenhum dos ${n} clientes cadastrados aproveita crédito da CBS: para eles, apurar a CBS por fora não muda nada.`;
-  return `${q === n ? `Todos os ${n}` : `${q} dos ${n}`} clientes cadastrados ${q === 1 ? 'aproveita' : 'aproveitam'} crédito da CBS: ` +
-    `com a CBS apurada por fora, ${cheio}, e não só a parte paga no Simples.`;
-}
-
 /* ---------- saídas: todo texto calculado da tela, por chave ---------- */
 function saidas(){
   const cm = calcMes(), ca = calcAno(), m = S.monthly, a = S.annual, rf = m.reforma;
@@ -1089,14 +1063,6 @@ function saidas(){
     .forEach(([k, v]) => { W[k] = (maxTot > 0 ? Math.max(0, v) / maxTot * 100 : 0) + '%'; });
   V['k.hibrido'] = cm.delta < -0.004;
   V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
-
-  // resumo do cliente
-  O['c.nRec'] = 'declarada no PGDAS'; O['c.nRes'] = 'margem de ' + P(cm.resultado, cm.R);
-  O['c.nSim'] = 'regime atual';
-  O['c.nCbs'] = credor ? 'vai para o mês seguinte' : 'simulação da reforma';
-  O['c.obs'] = textoObservar(cm);
-  O['c.obsCadeia'] = textoClientesCadeia();
-  V['c.temObsCadeia'] = O['c.obsCadeia'] !== '';
 
   // ano
   Object.assign(O, {
@@ -1434,13 +1400,10 @@ function barraComp(k, lbl, cor){
   return `<div class="cbar"><div class="bar-h"><span>${lbl}</span><span data-o="${k}"></span></div>` +
     `<div class="track" aria-hidden="true"><div class="fill ${cor}" data-w="${k}"></div></div></div>`;
 }
+// Os quatro cartões e o "O que observar" saíram a pedido do usuário: os mesmos números já estão na
+// faixa de indicadores do topo e no quadro Convencional × Híbrido, no fim da aba Resultado.
 function rCliente(){
-  const cartao = (cap, k, nota, cls, attrs) => `<div class="kc"><span class="cap">${cap}</span><span class="kv ${cls || ''}" data-o="${k}" ${attrs || ''}></span><span class="note" data-o="${nota}"></span></div>`;
-  return painel('cli', 'cliente', `<h2>O mês em quatro números</h2>
-    <p class="sub">Versão sem detalhamento contábil, para conversa com o cliente.</p>
-    <div class="cards">${cartao('Receita', 'm.receita', 'c.nRec')}${cartao('Resultado líquido', 'm.resultado', 'c.nRes')}${cartao('Simples Nacional', 'm.simples', 'c.nSim')}${cartao(o('m.cbsRotulo'), 'm.cbsRes', 'c.nCbs', 'brand', 'data-cls="credito:m.temCredor"')}</div>
-    <div class="obs obs-largo"><h4>O que observar</h4><p data-o="c.obs"></p><p data-o="c.obsCadeia" data-v="c.temObsCadeia"></p></div>
-    ${rCadeia()}${rProdutos()}`);
+  return painel('cli', 'cliente', `${rCadeia()}${rProdutos()}`);
 }
 const REGIMES = ['Simples Nacional', 'Simples Nacional – IBS/CBS por fora', 'MEI', 'Lucro Presumido', 'Lucro Real', 'Pessoa física', 'Imune / isento', 'Outro'];
 function rCadeia(){

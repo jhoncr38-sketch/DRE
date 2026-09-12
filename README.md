@@ -207,7 +207,7 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   empresa) e receita dos 12 meses (`monthly.rbt12`, do mês), com a faixa e a alíquota efetiva ao lado
 - **Apuração do mês** — `rApuracaoSimples()`, **fora da tela por enquanto** (decisão do usuário: entra
   depois, no fim da DRE, quando receitas e despesas já foram demonstradas). O cálculo continua valendo
-  (`segregacao()`, `dasBase`) e alimenta o "O que observar". Quando voltar, traz: receita
+  (`segregacao()`, `dasBase`) e alimenta o quadro Convencional × Híbrido. Quando voltar, traz: receita
   dos 12 meses (`monthly.rbt12`, do mês) dão a faixa e a alíquota efetiva; em seguida o DAS que sai da
   receita por tipo, o **DAS declarado** (campo ligado à linha do Simples nas despesas tributárias, sem
   precisar de "Editar valores") e a **conferência** entre os dois (tolerância de R$ 1,00; sem DAS
@@ -233,16 +233,17 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   percentuais
 - **De onde vem o crédito da CBS:** a barra "Crédito de CBS" é empilhada por origem — compras, despesas,
   outras linhas e saldo do mês anterior — com a legenda em reais e % embaixo
-- **Ponto de equilíbrio** ("O que observar", no Resumo do cliente): quanto faltaria em compras com crédito
-  para a apuração separada da CBS empatar com o Simples de hoje, ou quanto elas podem cair com ela ainda
-  mais barata. O IBS a pagar (`monthly.ibs`) e a parcela da CBS (`cbsSobreEfetiva`, padrão 15,33%)
-  continuam no estado e no cálculo, mas **sem campo na tela** (decisão do usuário)
-- **Cadeia nos textos:** "O que observar" diz quantos clientes aproveitam crédito (com a CBS por fora
-  eles recebem o crédito cheio); em "Compras do mês", avisa quantos fornecedores não geram crédito cheio
+- **Ponto de equilíbrio** (`textoEquilibrio()`, no quadro Convencional × Híbrido, fim da aba Resultado):
+  quanto faltaria em compras com crédito para o híbrido empatar com o convencional, ou quanto elas podem
+  cair com ele ainda mais barato. O IBS a pagar (`monthly.ibs`) e a parcela da CBS (`cbsSobreEfetiva`,
+  padrão 15,33%) continuam no estado e no cálculo, mas **sem campo na tela** (decisão do usuário)
+- **Cadeia nos textos:** em "Compras do mês", avisa quantos fornecedores não geram crédito cheio
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),
   Modo apresentação, Imprimir, Salvar, Baixar HTML, Restaurar padrão, Limpar tudo
-- **Resumo do cliente** (handoff seção 5): "Para onde foi a receita" foi retirado e "O que
-  observar" ocupa a largura toda
+- **Resumo do cliente** (handoff seção 5): a aba ficou só com a **cadeia de crédito** e os **produtos e
+  serviços**. "Para onde foi a receita", os quatro cartões ("O mês em quatro números") e o "O que
+  observar" foram retirados a pedido do usuário — os mesmos números já estão na faixa de indicadores do
+  topo e no quadro Convencional × Híbrido. Saíram com eles `textoObservar()` e `textoClientesCadeia()`
 - **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráficos **A e B**: as barras
   por regime e, ao lado, a pizza de 108px com a proporção do total. O handoff pedia escolher só um;
   o usuário pediu os dois — as barras quebram por regime, a pizza dá a proporção. A legenda é única,
@@ -420,7 +421,7 @@ expirada). Na primeira instalação real, rode `conferir_instalacao.sql` e faça
 5. **Crédito por item:** cada despesa tem % da base com direito e alíquota própria
    (aluguel 30%, contabilidade 70%, pessoal 0%, demais 100%).
 6. Comparação da carga = **Hoje (Simples declarado)** × **CBS por fora**
-   (Simples sem CBS + CBS + IBS), no "O que observar" do Resumo do cliente.
+   (Simples sem CBS + CBS + IBS), no quadro Convencional × Híbrido, fim da aba Resultado.
 
 ### Números de referência (dezembro) — usar como teste de regressão
 ```
