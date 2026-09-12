@@ -292,9 +292,11 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     `produto`/`servico` cai em "Escolha…" em vez de aparecer como lixo
   - gráficos por **quantidade de itens** em cada faixa (decisão do usuário): uma barra por faixa e a
     pizza com a proporção, nas mesmas cores (mais escuro = mais imposto; alíquota zero em `brand`)
-  - dados em `produtos` (`[nome, tipo, situação]`), por mês — o mês novo herda do modelo; "Limpar tudo" zera
-- **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas e identidade;
-  esvazia a cadeia de crédito
+  - dados em `produtos` (`[nome, tipo, natureza, NCM, NBS, cClassTrib]`), por mês — o mês novo herda do
+    modelo e "Limpar tudo" preserva
+- **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas, identidade
+  **e o cadastro da empresa** — cadeia de crédito e produtos ficam, porque são estrutura e custam caro
+  para refazer (CNPJ, NCM, NBS). Para começar do zero existe "+ Nova empresa", que nasce sem os dois
 - **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura
 - **Salvar no banco** (com Supabase configurado): barra abaixo do cabeçalho com Empresa, Competência,
   situação ("Salvo às 10:32" / "Alterações não salvas") e botão **Salvar** (ou Ctrl+S). Ver a seção

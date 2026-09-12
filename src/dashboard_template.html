@@ -1699,10 +1699,10 @@ function zerarValores(base, manter){
   return d;
 }
 function limparTudo(){
+  // o cadastro da empresa fica: cadeia de crédito e produtos são estrutura, como as categorias da DRE,
+  // e custam caro para refazer (CNPJ, NCM, NBS). Para começar do zero existe "+ Nova empresa".
   const d = zerarValores(S);
   if(!banco.empresaId) d.co = '[Nome da empresa]';            // com empresa aberta, o nome é o da empresa
-  d.cadeia = { fornecedores: [], clientes: [] };
-  d.produtos = [];
   return d;
 }
 async function salvar(){
