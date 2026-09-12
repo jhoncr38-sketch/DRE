@@ -176,20 +176,25 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **CBS Crédito:** quando o crédito passa do débito, a CBS aparece em verde (`--ok #1D7A4E`) como
   "CBS Crédito", com o saldo que vai para o mês seguinte — na faixa da memória, no indicador do topo,
   no Resumo do cliente e no gráfico de débito e crédito. Nunca aparece CBS a pagar negativa
-- **Estoque e compras** (aba Resultado): compra de mercadoria do mês, inventário, estoque
-  atualizado e pagamento a fornecedor; descrições editáveis em "Editar valores"
+- **Estoque e compras** (aba Resultado): o total das compras do mês em cima e, no detalhamento, a
+  **tabela de compras com as mesmas colunas das despesas gerais** (Item, Valor, Regra de crédito,
+  Alíquota, Crédito CBS), com adicionar e remover; abaixo, "Posição de estoque e pagamentos"
+  (inventário, estoque atualizado, pagamento a fornecedor), com descrição e valor editáveis
 - **Receita declarada = soma das linhas de receita** (`sincronizarReceita()`): cada linha tem o seu valor,
   então adicionar ou remover linha muda a receita do mês — o débito da CBS sempre fecha com o PGDAS.
   A linha "Receita declarada" da DRE é só o total (não é campo). Toda linha de receita se chama
   **"Receita PGDAS"** (`NOME_RECEITA`), sem campo de nome na tabela nem na memória: o que diferencia uma
   linha da outra é a situação no DAS. Só as linhas de crédito continuam com nome livre.
-- **Compras → crédito:** a linha "Compras do mês" gera crédito com alíquota própria, padrão 9%, editável
-  e fora das premissas. Linhas de crédito adicionadas saem das compras (legenda "restante das compras")
-  e já vêm com a alíquota das compras; cada uma pode ter base fixa ou ser parte (%) das compras,
-  pela etiqueta "compras"/"base fixa". Avisa quando as linhas passam o valor das compras
+- **Compras → crédito (itemizado):** cada linha de compra tem a sua regra e alíquota, e o crédito das
+  compras é a **soma das linhas** (`credLinha`, a mesma função das despesas). "Alíquota das compras"
+  é premissa (padrão 9%): vale para as linhas novas e propaga para as que já têm crédito.
+  O mecanismo antigo — uma compra só, com linhas de crédito atadas a "parte das compras" e a etiqueta
+  "compras"/"base fixa" — **saiu**: as duas coisas modelavam o mesmo crédito, e juntas contariam duas
+  vezes. As linhas de crédito da memória seguem existindo para crédito que não vem de compra, sempre
+  com base digitada
 - **Padrão x Excel:** com Receita PGDAS a 8% e compras a 9%, a CBS padrão do Aragão é R$ 2.272,19.
-  Para reproduzir o Excel (R$ 815,54): receita 2.734,37 integral + 103.685,52 reduzida; créditos
-  60.372,13 reduzida e 1.867,18 a 8%
+  Para reproduzir o Excel (R$ 815,54): receita 2.734,37 integral + 103.685,52 reduzida; e as compras
+  em duas linhas — 60.372,13 a 3,2% e 1.867,18 a 8%
 - **Premissas** "Alíquota geral" e "Alíquota reduzida" propagam para as linhas de receita, de crédito e
   de despesa com crédito
 - **Alíquota da receita sempre calculada pelo tipo:** na memória ela é texto, não campo — quem manda são
@@ -220,6 +225,9 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   linhas que não são monofásicas ÷ DAS calculado, aplicado ao DAS declarado). Sem eles, vale a
   "Parcela da CBS no Simples" informada (padrão 15,33%). Com a receita toda integral dá os mesmos 15,33%.
   Enquanto o DAS declarado estiver zerado, a base é o DAS calculado (`dasBase`, legenda "do DAS calculado")
+- **A linha do DAS é achada pelo nome** (`linhaSimples`, `/^simples nacional/i`). Sem ela — renomeada ou
+  removida —, o painel usa o **DAS calculado** pela tabela. Antes caía na primeira despesa tributária da
+  lista, o que faria o INSS virar "o DAS" sem avisar; com as listas editáveis isso ficou a um clique
 - **As duas CBS lado a lado** (fim do cartão, também fora da tela por enquanto): a de dentro é uma fatia do DAS (15,33% dele) e a de fora
   incide sobre a receita (8% dela) — bases diferentes, por isso aparecem com a legenda de cada uma, mais
   o DAS sem a CBS e a conclusão ("Com a CBS por fora, o mês custa R$ X a mais", com o total ao lado)
@@ -314,16 +322,18 @@ monthly.reforma = {
   aliqGeral, aliqReduzida, aliqCompras, cbsSobreEfetiva, saldoCredorAnterior,
   debitos:  [ [nome, base, alíquota, 'geral'|'reduzida', 'pgdas'?], ... ], // 'pgdas' = base é a receita
                                                                            // declarada menos as outras linhas
-  creditos: [ [nome, base, alíquota, 'geral'|'reduzida', parte], ... ]   // parte (opcional) = fração
-}                                                                          // das compras; base = compras × parte
-monthly.compraMercadoria = 62239.31
+  creditos: [ [nome, base, alíquota, 'geral'|'reduzida'], ... ]          // crédito que não vem de compra
+}
+monthly.compras = [ [item, valor, %base, alíquota], ... ]   // compras do mês, como monthly.ga
 monthly.estoque = [ [descrição, valor], ... ]   // inventário, estoque atualizado, pagamento a fornecedor
 ```
 Estados salvos no modelo antigo (v1: `creditosCompra`, `creditoGeralAliq`, sem tipo) são
 migrados em `migrar()` e mesclados em profundidade com os padrões. Estados anteriores à v3
 recebem `aliqCompras = 0`, para o crédito das compras não somar em cima dos créditos já lançados.
 Estados anteriores à v4 recebem `anexo = ''` e `rbt12 = 0`: não herdam os do cliente de exemplo e
-seguem com a parcela da CBS informada.
+seguem com a parcela da CBS informada. Na **v7**, `compraMercadoria` (um número) vira a lista
+`compras` com uma linha pela alíquota que estava em uso, e as linhas de crédito atadas a "parte das
+compras" viram base fixa — o crédito total não muda.
 
 "Simples sem a CBS" é **calculado** (Simples − CBS dentro do DAS, pela receita por tipo ou pela parcela
 informada), não constante como no handoff — com 15,33% dá os mesmos 4.140,30.

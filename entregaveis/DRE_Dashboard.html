@@ -122,6 +122,7 @@
   .gr{padding:5px 0; border-top:1px solid var(--line); font-size:13px}
   .nm{color:var(--ink-2); min-width:0}
   .cr-v{font-family:var(--mono); font-weight:500; text-align:right; white-space:nowrap}
+  .det-cap{padding:18px 0 4px; font:500 10px/1.4 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
   .det-foot{display:flex; justify-content:space-between; gap:12px; padding:9px 0 2px; border-top:1px solid var(--ink); margin-top:4px; font-size:12px; font-family:var(--mono)}
   .det-foot span:first-child{color:var(--muted)}
   .det-foot span:last-child{font-weight:600; white-space:nowrap}
@@ -162,6 +163,7 @@
   .parte{display:flex; align-items:baseline; gap:6px; font-size:11px; color:var(--muted-2)}
   .in.mini{width:44px; flex:0 0 44px; font-size:11px}
   .li .nm{flex:1 1 auto}
+  .li .nmcol{flex:1 1 auto}                     /* nome editável ocupa a linha toda, como nas despesas gerais */
   .ink3{color:var(--ink-3)}
   .mut{color:var(--muted-2)}
   .mut12{color:var(--muted-2); font-size:12px}
@@ -483,7 +485,7 @@ const LOGO_DEFAULT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAAEECAIA
 // Supabase {url, chave pública}: preenchido no build (scripts/vercel_build.mjs ou gerar_dashboard.py com .env).
 // null = modo local: o painel funciona, mas não salva no banco.
 const SUPABASE = /*SUPABASE_CONFIG*/null;
-const SCHEMA = 6;
+const SCHEMA = 7;
 
 /* ---------- dados iniciais (DRE do cliente) ---------- */
 function defaults(){ return {
@@ -527,7 +529,8 @@ function defaults(){ return {
          ["Manutenção, dedetização, equipamentos",5,1,0.08],["Outras despesas",181,0,0]],
     vendas: [],
     tributarias: [["Simples Nacional",4889.93],["INSS",986.67],["FGTS",987.19],["SEFAZ",678.16]],
-    compraMercadoria: 62239.31,
+    // compras do mês, itemizadas: [item, valor, % da base com direito a crédito, alíquota CBS] — como as despesas
+    compras: [["Compra de mercadoria do mês", 62239.31, 1, 0.09]],
     reforma: {
       aliqGeral: 0.08, aliqReduzida: 0.032,
       aliqCompras: 0.09,                        // crédito sobre as compras do mês; não segue as premissas
@@ -612,6 +615,17 @@ function migrar(s){
     // normalizarDebitos(), aplicado em todo carregamento — inclusive em mês já salvo nesta versão.
     s.v = 6;
   }
+  if(s.v < 7){
+    // as compras do mês deixam de ser um número só e viram linhas com regra e alíquota. As linhas de
+    // crédito atadas a "parte das compras" viram base fixa: as duas coisas modelavam o mesmo crédito.
+    const mm = s.monthly, rf = mm && mm.reforma, total = (mm && mm.compraMercadoria) || 0;
+    if(mm && !Array.isArray(mm.compras))
+      mm.compras = total > 0 ? [['Compra de mercadoria do mês', total, 1, (rf && rf.aliqCompras) || 0]] : [];
+    if(rf && Array.isArray(rf.creditos))
+      rf.creditos.forEach(r => { if(typeof r[4] === 'number'){ r[1] = total * r[4]; r[4] = null; } });
+    if(mm) delete mm.compraMercadoria;
+    s.v = 7;
+  }
   return s;
 }
 
@@ -665,10 +679,11 @@ function mix(a, b, t){ const pa = hex(a), pb = hex(b); if(!pa || !pb) return a;
 
 /* ---------- cálculo ---------- */
 const soma = arr => (arr || []).reduce((a, r) => a + (+r[1] || 0), 0);
-const linhaSimples = trib => (trib || []).find(r => /^simples nacional/i.test(r[0])) || (trib || [])[0];
+// sem uma linha "Simples Nacional", não há DAS declarado: o painel usa o calculado pela tabela, em vez
+// de tomar outra despesa tributária (INSS, FGTS…) por DAS — as listas agora podem ser editadas e removidas
+const linhaSimples = trib => (trib || []).find(r => /^simples nacional/i.test(r[0])) || null;
 const credLinha = r => (r[1] || 0) * (r[2] || 0) * (r[3] || 0);   // valor × % base × alíquota
-const parteCompras = r => typeof r[4] === 'number' ? r[4] : null;
-const baseLinha = r => parteCompras(r) !== null ? (S.monthly.compraMercadoria || 0) * r[4] : (r[1] || 0);
+const baseLinha = r => (r[1] || 0);
 const valorCbs = r => baseLinha(r) * (r[2] || 0);                  // base × alíquota (créditos)
 // a receita declarada do mês é a soma das linhas de receita (cada uma com a sua situação no DAS)
 const somaDebitos = () => S.monthly.reforma.debitos.reduce((a, r) => a + (+r[1] || 0), 0);
@@ -682,10 +697,9 @@ function calcMes(){
   const baseDespesas = m.ga.reduce((a, r) => a + ((r[3] || 0) > 0 ? (r[1] || 0) * (r[2] || 0) : 0), 0);
   const debitoTotal = rf.debitos.reduce((a, r) => a + (+r[1] || 0) * (r[2] || 0), 0);
   const saldoAnterior = rf.saldoCredorAnterior || 0;
-  const compras = m.compraMercadoria || 0;
-  const outrasCompras = rf.creditos.reduce((a, r) => a + baseLinha(r), 0);   // linhas de crédito saem das compras
-  const baseCompras = Math.max(0, compras - outrasCompras);
-  const creditoCompras = baseCompras * (rf.aliqCompras || 0);
+  // compras itemizadas: cada linha tem a sua regra e alíquota, igual às despesas gerais
+  const compras = m.compras.reduce((a, r) => a + (+r[1] || 0), 0);
+  const creditoCompras = m.compras.reduce((a, r) => a + credLinha(r), 0);
   const creditoTotal = rf.creditos.reduce((a, r) => a + valorCbs(r), 0) + creditoGeral + creditoCompras + saldoAnterior;
   const cbsPagar = Math.max(0, debitoTotal - creditoTotal);          // nunca negativo
   const saldoCredor = Math.max(0, creditoTotal - debitoTotal);       // excedente vai para o mês seguinte
@@ -709,8 +723,7 @@ function calcMes(){
   const faltaCredito = limite > 0.004 ? (debitoTotal - limite) - creditoTotal : null;
   return {R, custos, ga, vendas, trib, lucroBruto, resultado, creditoGeral, baseDespesas, debitoTotal,
     saldoAnterior, creditoTotal, cbsPagar, saldoCredor, simples, efetiva, seg, pelaTabela, parcela, parcelaCbs, simplesSemCbs, ibs,
-    dasCalculado, dasBase, semDeclarado, naTransicao, delta: naTransicao - dasBase, faltaCredito, compras, baseCompras, creditoCompras,
-    excessoCompras: Math.max(0, outrasCompras - compras)};
+    dasCalculado, dasBase, semDeclarado, naTransicao, delta: naTransicao - dasBase, faltaCredito, compras, creditoCompras};
 }
 
 // Resumo do mês, gravado junto com o estado: é daqui que o mês seguinte herda o saldo credor e
@@ -822,7 +835,9 @@ function calcAno(){
 let alvoGeral = null;          // linhas de despesa afetadas, fixadas ao entrar no campo
 function linhasComCredito(){ return alvoGeral || S.monthly.ga.map(r => (r[3] || 0) > 0); }
 function propagar(tipo){
-  const rf = S.monthly.reforma, v = tipo === 'reduzida' ? rf.aliqReduzida : rf.aliqGeral;
+  const rf = S.monthly.reforma, v = tipo === 'reduzida' ? rf.aliqReduzida : tipo === 'compras' ? rf.aliqCompras : rf.aliqGeral;
+  // a alíquota das compras só vale para as linhas de compra que têm crédito
+  if(tipo === 'compras'){ S.monthly.compras.forEach(r => { if((r[2] || 0) > 0) r[3] = v; }); return; }
   if(tipo === 'geral'){ const alvo = linhasComCredito(); S.monthly.ga.forEach((r, i) => { if(alvo[i]) r[3] = v; }); }
   rf.debitos.concat(rf.creditos).forEach(r => { if((r[3] === 'reduzida') === (tipo === 'reduzida')) r[2] = aliqTipo(r[3]); });
 }
@@ -975,11 +990,9 @@ function saidas(){
   });
   V['m.temFornCap'] = fq > 0;
   V['m.temCredor'] = cm.saldoCredor > 0.004;
-  rf.creditos.forEach((r, i) => { O[`m.cred.${i}.base`] = FMT.base(baseLinha(r)); });
   O['m.compraCred'] = brl(cm.creditoCompras);
-  V['m.compraCap'] = rf.creditos.length > 0;
-  O['m.compraCap'] = cm.excessoCompras > 0.004 ? `as outras linhas passam as compras em ${brl(cm.excessoCompras)}`
-                                               : `restante das compras: ${brl(cm.baseCompras)}`;
+  m.compras.forEach((r, i) => { const c = credLinha(r);
+    O[`m.co.${i}.cr`] = brl(c); C[`m.co.${i}.cr`] = c > 0.004 ? 'var(--ink)' : 'var(--disabled)'; });
   O['m.compra'] = brl(cm.compras); O['m.compraP'] = P(cm.compras, cm.R);
   // herança do mês novo: de onde veio o saldo credor e quantos meses entraram no RBT12
   const hz = banco.heranca || {};
@@ -1210,9 +1223,16 @@ function linha(cls, label, kv, kp, path, sempre){       // sempre: campo aberto 
   const val = path && (sempre || editavel()) ? inp(path, 'brl', semTags(label), 'val') : o(kv);
   return `<div class="dl ${cls}"><span class="l">${label}</span><span class="v">${val}${kp ? o(kp, 'p') : ''}</span></div>`;
 }
+// detalhamento de um grupo da DRE: nome e valor sempre editáveis, com remover e adicionar,
+// do mesmo jeito que as despesas gerais do mês (detDespesas)
+const ITEM = {custos: 'custo', ga: 'despesa', vendas: 'despesa de vendas', tributarias: 'despesa tributária'};
 function lista(base, arr, k){
-  return `<div class="det">` + arr.map((r, i) => `<div class="li"><span class="nm">${esc(r[0])}</span><span class="v">` +
-    (editavel() ? inp(`${base}.${i}.1`, 'brl', r[0], 'val') : o(`${k}.${i}.v`)) + o(`${k}.${i}.p`, 'p') + `</span></div>`).join('') + `</div>`;
+  const rotulo = ITEM[base.split('.').pop()] || 'item';
+  return `<div class="det">` + arr.map((r, i) => `<div class="li">
+    <span class="nmcol"><span class="nmwrap">${inp(`${base}.${i}.0`, 'txt', `Nome — ${rotulo} ${i + 1}`, 'txt')}
+      <span class="row-ctl"><button class="x" data-act="li-rm" data-lista="${base}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover">×</button></span></span></span>
+    <span class="v">${inp(`${base}.${i}.1`, 'brl', r[0] || rotulo, 'val')}${o(`${k}.${i}.p`, 'p')}</span></div>`).join('') +
+    `<button class="add" data-act="li-add" data-lista="${base}">+ adicionar ${rotulo}</button></div>`;
 }
 const btnDetalhe = () => `<button class="btn" data-act="detalhe" aria-expanded="${ui.detalhe}">${ui.detalhe ? 'Ocultar detalhamento' : 'Ver detalhamento'}</button>`;
 // tabela de cadastro de um bloco da aba do cliente: recolhida por padrão, e sempre recolhida em apresentação
@@ -1231,7 +1251,7 @@ function detDespesas(){
       <span class="nmcol"><span class="nmwrap">${inp(`monthly.ga.${i}.0`, 'txt', `Despesa ${i + 1}`, 'txt')}
         <span class="row-ctl"><button class="x" data-act="rm-ga" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover despesa">×</button></span></span></span>
       <span class="r m">${inp(`monthly.ga.${i}.1`, 'brl', r[0] + ' — valor', 'val')}</span>
-      <span class="sel-wrap regra${parte > 0 ? '' : ' sem'}"><select class="sel" data-regra data-i="${i}" aria-label="Regra de crédito — ${esc(r[0])}"${ui.present ? ' disabled' : ''}>${opcoes}</select></span>
+      <span class="sel-wrap regra${parte > 0 ? '' : ' sem'}"><select class="sel" data-regra="ga" data-i="${i}" aria-label="Regra de crédito — ${esc(r[0])}"${ui.present ? ' disabled' : ''}>${opcoes}</select></span>
       ${inp(`monthly.ga.${i}.3`, 'pct', r[0] + ' — alíquota')}
       <span class="cr-v" data-o="m.ga.${i}.cr" data-oc="m.ga.${i}.cr"></span></div>`;
   });
@@ -1321,13 +1341,32 @@ function rResultado(){
   h += linha('res', '( = ) Resultado líquido', 'm.resultado', 'm.margem');
   return rSimplesMes() + painel('card', 'resultado', h) + rEstoque() + rReforma() + rComparativo();
 }
+// Compras do mês: mesma tabela das despesas gerais — regra de crédito, alíquota e crédito de CBS por linha
+function tabelaCompras(){
+  let h = `<div class="det"><div class="scroll-x"><div class="g5 gh"><span>Item</span><span>Valor</span><span class="esq">Regra de crédito</span><span>Alíquota</span><span>Crédito CBS</span></div>`;
+  S.monthly.compras.forEach((r, i) => {
+    const parte = +r[2] || 0, igual = v => Math.abs(v - parte) < 1e-9, padrao = REGRAS.some(([v]) => igual(v));
+    const opcoes = REGRAS.map(([v, l]) => `<option value="${v}"${igual(v) ? ' selected' : ''}>${l}</option>`).join('') +
+      (padrao ? '' : `<option value="${parte}" selected>Outra: ${FMT.pct0(parte)} com crédito</option>`) + `<option value="outra">Outra parte…</option>`;
+    h += `<div class="g5 gr">
+      <span class="nmcol"><span class="nmwrap">${inp(`monthly.compras.${i}.0`, 'txt', `Compra ${i + 1}`, 'txt')}
+        <span class="row-ctl"><button class="x" data-act="rm-co" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover compra">×</button></span></span></span>
+      <span class="r m">${inp(`monthly.compras.${i}.1`, 'brl', r[0] + ' — valor', 'val')}</span>
+      <span class="sel-wrap regra${parte > 0 ? '' : ' sem'}"><select class="sel" data-regra="compras" data-i="${i}" aria-label="Regra de crédito — ${esc(r[0])}"${ui.present ? ' disabled' : ''}>${opcoes}</select></span>
+      ${inp(`monthly.compras.${i}.3`, 'pct', r[0] + ' — alíquota')}
+      <span class="cr-v" data-o="m.co.${i}.cr" data-oc="m.co.${i}.cr"></span></div>`;
+  });
+  return h + `</div>
+    <button class="add" data-act="add-co">+ adicionar compra</button>
+    <div class="det-foot"><span>Crédito de CBS gerado pelas compras</span><span data-o="m.compraCred"></span></div></div>`;
+}
 function rEstoque(){
   const lst = S.monthly.estoque || [];
   let h = `<div class="card-h"><div><h2>Estoque e compras</h2><p class="sub">Compras do mês, posição de estoque e pagamentos.</p></div>` +
     `<button class="btn" data-act="estoque" aria-expanded="${ui.estoque}">${ui.estoque ? 'Ocultar detalhamento' : 'Ver detalhamento'}</button></div>`;
-  h += linha('rec', 'Compra de mercadoria do mês', 'm.compra', 'm.compraP', 'monthly.compraMercadoria', true);
-  // descrições e valores editáveis direto, com adicionar e remover
-  if(ui.estoque) h += `<div class="det">` + lst.map((r, i) => `<div class="li">` +
+  // o total vem da soma das linhas de compra; o detalhamento traz as compras e a posição de estoque
+  h += linha('rec', 'Compra de mercadoria do mês', 'm.compra', 'm.compraP');
+  if(ui.estoque) h += tabelaCompras() + `<div class="det"><div class="det-cap">Posição de estoque e pagamentos</div>` + lst.map((r, i) => `<div class="li">` +
     `<span class="nm nmwrap">${inp(`monthly.estoque.${i}.0`, 'txt', `Descrição ${i + 1}`, 'txt')}` +
     `<span class="row-ctl"><button class="x" data-act="rm-es" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span>` +
     `<span class="v">${inp(`monthly.estoque.${i}.1`, 'brl', r[0] || `Valor ${i + 1}`, 'val')}</span></div>`).join('') +
@@ -1338,17 +1377,14 @@ function rEstoque(){
 function linhasCbs(g){
   const k = g === 'debitos' ? 'deb' : 'cred', cred = g === 'creditos';
   return S.monthly.reforma[g].map((r, i) => {
-    // só o crédito pode ser parte das compras do mês; receita é sempre valor digitado
-    const vinc = cred && parteCompras(r) !== null;
-    const chipVinc = cred ? `<button class="chip" data-act="vinc" data-g="${g}" data-i="${i}" title="${vinc ? 'Passar a digitar a base' : 'Calcular a base como parte das compras do mês'}">${vinc ? 'compras' : 'base fixa'}</button>` : '';
-    const legenda = vinc ? `<span class="parte">${inp(`monthly.reforma.creditos.${i}.4`, 'pct0', r[0] + ' — parte das compras', 'mini')}<span>das compras do mês</span></span>` : '';
-    const base = vinc ? `<span class="r m" data-o="m.cred.${i}.base"></span>` : inp(`monthly.reforma.${g}.${i}.1`, 'base', r[0] + ' — base');
+    // as compras do mês são itemizadas no bloco Estoque e compras: aqui a base é sempre digitada
+    const base = inp(`monthly.reforma.${g}.${i}.1`, 'base', r[0] + ' — base');
     const tipo = TIPOS.some(([v]) => v === r[3]) ? r[3] : 'geral';
     const tipoSel = `<select class="chip-sel" data-tipo data-g="${g}" data-i="${i}" aria-label="Tipo de alíquota — ${esc(r[0])}" title="Tipo de alíquota">` +
       TIPOS.map(([v, l]) => `<option value="${v}"${v === tipo ? ' selected' : ''}>${l}</option>`).join('') + `</select>`;
     return `<div class="g4 cr">
     <span class="nmcol"><span class="nmwrap">${cred ? inp(`monthly.reforma.${g}.${i}.0`, 'txt', `Nome da linha ${i + 1}`, 'txt') : `<span class="nm">${NOME_RECEITA}</span>`}
-      <span class="row-ctl">${tipoSel}${chipVinc}<button class="x" data-act="rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span>${legenda}</span>
+      <span class="row-ctl">${tipoSel}<button class="x" data-act="rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span></span>
     ${base}
     ${cred ? inp(`monthly.reforma.${g}.${i}.2`, 'pct', r[0] + ' — alíquota')    // receita: a alíquota sai do tipo
            : `<span class="r m" data-o="m.deb.${i}.aliq"></span>`}
@@ -1375,6 +1411,7 @@ function rReforma(){
       <div class="prem-f">
         <label><span>Alíquota geral</span>${inp('monthly.reforma.aliqGeral', 'pct', 'Alíquota geral', 'main', 'data-premissa="geral"')}</label>
         <label><span data-o="m.lblRed"></span>${inp('monthly.reforma.aliqReduzida', 'pct', 'Alíquota reduzida', 'main', 'data-premissa="reduzida"')}</label>
+        <label><span>Alíquota das compras</span>${inp('monthly.reforma.aliqCompras', 'pct', 'Alíquota das compras', 'main', 'data-premissa="compras"')}</label>
       </div>
     </div>
     <div class="scroll-x"><div class="calc">
@@ -1384,7 +1421,7 @@ function rReforma(){
       <div class="sum deb"><span>Débito total</span><span data-o="m.debitoTotal"></span></div>
       <div class="grp">Crédito</div>
       <div class="g4 cr"><span>Crédito geral (despesas)</span><span class="r m mut12" data-o="m.baseDespesas"></span><span class="r mut11">por item</span><span class="cr-v" data-o="m.creditoGeral"></span></div>
-      <div class="g4 cr"><span class="nmcol"><span>Compras do mês</span><span class="parte" data-v="m.compraCap" data-o="m.compraCap"></span><span class="parte" data-v="m.temFornCap" data-o="m.fornCap"></span></span>${inp('monthly.compraMercadoria', 'base', 'Compras do mês')}${inp('monthly.reforma.aliqCompras', 'pct', 'Compras do mês — alíquota')}<span class="cr-v" data-o="m.compraCred"></span></div>
+      <div class="g4 cr"><span class="nmcol"><span>Compras do mês</span><span class="parte" data-v="m.temFornCap" data-o="m.fornCap"></span></span><span class="r m mut12" data-o="m.compra"></span><span class="r mut11">por item</span><span class="cr-v" data-o="m.compraCred"></span></div>
       ${linhasCbs('creditos')}
       <button class="add" data-act="add" data-g="creditos">+ adicionar crédito sobre compras</button>
       <div class="g4 cr"><span class="nmcol ink3"><span>Saldo credor do mês anterior</span><span class="parte" data-v="m.temSaldoDe" data-o="m.saldoDe"></span></span><span></span>${inp('monthly.reforma.saldoCredorAnterior', 'base', 'Saldo credor do mês anterior')}<span class="r m mut" data-o="m.saldoAnt"></span></div>
@@ -1653,7 +1690,8 @@ function zerarValores(base, manter){
   const d = JSON.parse(JSON.stringify(base));
   const zera = arr => arr.forEach(r => { r[1] = 0; });
   const fixas = manter.fixas ? JSON.parse(JSON.stringify(d.monthly.ga)) : null;
-  [d.annual, d.monthly].forEach(x => { x.receita = 0; x.compraMercadoria = 0; ['custos', 'ga', 'vendas', 'tributarias'].forEach(g => zera(x[g])); });
+  [d.annual, d.monthly].forEach(x => { x.receita = 0; ['custos', 'ga', 'vendas', 'tributarias'].forEach(g => zera(x[g])); });
+  d.annual.compraMercadoria = 0; zera(d.monthly.compras);
   d.annual.resultadoInformado = 0;
   zera(d.monthly.reforma.debitos); zera(d.monthly.reforma.creditos);
   if(!manter.estoque) zera(d.monthly.estoque || []);
@@ -2213,8 +2251,9 @@ async function sair(){
 }
 
 // regra de crédito da despesa: "sem crédito" tira a linha das premissas; passar a ter crédito entra pela alíquota geral
-async function aplicarRegra(i, valor){
-  const r = S.monthly.ga[i];
+async function aplicarRegra(i, valor, grupo){
+  grupo = grupo || 'ga';                             // despesas gerais ou compras do mês
+  const r = S.monthly[grupo][i];
   let parte = +valor;
   if(valor === 'outra'){
     const res = await modal({
@@ -2222,13 +2261,13 @@ async function aplicarRegra(i, valor){
       campos: [['parte', 'Parte com crédito (%)', dec((+r[2] || 0) * 100, 0, 2)]],
       botoes: [['cancelar', 'Cancelar'], ['ok', 'Aplicar', 'prim']], padrao: 'ok'
     });
-    if(res.botao !== 'ok'){ render(); focar(`select[data-regra][data-i="${i}"]`); return; }
+    if(res.botao !== 'ok'){ render(); focar(`select[data-regra="${grupo}"][data-i="${i}"]`); return; }
     parte = Math.max(0, Math.min(1, num(res.valores.parte) / 100));
   }
   r[2] = parte;
   if(parte === 0) r[3] = 0;
-  else if(!((+r[3] || 0) > 0)) r[3] = S.monthly.reforma.aliqGeral;
-  render(); focar(`select[data-regra][data-i="${i}"]`);
+  else if(!((+r[3] || 0) > 0)) r[3] = grupo === 'compras' ? S.monthly.reforma.aliqCompras : S.monthly.reforma.aliqGeral;
+  render(); focar(`select[data-regra="${grupo}"][data-i="${i}"]`);
 }
 
 /* ---------- eventos ---------- */
@@ -2257,7 +2296,7 @@ app.addEventListener('change', e => {
   }
   // produto ou serviço troca os campos da linha (NCM × NBS + cClassTrib): precisa redesenhar, não só recalcular
   if(t.matches('select[data-nat]')){ S.produtos[+t.dataset.i][2] = t.value; render(); return; }
-  if(t.matches('select[data-regra]')){ aplicarRegra(+t.dataset.i, t.value); return; }
+  if(t.matches('select[data-regra]')){ aplicarRegra(+t.dataset.i, t.value, t.dataset.regra); return; }
   if(t.matches('select[data-sit]')){ S.monthly.reforma.debitos[+t.dataset.i][5] = t.value; refresh(); return; }
   if(t.matches('select[data-b]')){ setPath(t.dataset.b, t.value); refresh(); return; }
   if(!t.matches('input[data-b]') || t.type === 'color') return;
@@ -2332,17 +2371,22 @@ app.addEventListener('click', e => {
       { const n = app.querySelector(`input[data-b="monthly.ga.${S.monthly.ga.length - 1}.0"]`); if(n){ n.focus(); n.select(); } }
       break;
     case 'rm-ga': S.monthly.ga.splice(i, 1); render(); break;
+    case 'li-add': {                                 // custos, vendas e tributárias (mês e exercício)
+      const cam = b.dataset.lista, lst = getPath(cam);
+      lst.push(['', 0]); render();
+      const n = app.querySelector(`input[data-b="${cam}.${lst.length - 1}.0"]`); if(n) n.focus();
+    } break;
+    case 'li-rm': getPath(b.dataset.lista).splice(i, 1); render(); break;
     case 'add-es':
       (S.monthly.estoque = S.monthly.estoque || []).push(['Nova linha', 0]); render();
       { const n = app.querySelector(`input[data-b="monthly.estoque.${S.monthly.estoque.length - 1}.0"]`); if(n){ n.focus(); n.select(); } }
       break;
     case 'rm-es': S.monthly.estoque.splice(i, 1); render(); break;
-    case 'vinc': {                                   // crédito: base fixa ↔ parte das compras do mês
-      const r = rf.creditos[i], compras = S.monthly.compraMercadoria || 0;
-      if(parteCompras(r) !== null){ r[1] = baseLinha(r); r[4] = null; }
-      else r[4] = compras > 0 ? (r[1] || 0) / compras : 0;
-      render(); focar(`[data-act="vinc"][data-g="${g}"][data-i="${i}"]`); break;
-    }
+    case 'add-co':                                   // compra nova entra com crédito integral pela alíquota das compras
+      S.monthly.compras.push(['Nova compra', 0, 1, rf.aliqCompras || 0]); render();
+      { const n = app.querySelector(`input[data-b="monthly.compras.${S.monthly.compras.length - 1}.0"]`); if(n){ n.focus(); n.select(); } }
+      break;
+    case 'rm-co': S.monthly.compras.splice(i, 1); render(); break;
     case 'logo-padrao': S.logo = null; refresh(); break;
     case 'cadeia': ui.cadeia = b.dataset.id; render(); focar(`[data-act="cadeia"][data-id="${b.dataset.id}"]`); break;
     case 'cad-add':
