@@ -261,12 +261,12 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     começam vazios e ficam no banco (tabela `parceiros`) ou no Baixar HTML — nunca no código
 - **Produtos e serviços** (logo abaixo da cadeia de crédito, mesmo vocabulário visual): cadastro do que
   a empresa vende, com as **duas alíquotas calculadas** — nada de digitar percentual:
+  - colunas: **Nome**, **Tipo** (Produto / Serviço), **Redução da CBS** e **Alíquota reduzida**
   - **Redução da CBS** (cheia, −30%, −60%, −70%, zero) → dá a **alíquota reduzida**, por `aliqTipo()`,
-    seguindo as premissas do mês
-  - **Situação no DAS** (integral, ICMS-ST, monofásico, ICMS-ST + monofásico, ISS retido) → dá a
-    **alíquota efetiva** de hoje, por `aliqSituacao()` sobre a faixa do Simples — a mesma função que a
-    segregação das receitas usa, para não existirem duas contas do mesmo número. Sem anexo ou receita
-    dos 12 meses, a coluna mostra "—"
+    seguindo as premissas do mês. É o único número da tabela: situação no DAS e alíquota efetiva
+    saíram a pedido do usuário — são conversa da apuração do mês, não do cadastro do item
+  - a 3ª posição da linha guardou "situação no DAS" na primeira versão do bloco; valor que não seja
+    `produto`/`servico` cai em "Escolha…" em vez de aparecer como lixo
   - gráficos por **quantidade de itens** em cada faixa (decisão do usuário): uma barra por faixa e a
     pizza com a proporção, nas mesmas cores (mais escuro = mais imposto; alíquota zero em `brand`)
   - dados em `produtos` (`[nome, tipo, situação]`), por mês — o mês novo herda do modelo; "Limpar tudo" zera
