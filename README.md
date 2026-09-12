@@ -314,7 +314,10 @@ protege os dados é o **RLS** do banco: a chave pública sozinha não lê nada.
 
 1. **Criar o projeto:** supabase.com → New project (região São Paulo, se disponível).
 2. **Criar as tabelas:** SQL Editor → cole `supabase/migrations/20260911120000_estrutura_inicial.sql`
-   inteiro → Run. Para conferir, rode `supabase/scripts/conferir_instalacao.sql`.
+   inteiro → Run; depois o mesmo com `20260912120000_resumo_e_heranca.sql` (resumo do mês,
+   herança e a função `resumos`). Para conferir, rode `supabase/scripts/conferir_instalacao.sql`.
+   Enquanto a segunda migração não for aplicada o painel continua funcionando — só não herda
+   nada no mês novo e a aba Anual não soma os meses.
 3. **Fechar o cadastro público:** Authentication → Sign In / Providers → desligue
    "Allow new users to sign up". Assim só entra quem você criar.
 4. **Criar os usuários da equipe:** Authentication → Users → Add user → Create new user
@@ -338,12 +341,21 @@ Com a CLI, os passos 2 e 3 viram: `npx supabase init`, `npx supabase link --proj
 |---|---|
 | `membros` | quem da equipe acessa (`user_id` do Supabase Auth, nome, papel) |
 | `empresas` | clientes do escritório (nome, CNPJ único, ramo) |
-| `competencias` | um painel por empresa e mês: `periodo` (dia 1), `dados` (jsonb com o estado inteiro, sem a cadeia), `atualizado_em/por` |
+| `competencias` | um painel por empresa e mês: `periodo` (dia 1), `dados` (jsonb com o estado inteiro, sem a cadeia), `resumo` (números já calculados do mês), `atualizado_em/por` |
 | `parceiros` | cadeia de crédito da empresa: tipo, CNPJ, nome, regime, gera crédito, ordem |
 
+O `resumo` é gravado pelo próprio painel a cada salvamento (`resumoDe()`): receita, DAS, Simples, CBS,
+saldo credor, resultado, custos, despesas, compras, alíquota efetiva, RBT12, anexo e faixa. É ele que
+permite herdar do mês anterior e somar o exercício sem baixar o estado inteiro de cada mês — e nenhum
+imposto é recalculado em SQL. Mês salvo antes desta migração fica com `resumo` nulo; nesse caso o
+painel baixa o estado daquele mês e recalcula na hora.
+
 Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro delas:
-- `carregar_painel(empresa, período)` → o mês salvo, o mês mais próximo (modelo para mês novo) e a cadeia.
-- `salvar_painel(empresa, período, dados, parceiros, base)` → grava o mês e a cadeia **numa transação**.
+- `carregar_painel(empresa, período)` → o mês salvo, o mês mais próximo (modelo para mês novo),
+  o mês **imediatamente anterior** (`anterior`, origem da herança) e a cadeia.
+- `resumos(empresa, de, até)` → os meses do intervalo com `{periodo, resumo, receita}`. Usada pelo
+  RBT12 (12 meses anteriores) e pela aba Anual (o exercício).
+- `salvar_painel(empresa, período, dados, parceiros, base, resumo)` → grava o mês e a cadeia **numa transação**.
   `base` é o `atualizado_em` de quando o mês foi aberto: se outra pessoa salvou depois, dá `CONFLITO`
   e o painel pergunta se sobrescreve ou abre a versão salva (`'-infinity'` = criar mês que não pode existir).
 
@@ -355,6 +367,17 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
 - Trocar de empresa/mês ou sair com alterações pendentes pergunta antes: salvar, descartar ou cancelar.
   Fechar a aba com alterações também avisa.
 - A cadeia de crédito é por empresa (vale para todos os meses dela).
+- **Mês novo herda do anterior** (janela "Novo mês", uma caixa por item): o **saldo credor da CBS**
+  do mês imediatamente anterior vira o crédito inicial deste, e a **receita dos 12 meses** é somada
+  pelos meses salvos. Estoque e valores das despesas gerais são opcionais (vêm desmarcados).
+  É **cópia etiquetada, não vínculo vivo**: o número fica gravado no mês e editável, a tela diz de
+  onde veio ("veio de jan/2026", "somados 12 de 12 meses salvos") e há um "atualizar" ao lado do
+  RBT12 para somar de novo. Nunca herda de mês posterior — saldo credor só anda para a frente.
+- **Aba Anual → "O ano pelos meses salvos":** tabela mês a mês (receita, DAS, CBS por fora, resultado,
+  margem) com totais, leitura do exercício (alíquota efetiva média, carga, qual regime sairia mais
+  barato no acumulado, faixa do Simples, melhor e pior mês), alerta de **sublimite (R$ 3,6 mi)** e de
+  **exclusão (R$ 4,8 mi)** pelo ritmo do ano, aviso dos meses sem competência salva e o botão
+  "Preencher o exercício com estes meses" (pede confirmação: substitui o que estiver digitado).
 
 ### Testes
 Não há Postgres nesta máquina: o SQL foi validado com o parser do Postgres 17 (libpg_query) e o
@@ -403,10 +426,14 @@ tributárias 109.016,62 · resultado informado 81.289,32.
    Deixado editável até ele decidir.
 
 4. **Plano de contas diferente entre as abas.** Anual tem "Fatura Cartão",
-   "Funcionários"; mensal tem "HapVida", "Folha". Impede somar meses no anual.
+   "Funcionários"; mensal tem "HapVida", "Folha". **Contornado (12/09/2026):** o bloco
+   "O ano pelos meses salvos" soma os totais de cada competência, não as linhas por nome —
+   o anual fecha mesmo com os planos diferentes. Comparar linha a linha continua impossível.
 
-5. **Multi-mês.** Hoje é um mês por arquivo — foi o que gerou os erros de julho.
-   Doze meses juntos resolveriam anual por soma, saldo credor automático e evolução.
+5. **Multi-mês.** ~~Hoje é um mês por arquivo.~~ **Resolvido:** os meses ficam no banco, por
+   empresa e competência. O anual soma as competências salvas, o saldo credor da CBS passa de
+   um mês para o outro e o RBT12 é somado pelos meses salvos (ver "Banco de dados" e
+   `docs/roteiro-mes-novo-e-anual.md`).
 
 6. **Validações automáticas.** Ver seção seguinte — é o maior ganho pendente.
 

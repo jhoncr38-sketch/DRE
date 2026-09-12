@@ -1,8 +1,9 @@
 # Roteiro — mês novo herdando do anterior + aba Anual pelos meses salvos
 
-> **Situação:** aprovado para aplicar em breve. Levantado e escrito em 12/09/2026, ainda não implementado.
-> Nada deste roteiro está no código. Ao aplicar, seguir a regra de sempre: build, testes, abrir no
-> navegador e só subir para o GitHub depois do ok.
+> **Situação:** APLICADO em 12/09/2026 (Fases 0 a 3), com testes verdes nas duas suítes.
+> A migração `20260912120000_resumo_e_heranca.sql` **já foi aplicada** no Supabase do projeto "dre"
+> (conferido: 5 funções, coluna `resumo jsonb`, `salvar_painel` com `p_resumo`, `anon` sem execução).
+> Veja "O que foi aplicado", no fim.
 
 Pedido original: ao criar um mês novo para a mesma empresa, trazer informações do mês anterior
 (CBS Crédito, RBT12 já calculado) e usar os meses salvos para enriquecer a aba Anual.
@@ -108,5 +109,27 @@ Mock do Supabase em `teste_banco.py` ganha `resumo` / `anterior` / `serie`. Caso
 - Não exige migração de esquema do estado (v7): as chaves novas são opcionais e o
   `mesclar(defaults(), ...)` já as absorve.
 
-## 7. Pendente de decisão do usuário
-- Aplicar as quatro fases ou só a Fase 1 (a herança em si, que foi o pedido).
+## 7. O que foi aplicado (12/09/2026)
+
+As quatro fases entraram. Diferenças em relação ao que estava planejado:
+
+- **Meses antigos não ficam de fora.** O plano dizia que mês sem `resumo` só mostraria a receita.
+  Na prática o painel baixa o estado desses meses (uma requisição só, `periodo=in.(…)`) e recalcula
+  na hora com `resumoDe()` — o ano fica completo sem ninguém precisar reabrir e salvar 12 meses.
+- **Evolução do RBT12 e da faixa** virou frase na "Leitura do ano" ("a faixa foi da 3ª à 4ª"), em vez
+  de gráfico próprio: o dado já está na tabela e um gráfico a mais não pagava o espaço.
+- **Compatibilidade com banco sem a migração:** `salvar_painel` é chamado com `p_resumo` e, se o banco
+  recusar (PGRST202), o painel salva sem ele e não tenta de novo na sessão (`banco.semResumo`).
+
+Onde está cada coisa, em `src/dashboard_template.html`:
+
+| Peça | Função |
+|---|---|
+| Resumo do mês | `resumoDe()`, `prontoParaCalculo()`, `comEstado()` |
+| Herança | `HERANCA`, `herdarDoAnterior()`, `somarRbt12()`, `atualizarRbt12()`, `zerarValores(base, manter)` |
+| Janela do mês novo | `novoMes()` + `caixas` no `modal()` |
+| Aba Anual | `carregarAno()`, `garantirAno()`, `totaisAno()`, `mesesFaltando()`, `textoAno()`, `alertaLimite()`, `preencherAno()`, `rAnoMeses()` |
+
+Testes: `teste_banco.py` seções **3b** (herança: saldo credor, RBT12, caixas, nada do futuro,
+atualizar), **3c** (aba Anual: lacunas, soma do ano, leitura, preencher) e **3d** (banco sem a
+migração continua salvando).
