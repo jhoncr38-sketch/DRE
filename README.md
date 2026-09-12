@@ -264,7 +264,12 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     começam vazios e ficam no banco (tabela `parceiros`) ou no Baixar HTML — nunca no código
 - **Produtos e serviços** (logo abaixo da cadeia de crédito, mesmo vocabulário visual): cadastro do que
   a empresa vende, com as **duas alíquotas calculadas** — nada de digitar percentual:
-  - colunas: **Nome**, **Tipo** (Produto / Serviço), **Redução da CBS** e **Alíquota reduzida**
+  - colunas: **Nome**, **Tipo** (Produto / Serviço), **NCM / NBS**, **cClassTrib**, **Redução da CBS**
+    e **Alíquota reduzida**
+  - os códigos seguem o tipo: produto mostra o campo de **NCM**; serviço, os de **NBS** e **cClassTrib**;
+    onde não se aplica, um traço. Cada código tem a sua posição na linha (`3` NCM, `4` NBS, `5` cClassTrib),
+    então trocar o tipo não apaga o que já foi digitado no outro. O seletor de tipo é `data-nat` e chama
+    `render()` — muda a estrutura da linha, não só os números, e `refresh()` sozinho não redesenharia
   - **Redução da CBS** (cheia, −30%, −60%, −70%, zero) → dá a **alíquota reduzida**, por `aliqTipo()`,
     seguindo as premissas do mês. É o único número da tabela: situação no DAS e alíquota efetiva
     saíram a pedido do usuário — são conversa da apuração do mês, não do cadastro do item

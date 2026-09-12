@@ -358,11 +358,12 @@
   .cad-row{display:grid; grid-template-columns:200px minmax(0,1fr) 170px 130px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
   .cad-row:not(.gh):hover{background:#FAF9F7}
   /* produtos e serviços: as duas alíquotas saem calculadas, por isso são texto e não campo */
-  .gprod{display:grid; grid-template-columns:minmax(0,1.4fr) 132px 152px 108px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:580px}
+  .gprod{display:grid; grid-template-columns:minmax(0,1.25fr) 118px 124px 118px 146px 96px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:880px}
   .gprod:not(.gh):hover{background:#FAF9F7}
   .gprod.gh{padding:0 0 7px; border-bottom-color:var(--ink)}
   .gprod.gh > span{text-align:left}
-  .gprod.gh > span:nth-child(4){text-align:right}
+  .gprod.gh > span:nth-child(6){text-align:right}
+  .gprod > .mut{color:var(--muted-2)}
   .cad-row.gh{padding:0 0 7px; border-bottom-color:var(--ink); font-size:10px}
   .cad-row.gh > span{text-align:left}
   .cad-row .in{text-align:left}
@@ -495,7 +496,8 @@ function defaults(){ return {
   anexo: "I",                                   // anexo do Simples Nacional (I a V): dado da empresa, passa de um mês para o outro
   // cadeia de crédito: [CNPJ, nome, regime, gera crédito ('sim' | 'parcial' | 'nao' | '')] — começa vazia
   cadeia: { fornecedores: [], clientes: [] },
-  // produtos e serviços: [nome, tipo de alíquota da CBS, 'produto' | 'servico'] — a alíquota é calculada
+  // produtos e serviços: [nome, tipo de alíquota da CBS, 'produto' | 'servico', NCM, NBS, cClassTrib]
+  // a alíquota é calculada; NCM vale para produto, NBS e cClassTrib para serviço
   produtos: [],
   annual: {
     receita: 1187289.06,
@@ -1474,16 +1476,23 @@ function rProdutos(){
       const tipo = TIPOS.some(([v]) => v === r[1]) ? r[1] : 'geral';
       // a 3ª posição já guardou "situação no DAS" numa versão anterior: valor desconhecido vira "Escolha…"
       const nat = NATUREZAS.some(([v]) => v === r[2]) ? r[2] : '';
+      // produto pede NCM; serviço pede NBS e cClassTrib. Cada código no seu lugar, para trocar o tipo não apagar o outro
+      const traco = '<span class="m mut">—</span>';
+      const codigo = nat === 'produto' ? inp(`produtos.${i}.3`, 'txt', `NCM — item ${i + 1}`, 'txt', 'placeholder="NCM"')
+        : nat === 'servico' ? inp(`produtos.${i}.4`, 'txt', `NBS — item ${i + 1}`, 'txt', 'placeholder="NBS"') : traco;
+      const classtrib = nat === 'servico' ? inp(`produtos.${i}.5`, 'txt', `cClassTrib — item ${i + 1}`, 'txt', 'placeholder="cClassTrib"') : traco;
       return `<div class="gprod">
       ${inp(`produtos.${i}.0`, 'txt', `Nome do item ${i + 1}`, 'txt', 'placeholder="Nome"')}
-      <span class="sel-wrap"><select class="sel" data-b="produtos.${i}.2" data-f="txt" aria-label="Produto ou serviço — item ${i + 1}"${ro}>${opcoesSel(NATUREZAS, nat)}</select></span>
+      <span class="sel-wrap"><select class="sel" data-nat data-i="${i}" aria-label="Produto ou serviço — item ${i + 1}"${ro}>${opcoesSel(NATUREZAS, nat)}</select></span>
+      ${codigo}
+      ${classtrib}
       <span class="sel-wrap"><select class="sel" data-b="produtos.${i}.1" data-f="txt" aria-label="Redução da CBS — item ${i + 1}"${ro}>${opcoesSel(TIPOS, tipo)}</select></span>
       <span class="r m" data-o="pr.${i}.red"></span>
       <button class="cad-x" data-act="pr-rm" data-i="${i}" aria-label="Remover item ${i + 1}" title="Remover item">×</button></div>`;
     }).join('');
     corpo = `<div class="cad-grafico" data-h="pr.grafico"></div>
       <div class="scroll-x">
-        <div class="gprod gh"><span>Nome</span><span>Tipo</span><span>Redução da CBS</span><span>Alíquota reduzida</span><span></span></div>
+        <div class="gprod gh"><span>Nome</span><span>Tipo</span><span>NCM / NBS</span><span>cClassTrib</span><span>Redução da CBS</span><span>Alíquota reduzida</span><span></span></div>
         ${linhas}
       </div>
       <button class="cad-mais" data-act="pr-add">+ adicionar produto</button>`;
@@ -2234,6 +2243,8 @@ app.addEventListener('change', e => {
   if(t.matches('select[data-tipo]')){
     const r = S.monthly.reforma[t.dataset.g][+t.dataset.i]; r[3] = t.value; r[2] = aliqTipo(r[3]); refresh(); return;
   }
+  // produto ou serviço troca os campos da linha (NCM × NBS + cClassTrib): precisa redesenhar, não só recalcular
+  if(t.matches('select[data-nat]')){ S.produtos[+t.dataset.i][2] = t.value; render(); return; }
   if(t.matches('select[data-regra]')){ aplicarRegra(+t.dataset.i, t.value); return; }
   if(t.matches('select[data-sit]')){ S.monthly.reforma.debitos[+t.dataset.i][5] = t.value; refresh(); return; }
   if(t.matches('select[data-b]')){ setPath(t.dataset.b, t.value); refresh(); return; }
@@ -2278,7 +2289,7 @@ app.addEventListener('click', e => {
     case 'senha': ui.menu = false; render(); comErro(alterarSenha); break;
     case 'excluir-mes': ui.menu = false; render(); comErro(excluirMes); break;
     case 'pr-add':
-      S.produtos.push(['', 'geral', 'produto']); render();
+      S.produtos.push(['', 'geral', 'produto', '', '', '']); render();
       { const n = app.querySelector(`input[data-b="produtos.${S.produtos.length - 1}.0"]`); if(n) n.focus(); }
       break;
     case 'pr-rm': S.produtos.splice(i, 1); render(); break;
