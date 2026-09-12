@@ -259,6 +259,17 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     "+ adicionar" e a legenda da visão; estado vazio explicando por que cadastrar
   - dados em `cadeia.fornecedores` e `cadeia.clientes` (`[cnpj, nome, regime, 'sim'|'parcial'|'nao'|'']`),
     começam vazios e ficam no banco (tabela `parceiros`) ou no Baixar HTML — nunca no código
+- **Produtos e serviços** (logo abaixo da cadeia de crédito, mesmo vocabulário visual): cadastro do que
+  a empresa vende, com as **duas alíquotas calculadas** — nada de digitar percentual:
+  - **Redução da CBS** (cheia, −30%, −60%, −70%, zero) → dá a **alíquota reduzida**, por `aliqTipo()`,
+    seguindo as premissas do mês
+  - **Situação no DAS** (integral, ICMS-ST, monofásico, ICMS-ST + monofásico, ISS retido) → dá a
+    **alíquota efetiva** de hoje, por `aliqSituacao()` sobre a faixa do Simples — a mesma função que a
+    segregação das receitas usa, para não existirem duas contas do mesmo número. Sem anexo ou receita
+    dos 12 meses, a coluna mostra "—"
+  - gráficos por **quantidade de itens** em cada faixa (decisão do usuário): uma barra por faixa e a
+    pizza com a proporção, nas mesmas cores (mais escuro = mais imposto; alíquota zero em `brand`)
+  - dados em `produtos` (`[nome, tipo, situação]`), por mês — o mês novo herda do modelo; "Limpar tudo" zera
 - **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas e identidade;
   esvazia a cadeia de crédito
 - **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura
@@ -370,6 +381,12 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
 - Trocar de empresa/mês ou sair com alterações pendentes pergunta antes: salvar, descartar ou cancelar.
   Fechar a aba com alterações também avisa.
 - A cadeia de crédito é por empresa (vale para todos os meses dela).
+- **Excluir um mês:** menu "Opções" → "Excluir *mês* do banco", com janela de confirmação (o botão
+  padrão é Cancelar). Apaga a competência para toda a equipe e não dá para desfazer; a cadeia de
+  crédito, que é da empresa, não é tocada. Depois abre o mês salvo mais recente — e, se não sobrou
+  nenhum, o mês atual **sem gravar**, para não recriar sozinho o que você acabou de apagar. O item
+  só aparece quando o mês aberto existe no banco. Usa `DELETE` direto na tabela: o RLS já restringe
+  à equipe, não precisou de função nova.
 - **Mês novo herda do anterior** (janela "Novo mês", uma caixa por item): o **saldo credor da CBS**
   do mês imediatamente anterior vira o crédito inicial deste, e a **receita dos 12 meses** é somada
   pelos meses salvos. Estoque e valores das despesas gerais são opcionais (vêm desmarcados).
