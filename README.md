@@ -91,8 +91,8 @@ reforma/CBS `#B3122B` (o vermelho só aparece em valores da reforma e no foco), 
 `#EFEEEA`, IBM Plex Sans na interface e IBM Plex Mono em todos os números. Cantos retos,
 sem sombras. Só tema claro.
 
-**Cuidado:** as cores personalizáveis são `--fill` (preenchimentos: bloco herói, aba
-ativa, barra "hoje", faixa do resultado) e `--brand`. O texto usa `--ink`, que nunca
+**Cuidado:** as cores personalizáveis são `--fill` (preenchimentos: aba
+ativa, barra do débito, faixa do resultado) e `--brand`. O texto usa `--ink`, que nunca
 muda. Já foram unificados por engano uma vez e o texto ficou ilegível.
 
 ---
@@ -157,11 +157,20 @@ Sem senha — Revisão → Desproteger Planilha.
 Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 (`{{LOGO_B64}}`, `{{FONTS_CSS}}`). Barras em HTML/CSS, sem biblioteca.
 
-- **Cabeçalho e faixa de indicadores** fixos em todas as abas: um número dominante
-  (resultado líquido) e dois de apoio — Simples Nacional e CBS a pagar no mês; despesas
+- **Cabeçalho e faixa de indicadores** fixos em todas as abas, sem bloco herói (o resultado líquido
+  já fecha a DRE e está nos cartões do resumo): Simples Nacional e CBS a pagar no mês; despesas
   operacionais e Simples no ano (o lucro operacional bruto fica só na DRE)
-- **Abas:** Resultado · Reforma · CBS · Resumo do cliente (mês) · Anual; setas do teclado navegam
-- **Detalhamento** recolhível (despesas com % base/alíquota/crédito e tributárias)
+- **Abas:** Resultado · Resumo do cliente (mês) · Anual; setas do teclado navegam. A aba Resultado vai da
+  DRE à apuração: Simples Nacional do mês → DRE → Estoque e compras → memória de cálculo da CBS
+- **Detalhamento** recolhível e **fechado por padrão** (receita por tipo, despesas com regra de
+  crédito/alíquota/crédito e tributárias); "Estoque e compras" tem o seu próprio botão, também fechado
+- **Despesas editáveis no detalhamento:** nome e valor de cada despesa são campos (sem precisar de
+  "Editar valores"), com "+ adicionar despesa" e × para remover. A despesa nova entra com crédito
+  integral pela alíquota geral
+- **Regra de crédito por despesa** (no lugar do "% base"): Integral, Redução de 30% (profissões
+  regulamentadas: contabilidade, advocacia), Redução de 60%, Redução de 70% (aluguel), Sem crédito e
+  "Outra parte…" (janela para digitar o %). Por baixo continua a parte da base (`ga[i][2]`):
+  "Sem crédito" zera a alíquota; passar a ter crédito entra pela alíquota geral
 - **Memória de cálculo da CBS** recolhível ("Ocultar memória"): fechada, mostra só débito total,
   crédito total e a faixa da CBS; aberta, as premissas e linha a linha
 - **CBS Crédito:** quando o crédito passa do débito, a CBS aparece em verde (`--ok #1D7A4E`) como
@@ -169,23 +178,70 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   no Resumo do cliente e no gráfico de débito e crédito. Nunca aparece CBS a pagar negativa
 - **Estoque e compras** (aba Resultado): compra de mercadoria do mês, inventário, estoque
   atualizado e pagamento a fornecedor; descrições editáveis em "Editar valores"
-- **Receita do PGDAS → débito:** por padrão o débito tem uma linha, "Receita PGDAS", que puxa a
-  receita declarada menos as outras categorias, então o débito sempre fecha com o PGDAS. Categorias
-  podem ser adicionadas e excluídas; com a seção vazia, o "+ adicionar" traz a linha do PGDAS
-  de volta. Avisa quando as categorias passam da receita ou, sem linha PGDAS, quando a soma difere.
+- **Receita declarada = soma das linhas de receita** (`sincronizarReceita()`): cada linha tem o seu valor,
+  então adicionar ou remover linha muda a receita do mês — o débito da CBS sempre fecha com o PGDAS.
+  A linha "Receita declarada" da DRE é só o total (não é campo). Toda linha de receita se chama
+  **"Receita PGDAS"** (`NOME_RECEITA`), sem campo de nome na tabela nem na memória: o que diferencia uma
+  linha da outra é a situação no DAS. Só as linhas de crédito continuam com nome livre.
 - **Compras → crédito:** a linha "Compras do mês" gera crédito com alíquota própria, padrão 9%, editável
   e fora das premissas. Linhas de crédito adicionadas saem das compras (legenda "restante das compras")
   e já vêm com a alíquota das compras; cada uma pode ter base fixa ou ser parte (%) das compras,
   pela etiqueta "compras"/"base fixa". Avisa quando as linhas passam o valor das compras
 - **Padrão x Excel:** com Receita PGDAS a 8% e compras a 9%, a CBS padrão do Aragão é R$ 2.272,19.
-  Para reproduzir o Excel (R$ 815,54): débito "Medicamentos" 103.685,52 reduzida; créditos
+  Para reproduzir o Excel (R$ 815,54): receita 2.734,37 integral + 103.685,52 reduzida; créditos
   60.372,13 reduzida e 1.867,18 a 8%
-- **Premissas** "Alíquota geral" e "reduzida" propagam para as linhas; o rótulo da reduzida
-  é o nome da primeira categoria de débito reduzida (ex.: Medicamentos)
+- **Premissas** "Alíquota geral" e "Alíquota reduzida" propagam para as linhas de receita, de crédito e
+  de despesa com crédito
+- **Alíquota da receita sempre calculada pelo tipo:** na memória ela é texto, não campo — quem manda são
+  as premissas. A migração v6 acerta meses salvos com alíquota antiga gravada na linha (ex.: 15,33%, que
+  é a parcela da CBS no DAS, não a alíquota da CBS). As linhas de crédito seguem com alíquota própria
+- **Tipo de alíquota** de cada débito e crédito (etiqueta ao passar o mouse): Alíquota cheia,
+  Redução de 30% (geral × 0,7), Redução de 60% (segue a premissa "reduzida"), Redução de 70%
+  (geral × 0,3) e Alíquota zero. Guardado em `r[3]`: `geral`, `red30`, `reduzida`, `red70`, `zero`
+- **Receita por tipo** (detalhamento da receita, aba Resultado — seção 2 da planilha "Simples CBS
+  Convencional vs Híbrido"): tipo, receita, **situação no DAS** (`r[5]`: Integral, ICMS-ST, Monofásico,
+  ICMS-ST + monofásico, ISS retido), **tipo da CBS por fora** (com a alíquota da linha embaixo, para não
+  confundir a alíquota da CBS com a parcela dela dentro do DAS) e débito. São as mesmas linhas do débito
+  da memória da Reforma — editar em uma vale para a outra
+- **Simples Nacional do mês** — `rSimplesMes()`, cartão **acima da DRE**: anexo do Simples (`anexo`, da
+  empresa) e receita dos 12 meses (`monthly.rbt12`, do mês), com a faixa e a alíquota efetiva ao lado
+- **Apuração do mês** — `rApuracaoSimples()`, **fora da tela por enquanto** (decisão do usuário: entra
+  depois, no fim da DRE, quando receitas e despesas já foram demonstradas). O cálculo continua valendo
+  (`segregacao()`, `dasBase`) e alimenta o "O que observar". Quando voltar, traz: receita
+  dos 12 meses (`monthly.rbt12`, do mês) dão a faixa e a alíquota efetiva; em seguida o DAS que sai da
+  receita por tipo, o **DAS declarado** (campo ligado à linha do Simples nas despesas tributárias, sem
+  precisar de "Editar valores") e a **conferência** entre os dois (tolerância de R$ 1,00; sem DAS
+  declarado, nada é comparado). ICMS-ST tira o ICMS da partilha, monofásico tira PIS/Cofins (até 2026;
+  a CBS a partir de 2027, pelo ano da competência), ISS retido tira o ISS. Dezembro do Aragão fecha
+  exato: medicamentos 103.685,52 com ICMS-ST + monofásico e o restante 2.734,37 integral dão
+  R$ 4.889,93. Tabelas dos Anexos I–V (LC 123) em `ANEXOS`; 6ª faixa com ICMS/ISS pela 5ª; ISS acima
+  de 5% passa o excedente para os federais
+- **CBS dentro do DAS:** com anexo e receita dos 12 meses, sai da receita por tipo (CBS de 2027 sobre as
+  linhas que não são monofásicas ÷ DAS calculado, aplicado ao DAS declarado). Sem eles, vale a
+  "Parcela da CBS no Simples" informada (padrão 15,33%). Com a receita toda integral dá os mesmos 15,33%.
+  Enquanto o DAS declarado estiver zerado, a base é o DAS calculado (`dasBase`, legenda "do DAS calculado")
+- **As duas CBS lado a lado** (fim do cartão, também fora da tela por enquanto): a de dentro é uma fatia do DAS (15,33% dele) e a de fora
+  incide sobre a receita (8% dela) — bases diferentes, por isso aparecem com a legenda de cada uma, mais
+  o DAS sem a CBS e a conclusão ("Com a CBS por fora, o mês custa R$ X a mais", com o total ao lado)
+- **Convencional × Híbrido** (último bloco da aba Resultado — seção 4 da planilha): DAS, CBS e total de
+  cada regime em números, com uma **barra empilhada** por regime (DAS escuro + CBS em `--brand`, medidas
+  pelo maior total), faixa com a decisão (verde quando o híbrido ganha) e o ponto de equilíbrio embaixo.
+  A CBS do convencional aparece com a legenda "dentro do DAS" porque não soma no total. Embaixo de cada
+  regime, a **carga tributária do mês**: todas as despesas tributárias em reais e em % da receita (no
+  híbrido, trocando o DAS pelo par DAS sem CBS + CBS). No total de cada regime vem a **alíquota efetiva**
+  (regime ÷ receita) e, abaixo da faixa, quanto ela sobe ou cai de um regime para o outro, em pontos
+  percentuais
+- **De onde vem o crédito da CBS:** a barra "Crédito de CBS" é empilhada por origem — compras, despesas,
+  outras linhas e saldo do mês anterior — com a legenda em reais e % embaixo
+- **Ponto de equilíbrio** ("O que observar", no Resumo do cliente): quanto faltaria em compras com crédito
+  para a apuração separada da CBS empatar com o Simples de hoje, ou quanto elas podem cair com ela ainda
+  mais barata. O IBS a pagar (`monthly.ibs`) e a parcela da CBS (`cbsSobreEfetiva`, padrão 15,33%)
+  continuam no estado e no cálculo, mas **sem campo na tela** (decisão do usuário)
+- **Cadeia nos textos:** "O que observar" diz quantos clientes aproveitam crédito (com a CBS por fora
+  eles recebem o crédito cheio); em "Compras do mês", avisa quantos fornecedores não geram crédito cheio
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),
   Modo apresentação, Imprimir, Salvar, Baixar HTML, Restaurar padrão, Limpar tudo
-- **Resumo do cliente** (handoff seção 5): a faixa de indicadores esconde o bloco herói (o resultado
-  já está nos cartões) e fica só com as linhas; "Para onde foi a receita" foi retirado e "O que
+- **Resumo do cliente** (handoff seção 5): "Para onde foi a receita" foi retirado e "O que
   observar" ocupa a largura toda
 - **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráfico opção A):
   - cabeçalho com a frase que responde "quantos geram crédito" e o alternador Fornecedores / Clientes
@@ -213,7 +269,7 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 `render()` monta a estrutura (troca de aba, adicionar/remover linha, detalhamento).
 `refresh()` recalcula e escreve só os textos marcados com `data-o`, as larguras das barras
 (`data-w`) e os campos fora de foco — por isso digitar recalcula tudo sem perder o cursor.
-Campos: `data-b` = caminho no estado, `data-f` = formato (`brl`, `base`, `pct`, `pct0`, `txt`).
+Campos: `data-b` = caminho no estado, `data-f` = formato (`brl`, `base`, `pct`, `pct0`, `txt`, `cnpj`).
 Parser pt-BR `num()`: com vírgula, ela é o decimal; sem vírgula, o ponto é decimal.
 
 ### Armazenamento no navegador
@@ -237,9 +293,11 @@ monthly.estoque = [ [descrição, valor], ... ]   // inventário, estoque atuali
 Estados salvos no modelo antigo (v1: `creditosCompra`, `creditoGeralAliq`, sem tipo) são
 migrados em `migrar()` e mesclados em profundidade com os padrões. Estados anteriores à v3
 recebem `aliqCompras = 0`, para o crédito das compras não somar em cima dos créditos já lançados.
+Estados anteriores à v4 recebem `anexo = ''` e `rbt12 = 0`: não herdam os do cliente de exemplo e
+seguem com a parcela da CBS informada.
 
-"Simples sem a CBS" é **calculado** (Simples × parcela da CBS, campo editável no cartão de
-carga tributária), não constante como no handoff — com 15,33% dá os mesmos 4.140,30.
+"Simples sem a CBS" é **calculado** (Simples − CBS dentro do DAS, pela receita por tipo ou pela parcela
+informada), não constante como no handoff — com 15,33% dá os mesmos 4.140,30.
 
 As categorias são **editáveis e ilimitadas** justamente porque o escritório
 atende ramos diferentes — não pode haver "medicamento" hardcoded.
@@ -316,8 +374,8 @@ expirada). Na primeira instalação real, rode `conferir_instalacao.sql` e faça
    mostrar `CBS a pagar = 0` + `Saldo credor a transportar`.
 5. **Crédito por item:** cada despesa tem % da base com direito e alíquota própria
    (aluguel 30%, contabilidade 70%, pessoal 0%, demais 100%).
-6. Comparação da carga = **Hoje (Simples)** × **Simples sem a CBS** × **Na transição**
-   (Simples sem CBS + CBS + IBS).
+6. Comparação da carga = **Hoje (Simples declarado)** × **CBS por fora**
+   (Simples sem CBS + CBS + IBS), no "O que observar" do Resumo do cliente.
 
 ### Números de referência (dezembro) — usar como teste de regressão
 ```
@@ -337,8 +395,8 @@ tributárias 109.016,62 · resultado informado 81.289,32.
    (81.289,32) não bate com a soma das linhas (70.367,30). Mantido o informado,
    com comentário na célula e nota no dashboard. **Não resolvido — é do cliente.**
 
-2. **IBS ausente.** O sistema só calcula CBS. A barra "Na transição" está
-   incompleta e **subestima** a carga. Há campo de entrada manual do IBS.
+2. **IBS ausente.** O sistema só calcula CBS. O total com a CBS por fora está
+   incompleto e **subestima** a carga. Há campo de entrada manual do IBS.
    Falta também o cronograma de transição.
 
 3. **15,33% × 15,5%.** A memória RBT12 do cliente usa 15,5% para a mesma conta.

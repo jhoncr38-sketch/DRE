@@ -74,11 +74,7 @@
   .sw input[type=color]{width:34px; height:26px; padding:0; border:1px solid var(--line-2); border-radius:2px; background:none; cursor:pointer}
 
   /* Faixa de indicadores */
-  .hero{display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:16px}
-  .hero-main{background:var(--fill); color:#fff; padding:26px 28px; display:flex; flex-direction:column; gap:6px; min-width:0}
-  .hero-main .cap{color:var(--muted-3)}
-  .hero-val{font-family:var(--mono); font-weight:600; letter-spacing:-.03em; line-height:1.05; white-space:nowrap; font-size:clamp(34px,5.2vw,52px)}
-  .hero-ctx{font-size:13px; color:var(--on-fill)}
+  .hero{display:grid; grid-template-columns:minmax(0,1fr); gap:16px}
   .hero-side{display:grid; grid-auto-rows:1fr; gap:1px; background:var(--line-2); min-width:0}
   .hero-row{background:var(--surface-2); padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:4px 16px; flex-wrap:wrap}
   .hero-row .lbl{font-size:13px; color:var(--ink-3)}
@@ -114,7 +110,12 @@
   .dl.res .p{color:var(--muted-3); font-size:13px}
   .det{background:var(--surface-2); padding:6px 14px 10px; margin-bottom:4px}
   .scroll-x{overflow-x:auto}
-  .g5{display:grid; grid-template-columns:minmax(0,1fr) 110px 62px 70px 92px; gap:10px; align-items:center}
+  .g5{display:grid; grid-template-columns:minmax(0,1fr) 110px 138px 70px 92px; gap:10px; align-items:center}
+  .g5 > :nth-child(3){padding-left:14px}                               /* regra afastada do valor à esquerda */
+  .g5.gh > span.esq, .grec.gh > span.esq{text-align:left}
+  .regra .sel{font-size:12px}
+  .regra.sem .sel{color:var(--muted-2)}
+  .gr:hover .sel-wrap::after, .gr .sel-wrap:focus-within::after{opacity:1}
   .g4{display:grid; grid-template-columns:minmax(0,1fr) 118px 74px 104px; gap:10px; align-items:center}
   .gh{padding:8px 0 6px; font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
   .gh > span:not(:first-child){text-align:right}
@@ -173,6 +174,10 @@
   @media (hover:none){ .row-ctl{opacity:1; pointer-events:auto} }
   .chip{border:0; background:transparent; font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2); padding:2px 4px; cursor:pointer; white-space:nowrap}
   .chip:hover, .x:hover{color:var(--ink)}
+  /* tipo de alíquota da linha: seletor com cara de etiqueta */
+  .chip-sel{appearance:none; -webkit-appearance:none; border:0; border-radius:0; background:transparent; font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted-2); padding:2px 4px; cursor:pointer; outline:none}
+  .chip-sel:hover, .chip-sel:focus{color:var(--ink)}
+  .chip-sel option{text-transform:none; letter-spacing:0; font-family:var(--sans); font-size:13px; color:var(--ink)}
   .x{border:0; background:transparent; color:var(--muted-2); cursor:pointer; font-size:15px; line-height:1; padding:0 4px}
   .add{border:0; background:transparent; color:var(--muted); font-size:12px; padding:8px 0 2px; cursor:pointer}
   .add:hover{color:var(--ink); text-decoration:underline}
@@ -191,25 +196,66 @@
   .side{display:flex; flex-direction:column; gap:16px; min-width:0}
   .chart{background:var(--surface); padding:24px 26px}
   .chart .sub{margin:0 0 18px; font-size:12px}
-  .chart .sub.s6{margin-bottom:6px}
   .bar{display:flex; flex-direction:column; gap:5px; margin-bottom:14px}
   .bar-h{display:flex; justify-content:space-between; gap:12px; font-size:12px}
   .bar-h > span:first-child{color:var(--ink-3)}
   .bar-h > span:last-child{font-family:var(--mono); font-weight:500; white-space:nowrap}
   .track{height:10px; background:var(--canvas)}
   .fill{height:100%; width:0}
-  .c-ink{background:var(--fill)} .c-ink3{background:var(--ink-3)} .c-mut{background:var(--muted-3)} .c-brand{background:var(--brand)}
+  .c-ink{background:var(--fill)} .c-ink3{background:var(--ink-3)} .c-mut{background:var(--muted-3)} .c-brand{background:var(--brand)} .c-line{background:var(--line-3)}
+  .track.empilhada{display:flex}
+  .cr-legenda{margin:5px 0 0; font-size:11px; color:var(--muted-2); line-height:1.5}
   .fill.credito{background:var(--ok)}
   .kv.brand.credito{color:var(--ok)}
-  .delta{display:flex; align-items:baseline; gap:8px; margin:0 0 18px; flex-wrap:wrap}
-  .delta .dv{font-family:var(--mono); font-size:20px; font-weight:600}
-  .delta .dl2{font-size:12px; color:var(--muted)}
   .prem2{margin-top:16px; padding-top:14px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:12px}
   .prem2 label{display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:12px; color:var(--ink-3)}
   .prem2 label small{display:block; font-size:11px; color:var(--muted-2); margin-top:2px}
   .prem2 .in{width:120px; flex:0 0 120px; font-size:14px; font-weight:600; border-bottom-color:var(--line-3)}
   .prem2 .in:focus{border-bottom-color:var(--brand)}
   .hint{margin:12px 0 0; font-size:11px; color:var(--muted-2); line-height:1.5}
+
+  /* Convencional × Híbrido: números com uma barra empilhada por regime (DAS escuro + CBS em brand) */
+  .cmp-l{display:grid; grid-template-columns:minmax(0,1fr) 140px 200px 140px; gap:16px; align-items:baseline; padding:12px 0; border-top:1px solid var(--line)}
+  .cmp-h{padding:0 0 7px; border-top:0; border-bottom:1px solid var(--ink); font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
+  .cmp-h + .cmp-l{border-top:0}
+  .cmp-h > span{text-align:right}
+  .cmp-n{display:flex; flex-direction:column; gap:6px; font-size:14px; font-weight:600}
+  .cmp-bar{display:flex; height:8px; background:var(--canvas); max-width:320px}
+  .cmp-bar > span{display:block; height:100%; width:0}
+  .cmp-carga{font-family:var(--sans); font-size:11px; font-weight:400; color:var(--muted-2)}
+  .cmp-v{display:flex; flex-direction:column; align-items:flex-end; gap:1px; text-align:right; font-family:var(--mono); font-size:15px; white-space:nowrap}
+  .cmp-v small{font-family:var(--sans); font-size:11px; font-weight:400; color:var(--muted-2); white-space:normal}
+  .cmp-res.hibrido{background:var(--ok)}
+  .cmp-eq{margin:12px 0 0; font-size:12px; color:var(--ink-3); line-height:1.5}
+
+  /* Receita por tipo (detalhamento da receita) e Simples Nacional do mês */
+  .grec{display:grid; grid-template-columns:minmax(0,1fr) 124px 170px 156px 100px; gap:10px; align-items:center}
+  .grec > :nth-child(3){padding-left:14px}                              /* seletor afastado do número à esquerda */
+  .gr:hover .row-ctl, .gr:focus-within .row-ctl, .li:hover .row-ctl, .li:focus-within .row-ctl{opacity:1; pointer-events:auto}
+  .seg-prem{display:flex; align-items:flex-end; flex-wrap:wrap; gap:10px 28px; padding:8px 0 12px}
+  .seg-campo{display:flex; flex-direction:column; gap:2px; min-width:0}
+  .seg-campo > span:first-child{font-size:11px; color:var(--muted)}
+  .seg-campo .sel-wrap, .seg-campo .in{width:150px}
+  .seg-campo .sel, .seg-campo .in{font-size:14px; font-weight:600; text-align:left; border-bottom-color:var(--line-3)}
+  .seg-campo .sel-wrap::after{opacity:1}
+  .seg-faixa{font-family:var(--mono); font-size:12px; color:var(--ink-3); padding-bottom:4px}
+  .seg .gr .sel{font-size:12px}
+  .cbscol{display:flex; flex-direction:column; gap:1px; min-width:0}
+  .cbscol small{font-size:11px; color:var(--muted-2); padding-left:2px}
+  .sn .seg-prem{padding:0}
+  .sn-l{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid var(--line); font-size:13px}
+  .sn-l > span:first-child{color:var(--ink-3)}
+  .sn-l .v{font-family:var(--mono); font-weight:600; white-space:nowrap}
+  .sn-l .in{width:140px; flex:0 0 140px; font-weight:600; border-bottom-color:var(--line-3)}
+  .sn-l small{display:block; margin-top:1px; font-family:var(--sans); font-size:11px; font-weight:400; color:var(--muted-2)}
+  .sn-fim{border-top:1px solid var(--ink); font-weight:600}
+  .sn-fim > span:first-child{color:var(--ink)}
+  .sn-fim .v{display:flex; flex-direction:column; align-items:flex-end; gap:1px}
+  .sn-fim .v small{text-align:right}
+  .seg-hint{margin:2px 0 6px; font-size:12px; color:var(--ink-3)}
+  .seg-conf{margin:6px 0 0; font-size:12px; color:var(--ink-3)}
+  .seg-conf.ok{color:var(--ok)}
+  .seg-conf.dif{color:var(--brand)}
 
   /* Banco de dados: barra de salvamento, login e janelas */
   .btn.prim{background:var(--fill); border-color:var(--fill); color:#fff}
@@ -245,8 +291,7 @@
   .present .barra{display:none}
   @media print{ .barra, #modal{display:none !important} }
 
-  /* Resumo do cliente: sem o bloco herói (o resultado já está nos cartões) */
-  .hero.so-linhas{grid-template-columns:minmax(0,1fr)}
+  /* Resumo do cliente */
   .obs-largo{margin-top:32px; max-width:78ch}
 
   /* Cadeia de crédito (resumo do cliente) — handoff 5.1 */
@@ -336,7 +381,7 @@
   .toast{position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--fill); color:#fff; padding:10px 16px; border-radius:2px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; max-width:calc(100% - 32px)}
   .toast.show{opacity:1; transform:translate(-50%,0)}
 
-  @media (max-width:900px){ .hero, .reforma{grid-template-columns:minmax(0,1fr)} }
+  @media (max-width:900px){ .reforma{grid-template-columns:minmax(0,1fr)} }
   @media (max-width:640px){
     .card{padding:22px 18px 18px}
     .memo, .chart{padding:22px 18px}
@@ -346,10 +391,29 @@
     .dl.res{margin:8px -10px 0; padding:14px 10px}
     .total{margin:8px -10px -6px; padding:14px 10px}
     /* grades viram duas linhas: nome em cima, números embaixo */
-    .g5{grid-template-columns:minmax(0,1.3fr) 44px 52px minmax(0,1fr); gap:2px 8px}
+    /* despesas: nome e regra em cima; valor, alíquota e crédito embaixo */
+    .g5{grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr); grid-template-areas:"nome regra regra" "valor aliq cred"; gap:4px 8px}
+    .g5 > :nth-child(1){grid-area:nome}
+    .g5 > :nth-child(2){grid-area:valor}
+    .g5 > :nth-child(3){grid-area:regra; padding-left:0}
+    .g5 > :nth-child(4){grid-area:aliq}
+    .g5 > :nth-child(5){grid-area:cred}
+    .g5.gh{display:none}
+    .cmp-l{grid-template-columns:repeat(3, minmax(0,1fr)); gap:2px 10px}
+    .cmp-l > .cmp-n{grid-column:1 / -1; margin-bottom:4px}
+    .cmp-h > span:first-child{display:none}
+    .cmp-v{font-size:13px}
+    /* receita por tipo: nome e receita; situação no DAS e tipo da CBS; débito embaixo */
+    .grec{grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"nome receita" "sit cbs" "deb deb"; gap:4px 10px}
+    .grec > :nth-child(1){grid-area:nome}
+    .grec > :nth-child(2){grid-area:receita}
+    .grec > :nth-child(3){grid-area:sit; padding-left:0}
+    .grec > :nth-child(4){grid-area:cbs}
+    .grec > :nth-child(5){grid-area:deb; text-align:right}
+    .grec.gh{display:none}
+    .grec.gr > :nth-child(5)::before{content:"Débito CBS "; font:400 11px var(--sans); color:var(--muted-2)}
     .g4{grid-template-columns:minmax(0,1.2fr) 64px minmax(0,1fr); gap:2px 8px}
-    .g5 > :first-child, .g4 > :first-child{grid-column:1 / -1}
-    .g5.gh > :first-child{display:none}
+    .g4 > :first-child{grid-column:1 / -1}
     /* cadeia de crédito: nome em cima; CNPJ e regime; depois o crédito */
     .cad-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 28px; grid-template-areas:"nome nome x" "cnpj cnpj cnpj" "regime cred cred"; row-gap:6px; padding:8px 0}
     .cad-row > :nth-child(1){grid-area:cnpj}
@@ -385,7 +449,7 @@ const LOGO_DEFAULT = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOQAAAEECAIA
 // Supabase {url, chave pública}: preenchido no build (scripts/vercel_build.mjs ou gerar_dashboard.py com .env).
 // null = modo local: o painel funciona, mas não salva no banco.
 const SUPABASE = /*SUPABASE_CONFIG*/null;
-const SCHEMA = 3;
+const SCHEMA = 6;
 
 /* ---------- dados iniciais (DRE do cliente) ---------- */
 function defaults(){ return {
@@ -396,6 +460,7 @@ function defaults(){ return {
   anoLabel: "Exercício anual",
   footer: "Alexandre Araújo — Consultoria & Contabilidade",
   logo: null,                                   // null = logo padrão do escritório
+  anexo: "I",                                   // anexo do Simples Nacional (I a V): dado da empresa, passa de um mês para o outro
   // cadeia de crédito: [CNPJ, nome, regime, gera crédito ('sim' | 'parcial' | 'nao' | '')] — começa vazia
   cadeia: { fornecedores: [], clientes: [] },
   annual: {
@@ -415,6 +480,7 @@ function defaults(){ return {
   },
   monthly: {
     receita: 106419.89,
+    rbt12: 1179636.95,                          // receita bruta dos 12 meses anteriores (faixa do Simples)
     custos: [["Custo de vendas de produtos / outros",58039.60]],
     // [item, valor, % da base com direito a crédito, alíquota CBS]
     ga: [["Retirada de sócio",0,0,0],["HapVida",804.29,0,0],["Folha",12346.56,0,0],
@@ -429,9 +495,10 @@ function defaults(){ return {
       aliqGeral: 0.08, aliqReduzida: 0.032,
       aliqCompras: 0.09,                        // crédito sobre as compras do mês; não segue as premissas
       cbsSobreEfetiva: 0.1533,                  // parcela da CBS dentro do Simples (README, pendência 3)
-      // [nome, base, alíquota, tipo, 'pgdas'?] — o tipo diz qual premissa a linha segue: 'geral' | 'reduzida'.
-      // A linha marcada 'pgdas' puxa a receita declarada menos as outras categorias (a soma fecha com o PGDAS).
-      debitos: [["Receita PGDAS",106419.89,0.08,"geral","pgdas"]],
+      // [nome, receita, alíquota, tipo, —, situação no DAS]: a receita declarada do mês é a soma destas linhas.
+      // O tipo diz a alíquota da CBS por fora ('geral' | 'red30' | 'reduzida' | 'red70' | 'zero') e a situação
+      // ('' | 'st' | 'mono' | 'stmono' | 'iss') ajusta o DAS.
+      debitos: [["Receita PGDAS",106419.89,0.08,"geral"]],
       // créditos adicionados saem das compras do mês; 5º item opcional: parte das compras (base = compras × parte)
       creditos: [],
       saldoCredorAnterior: 0
@@ -484,6 +551,29 @@ function migrar(s){
     // antes da v3 não havia crédito direto sobre as compras: começa zerado para não somar em cima dos créditos já lançados
     if(s.monthly && s.monthly.reforma && s.monthly.reforma.aliqCompras == null) s.monthly.reforma.aliqCompras = 0;
     s.v = 3;
+  }
+  if(s.v < 4){
+    // anexo e receita dos 12 meses (v4): arquivo antigo não herda os do cliente de exemplo e segue com a parcela informada
+    if(s.anexo == null) s.anexo = '';
+    if(s.monthly && s.monthly.rbt12 == null) s.monthly.rbt12 = 0;
+    s.v = 4;
+  }
+  if(s.v < 5){
+    // até a v4 uma linha puxava o que sobrava da receita declarada; agora a receita é a soma das linhas
+    const mm = s.monthly, rf = mm && mm.reforma;
+    if(rf && Array.isArray(rf.debitos)){
+      const fixas = rf.debitos.reduce((a, r) => a + (r[4] === 'pgdas' ? 0 : (r[1] || 0)), 0);
+      const nPg = rf.debitos.filter(r => r[4] === 'pgdas').length;
+      const resto = Math.max(0, (mm.receita || 0) - fixas) / (nPg || 1);
+      rf.debitos.forEach(r => { if(r[4] === 'pgdas'){ r[1] = resto; r[4] = null; } });
+      if(rf.debitos.length) mm.receita = rf.debitos.reduce((a, r) => a + (r[1] || 0), 0);
+    }
+    s.v = 5;
+  }
+  if(s.v < 6){
+    // v6: a alíquota da receita deixa de ser campo e passa a sair do tipo. Quem acerta a linha é
+    // normalizarDebitos(), aplicado em todo carregamento — inclusive em mês já salvo nesta versão.
+    s.v = 6;
   }
   return s;
 }
@@ -543,24 +633,17 @@ const credLinha = r => (r[1] || 0) * (r[2] || 0) * (r[3] || 0);   // valor × % 
 const parteCompras = r => typeof r[4] === 'number' ? r[4] : null;
 const baseLinha = r => parteCompras(r) !== null ? (S.monthly.compraMercadoria || 0) * r[4] : (r[1] || 0);
 const valorCbs = r => baseLinha(r) * (r[2] || 0);                  // base × alíquota (créditos)
-const ehPgdas = r => r[4] === 'pgdas';
-function basesDebito(){          // a linha PGDAS recebe o que falta para fechar a receita declarada
-  const rf = S.monthly.reforma, R = S.monthly.receita || 0;
-  const fixas = rf.debitos.reduce((a, r) => a + (ehPgdas(r) ? 0 : (r[1] || 0)), 0);
-  const nPg = rf.debitos.filter(ehPgdas).length;
-  const resto = Math.max(0, R - fixas) / (nPg || 1);
-  const bases = rf.debitos.map(r => ehPgdas(r) ? resto : (r[1] || 0));
-  return {bases, temPgdas: nPg > 0, excesso: nPg ? Math.max(0, fixas - R) : 0, soma: bases.reduce((a, b) => a + b, 0)};
-}
+// a receita declarada do mês é a soma das linhas de receita (cada uma com a sua situação no DAS)
+const somaDebitos = () => S.monthly.reforma.debitos.reduce((a, r) => a + (+r[1] || 0), 0);
+function sincronizarReceita(){ S.monthly.receita = somaDebitos(); }
 
 function calcMes(){
-  const m = S.monthly, rf = m.reforma, R = m.receita || 0;
+  const m = S.monthly, rf = m.reforma, R = somaDebitos();
   const custos = soma(m.custos), ga = soma(m.ga), vendas = soma(m.vendas), trib = soma(m.tributarias);
   const lucroBruto = R - custos, resultado = lucroBruto - ga - vendas - trib;
   const creditoGeral = m.ga.reduce((a, r) => a + credLinha(r), 0);
   const baseDespesas = m.ga.reduce((a, r) => a + ((r[3] || 0) > 0 ? (r[1] || 0) * (r[2] || 0) : 0), 0);
-  const bd = basesDebito().bases;
-  const debitoTotal = rf.debitos.reduce((a, r, i) => a + bd[i] * (r[2] || 0), 0);
+  const debitoTotal = rf.debitos.reduce((a, r) => a + (+r[1] || 0) * (r[2] || 0), 0);
   const saldoAnterior = rf.saldoCredorAnterior || 0;
   const compras = m.compraMercadoria || 0;
   const outrasCompras = rf.creditos.reduce((a, r) => a + baseLinha(r), 0);   // linhas de crédito saem das compras
@@ -571,15 +654,98 @@ function calcMes(){
   const saldoCredor = Math.max(0, creditoTotal - debitoTotal);       // excedente vai para o mês seguinte
   const ls = linhaSimples(m.tributarias), simples = ls ? (ls[1] || 0) : 0;
   const efetiva = R > 0 ? simples / R * 100 : 0;                     // Simples pago ÷ receita
-  const parcelaCbs = simples * (rf.cbsSobreEfetiva || 0);            // = receita × efetiva × parcela
-  const simplesSemCbs = simples - parcelaCbs;
+  // CBS dentro do DAS: pela receita por tipo quando há anexo e receita dos 12 meses; sem eles, a parcela informada
+  const seg = segregacao();
+  const pelaTabela = !!(seg && !seg.excluida && seg.das > 0.004);
+  const parcela = pelaTabela ? seg.cbs / seg.das : (rf.cbsSobreEfetiva || 0);
+  // enquanto o DAS declarado estiver zerado, a comparação usa o DAS que sai da receita por tipo
+  const dasCalculado = pelaTabela ? seg.das : 0;
+  const dasBase = simples > 0.004 ? simples : dasCalculado;
+  const semDeclarado = simples <= 0.004 && dasBase > 0.004;
+  const parcelaCbs = dasBase * parcela;                              // a CBS é uma fatia do DAS
+  const simplesSemCbs = dasBase - parcelaCbs;
   const ibs = m.ibs || 0;
   const naTransicao = simplesSemCbs + cbsPagar + ibs;
+  // equilíbrio: a CBS por fora empata com hoje quando custa o mesmo que a parcela da CBS no Simples (menos o IBS informado).
+  // faltaCredito > 0: falta crédito para empatar; < 0: folga; null: nem com a CBS zerada empata
+  const limite = parcelaCbs - ibs;
+  const faltaCredito = limite > 0.004 ? (debitoTotal - limite) - creditoTotal : null;
   return {R, custos, ga, vendas, trib, lucroBruto, resultado, creditoGeral, baseDespesas, debitoTotal,
-    saldoAnterior, creditoTotal, cbsPagar, saldoCredor, simples, efetiva, parcelaCbs, simplesSemCbs, ibs,
-    naTransicao, delta: naTransicao - simples, compras, baseCompras, creditoCompras,
+    saldoAnterior, creditoTotal, cbsPagar, saldoCredor, simples, efetiva, seg, pelaTabela, parcela, parcelaCbs, simplesSemCbs, ibs,
+    dasCalculado, dasBase, semDeclarado, naTransicao, delta: naTransicao - dasBase, faltaCredito, compras, baseCompras, creditoCompras,
     excessoCompras: Math.max(0, outrasCompras - compras)};
 }
+
+/* ---------- reforma: tipos de alíquota e regras de crédito (LC 214/2025) ---------- */
+// tipo da linha de débito/crédito: a reduzida (−60%) tem premissa própria; cheia, −30%, −70% e zero seguem a alíquota geral
+const TIPOS = [['geral', 'Alíquota cheia'], ['red30', 'Redução de 30%'], ['reduzida', 'Redução de 60%'], ['red70', 'Redução de 70%'], ['zero', 'Alíquota zero']];
+const FATOR_TIPO = {red30: 0.7, red70: 0.3, zero: 0};
+function aliqTipo(tipo){
+  const rf = S.monthly.reforma;
+  return tipo === 'reduzida' ? rf.aliqReduzida : (tipo in FATOR_TIPO ? FATOR_TIPO[tipo] : 1) * rf.aliqGeral;
+}
+// A receita não tem alíquota própria: ela sai do tipo da linha. Todo mês carregado passa por aqui, senão
+// uma alíquota antiga gravada (ex.: 15,33%, que é a parcela da CBS no DAS) apareceria até trocarem o tipo.
+function normalizarDebitos(rf){
+  if(!rf || !Array.isArray(rf.debitos)) return;
+  rf.debitos.forEach(r => {
+    r[2] = r[3] === 'reduzida' ? (rf.aliqReduzida || 0) : ((r[3] in FATOR_TIPO ? FATOR_TIPO[r[3]] : 1) * (rf.aliqGeral || 0));
+  });
+}
+// regra de crédito da despesa = parte do valor que dá direito a crédito (profissões regulamentadas −30%, locação de imóveis −70%)
+const REGRAS = [[1, 'Integral'], [0.7, 'Redução de 30%'], [0.4, 'Redução de 60%'], [0.3, 'Redução de 70%'], [0, 'Sem crédito']];
+
+/* ---------- Simples Nacional: faixa e partilha (LC 123/2006; a partir de 2027 com CBS e IBS, LC 214/2025) ---------- */
+// faixa: [receita dos 12 meses até, alíquota nominal, parcela a deduzir, ICMS, ISS, PIS+Cofins (até 2026), CBS (2027 em diante)]
+// redist: parte do PIS/Cofins (e da CBS) no excedente do ISS acima de 5%
+const ANEXOS = {
+  I:   {nome: 'Comércio', faixas: [[180000, .04, 0, .34, 0, .155, .1533], [360000, .073, 5940, .34, 0, .155, .1533],
+         [720000, .095, 13860, .335, 0, .155, .1533], [1800000, .107, 22500, .335, 0, .155, .1533],
+         [3600000, .143, 87300, .335, 0, .155, .1533], [4800000, .19, 378000, 0, 0, .344, .3402]]},
+  II:  {nome: 'Indústria', faixas: [[180000, .045, 0, .32, 0, .14, .1385], [360000, .078, 5940, .32, 0, .14, .1385],
+         [720000, .10, 13860, .32, 0, .14, .1385], [1800000, .112, 22500, .32, 0, .14, .1385],
+         [3600000, .147, 85500, .32, 0, .14, .1385], [4800000, .30, 720000, 0, 0, .255, .2522]]},
+  III: {nome: 'Serviços', redist: .2346, faixas: [[180000, .06, 0, 0, .335, .156, .1543], [360000, .112, 9360, 0, .32, .171, .1691],
+         [720000, .135, 17640, 0, .325, .166, .1641], [1800000, .16, 35640, 0, .325, .166, .1641],
+         [3600000, .21, 125640, 0, .335, .156, .1543], [4800000, .33, 648000, 0, 0, .195, .1929]]},
+  IV:  {nome: 'Serviços', redist: .3667, faixas: [[180000, .045, 0, 0, .445, .215, .2126], [360000, .09, 8100, 0, .40, .25, .2473],
+         [720000, .102, 12420, 0, .40, .24, .2374], [1800000, .14, 39780, 0, .40, .23, .2275],
+         [3600000, .22, 183780, 0, .40, .22, .2176], [4800000, .33, 828000, 0, 0, .25, .247]]},
+  V:   {nome: 'Serviços', redist: .2242, faixas: [[180000, .155, 0, 0, .14, .1715, .1696], [360000, .18, 4500, 0, .17, .1715, .1696],
+         [720000, .195, 9900, 0, .19, .1815, .1795], [1800000, .205, 17100, 0, .21, .1915, .1894],
+         [3600000, .23, 62100, 0, .235, .1715, .1696], [4800000, .305, 540000, 0, 0, .20, .1978]]}
+};
+const LIMITE_SN = 4800000, TETO_ISS = 0.05;
+// alíquotas sobre a receita: total do DAS e as partes de ICMS, ISS, PIS/Cofins (CBS a partir de 2027) e a CBS da simulação
+function simplesFaixa(anexo, rbt12, ano){
+  const A = ANEXOS[anexo];
+  if(!A || !(rbt12 > 0)) return null;
+  if(rbt12 > LIMITE_SN) return {excluida: true};
+  const n = A.faixas.findIndex(x => rbt12 <= x[0]), f = A.faixas[n];
+  const ef = x => (rbt12 * x[1] - x[2]) / rbt12;
+  const fed = ef(f), loc = n < 5 ? f : A.faixas[4], el = ef(loc);          // 6ª faixa: ICMS e ISS seguem calculados pela 5ª
+  const icms = el * loc[3], iss = el * loc[4];
+  const excesso = A.redist && iss > TETO_ISS ? iss - TETO_ISS : 0;           // ISS acima de 5% vai para os tributos federais
+  const extra = excesso * (A.redist || 0);
+  return {faixa: n + 1, sexta: n === 5, total: n < 5 ? fed : fed + icms + iss, icms, iss: iss - excesso,
+    pc: fed * (ano >= 2027 ? f[6] : f[5]) + extra, cbs: fed * f[6] + extra};
+}
+// toda linha de receita é a receita declarada no PGDAS: o que diferencia uma da outra é a situação no DAS
+const NOME_RECEITA = 'Receita PGDAS';
+// situação da receita no DAS: ICMS-ST tira o ICMS, monofásico tira PIS/Cofins (a CBS, a partir de 2027), ISS retido tira o ISS
+const SITUACOES =[['', 'Integral'], ['st', 'ICMS-ST'], ['mono', 'Monofásico'], ['stmono', 'ICMS-ST + monofásico'], ['iss', 'ISS retido']];
+const anoCompetencia = () => { const p = lerPeriodo(S.mesLabel); return p ? +p.slice(0, 4) : new Date().getFullYear(); };
+// DAS e CBS dentro do DAS de cada linha de receita (as mesmas linhas do débito da CBS)
+function segregacao(){
+  const f = simplesFaixa(S.anexo, +S.monthly.rbt12 || 0, anoCompetencia());
+  if(!f || f.excluida) return f;
+  const linhas = S.monthly.reforma.debitos.map(r => {
+    const sit = r[5] || '', b = +r[1] || 0, st = sit === 'st' || sit === 'stmono', mono = sit === 'mono' || sit === 'stmono';
+    return {das: b * (f.total - (st ? f.icms : 0) - (mono ? f.pc : 0) - (sit === 'iss' ? f.iss : 0)), cbs: mono ? 0 : b * f.cbs};
+  });
+  return Object.assign(f, {linhas, das: linhas.reduce((a, x) => a + x.das, 0), cbs: linhas.reduce((a, x) => a + x.cbs, 0)});
+}
+
 function calcAno(){
   const a = S.annual, R = a.receita || 0;
   const custos = soma(a.custos), ga = soma(a.ga), vendas = soma(a.vendas), trib = soma(a.tributarias);
@@ -596,7 +762,7 @@ function linhasComCredito(){ return alvoGeral || S.monthly.ga.map(r => (r[3] || 
 function propagar(tipo){
   const rf = S.monthly.reforma, v = tipo === 'reduzida' ? rf.aliqReduzida : rf.aliqGeral;
   if(tipo === 'geral'){ const alvo = linhasComCredito(); S.monthly.ga.forEach((r, i) => { if(alvo[i]) r[3] = v; }); }
-  rf.debitos.concat(rf.creditos).forEach(r => { if((r[3] === 'reduzida' ? 'reduzida' : 'geral') === tipo) r[2] = v; });
+  rf.debitos.concat(rf.creditos).forEach(r => { if((r[3] === 'reduzida') === (tipo === 'reduzida')) r[2] = aliqTipo(r[3]); });
 }
 
 /* ---------- textos ---------- */
@@ -643,9 +809,37 @@ function textoObservar(c){
   else
     t += `Na transição da reforma, o Simples cai para ${brl(c.simplesSemCbs)} e a CBS passa a ser apurada em separado, em ${brl(c.cbsPagar)}`;
   t += c.ibs > 0.004
-    ? `. Com o IBS informado (${brl(c.ibs)}), somados dão ${brl(c.naTransicao)}, contra ${brl(c.simples)} hoje. `
-    : ` — somados, ${brl(c.naTransicao)}, contra ${brl(c.simples)} hoje. `;
-  return t + `Os créditos sobre compras e despesas somam ${brl(c.creditoTotal)}.`;
+    ? `. Com o IBS informado (${brl(c.ibs)}), somados dão ${brl(c.naTransicao)}, contra ${brl(c.dasBase)} hoje. `
+    : ` — somados, ${brl(c.naTransicao)}, contra ${brl(c.dasBase)} hoje. `;
+  t += `Os créditos sobre compras e despesas somam ${brl(c.creditoTotal)}.`;
+  const eq = textoEquilibrio(c);
+  return eq ? `${t} ${eq}` : t;
+}
+// quanto de crédito separa hoje da CBS por fora — em compras quando há alíquota de compras (o valor em crédito já é o delta)
+// hib: na linguagem do quadro Convencional × Híbrido; sem ele, na do resumo do cliente
+function textoEquilibrio(c, hib){
+  if(!(c.dasBase > 0.004)) return '';
+  const [quem, Quem, barato, ref] = hib ? ['o híbrido', 'O híbrido', 'mais barato', 'o convencional']
+                                        : ['a apuração separada', 'A apuração separada', 'mais barata', 'hoje'];
+  if(c.faltaCredito === null) return `Nem com a CBS zerada ${quem} empataria: o IBS informado já passa a parcela da CBS no Simples.`;
+  const aliq = S.monthly.reforma.aliqCompras || 0, v = Math.abs(c.faltaCredito);
+  if(v < 0.005) return hib ? '' : 'Hoje e a apuração separada empatam.';
+  const quanto = aliq > 0 ? `${brl(v / aliq)} em compras com crédito de ${FMT.pct0(aliq)}` : `${brl(v)} de crédito`;
+  return c.faltaCredito > 0
+    ? `Para ${quem} empatar com ${ref}, faltariam cerca de ${quanto} no mês.`
+    : `${Quem} segue ${barato} que ${ref} mesmo com até ${quanto} a menos no mês.`;
+}
+// clientes da cadeia: quem aproveita crédito recebe o crédito cheio quando a CBS é apurada por fora
+function textoClientesCadeia(){
+  const lst = (S.cadeia && S.cadeia.clientes) || [], n = lst.length;
+  if(!n) return '';
+  const q = lst.filter(r => r[3] === 'sim' || r[3] === 'parcial').length;
+  const cheio = q === 1 ? 'ele passa a receber o crédito cheio' : 'eles passam a receber o crédito cheio';
+  if(n === 1) return q ? `O cliente cadastrado aproveita crédito da CBS: com a CBS apurada por fora, ${cheio}, e não só a parte paga no Simples.`
+                       : 'O cliente cadastrado não aproveita crédito da CBS: para ele, apurar a CBS por fora não muda nada.';
+  if(!q) return `Nenhum dos ${n} clientes cadastrados aproveita crédito da CBS: para eles, apurar a CBS por fora não muda nada.`;
+  return `${q === n ? `Todos os ${n}` : `${q} dos ${n}`} clientes cadastrados ${q === 1 ? 'aproveita' : 'aproveitam'} crédito da CBS: ` +
+    `com a CBS apurada por fora, ${cheio}, e não só a parte paga no Simples.`;
 }
 
 /* ---------- saídas: todo texto calculado da tela, por chave ---------- */
@@ -663,10 +857,6 @@ function saidas(){
   O.ctx = 'DRE · ' + (an ? S.anoLabel : S.mesLabel);
   O.comp = an ? 'Valores em reais · ' + String(S.anoLabel || '').toLowerCase()
               : 'Valores em reais · competência ' + competencia(S.mesLabel);
-  const h = an ? [ca.resultado, ca.R, 'exercício'] : [cm.resultado, cm.R, 'mês'];
-  O['h.cap'] = 'Resultado líquido do ' + h[2];
-  O['h.val'] = brl(h[0]);
-  O['h.ctx'] = `margem de ${P(h[0], h[1])} sobre receita declarada de ${brl(h[1])}`;
 
   // mês — DRE
   Object.assign(O, {
@@ -683,16 +873,18 @@ function saidas(){
     O[`m.ga.${i}.v`] = brl(r[1] || 0); O[`m.ga.${i}.cr`] = brl(c); C[`m.ga.${i}.cr`] = c > 0.004 ? 'var(--ink)' : 'var(--disabled)'; });
 
   // mês — CBS
-  const reduzida = rf.debitos.find(r => r[3] === 'reduzida');
+  const forn =(S.cadeia && S.cadeia.fornecedores) || [], fq = forn.filter(r => r[3] === 'nao' || r[3] === 'parcial').length;
   Object.assign(O, {
     'm.creditoGeral': brl(cm.creditoGeral), 'm.baseDespesas': brl(cm.baseDespesas),
     'm.debitoTotal': brl(cm.debitoTotal), 'm.creditoTotal': brl(cm.creditoTotal),
     'm.saldoAnt': brl(cm.saldoAnterior), 'm.saldoCredor': brl(cm.saldoCredor),
     'm.linhas': `${linhasComCredito().filter(Boolean).length} de ${m.ga.length} linhas de despesa`,
-    'm.lblRed': reduzida && String(reduzida[0]).trim() ? reduzida[0] : 'Alíquota reduzida',
-    'm.lblTrans': 'Na transição — Simples reduzido + CBS' + (cm.ibs > 0.004 ? ' + IBS' : ''),
-    'm.parcelaInfo': `efetiva ${dec(cm.efetiva, 2, 2)}% · ${brl(cm.parcelaCbs)}`
+    'm.lblRed': 'Alíquota reduzida',
+    // fornecedores da cadeia que não geram crédito cheio: o crédito das compras pode estar alto
+    'm.fornCap': forn.length === 1 ? '1 de 1 fornecedor cadastrado não gera crédito cheio — confira a alíquota'
+      : `${fq} dos ${forn.length} fornecedores cadastrados não ${fq === 1 ? 'gera' : 'geram'} crédito cheio — confira a alíquota`
   });
+  V['m.temFornCap'] = fq > 0;
   V['m.temCredor'] = cm.saldoCredor > 0.004;
   rf.creditos.forEach((r, i) => { O[`m.cred.${i}.base`] = FMT.base(baseLinha(r)); });
   O['m.compraCred'] = brl(cm.creditoCompras);
@@ -701,37 +893,92 @@ function saidas(){
                                                : `restante das compras: ${brl(cm.baseCompras)}`;
   O['m.compra'] = brl(cm.compras); O['m.compraP'] = P(cm.compras, cm.R);
   (m.estoque || []).forEach((r, i) => { O[`m.es.${i}.v`] = brl(r[1] || 0); });
-  const db = basesDebito();
-  rf.debitos.forEach((r, i) => {
-    O[`m.deb.${i}.val`] = brl(db.bases[i] * (r[2] || 0)); O[`m.deb.${i}.base`] = FMT.base(db.bases[i]);
-    O[`m.deb.${i}.tipo`] = r[3] === 'reduzida' ? 'reduzida' : 'geral';
-    O[`m.deb.${i}.cap`] = rf.debitos.length > 1 ? 'restante da receita declarada no PGDAS' : 'receita declarada no PGDAS';
-  });
-  rf.creditos.forEach((r, i) => { O[`m.cred.${i}.val`] = brl(valorCbs(r)); O[`m.cred.${i}.tipo`] = r[3] === 'reduzida' ? 'reduzida' : 'geral'; });
-  O['m.debHint'] = db.temPgdas
-    ? (db.excesso > 0.004 ? `As outras categorias somam ${brl(db.excesso)} a mais que a receita declarada no PGDAS.` : '')
-    : (rf.debitos.length && Math.abs(db.soma - cm.R) >= 0.01
-        ? `A soma das categorias (${brl(db.soma)}) difere da receita declarada no PGDAS (${brl(cm.R)}) em ${brl(Math.abs(db.soma - cm.R))}.` : '');
-  V['m.debHint'] = O['m.debHint'] !== '';
+  // a alíquota da linha aparece na tabela: é fácil confundir a alíquota da CBS com a parcela dela dentro do DAS
+  rf.debitos.forEach((r, i) => { O[`m.deb.${i}.val`] = brl((+r[1] || 0) * (r[2] || 0)); O[`m.deb.${i}.aliq`] = FMT.pct(r[2]); });
+  rf.creditos.forEach((r, i) => { O[`m.cred.${i}.val`] = brl(valorCbs(r)); });
   // crédito maior que o débito: a CBS vira "CBS Crédito" (verde) com o saldo que vai para o mês seguinte
   const credor = V['m.temCredor'];
   O['m.cbsRotulo'] = credor ? 'CBS Crédito' : 'CBS a pagar';
   O['m.cbsRes'] = brl(credor ? cm.saldoCredor : cm.cbsPagar);
   const maxCbs = Math.max(cm.debitoTotal, cm.creditoTotal, cm.cbsPagar, cm.saldoCredor, 1);
-  const maxCarga = Math.max(cm.simples, cm.simplesSemCbs, cm.naTransicao, 1);
-  [['deb', cm.debitoTotal, maxCbs], ['cred', cm.creditoTotal, maxCbs], ['cbs', credor ? cm.saldoCredor : cm.cbsPagar, maxCbs],
-   ['hoje', cm.simples, maxCarga], ['sem', cm.simplesSemCbs, maxCarga], ['trans', cm.naTransicao, maxCarga]]
-    .forEach(([k, v, mx]) => { O['b.' + k] = brl(v); W['b.' + k] = larg(v, mx); });
-  const sobe = cm.delta >= 0;
-  O['m.delta'] = (sobe ? '+' : '−') + brl(Math.abs(cm.delta)) + ' (' + pct(cm.simples ? Math.abs(cm.delta) / cm.simples * 100 : 0) + ')';
-  O['m.deltaLbl'] = sobe ? 'a mais que hoje' : 'a menos que hoje';
-  C['m.delta'] = sobe ? 'var(--brand)' : 'var(--ink)';
+  [['deb', cm.debitoTotal], ['cred', cm.creditoTotal], ['cbs', credor ? cm.saldoCredor : cm.cbsPagar]]
+    .forEach(([k, v]) => { O['b.' + k] = brl(v); W['b.' + k] = larg(v, maxCbs); });
+  // de onde vem o crédito: a barra do crédito é empilhada por origem (sem mínimo de largura, para somar o total)
+  const origens = [['compras', cm.creditoCompras, 'compras'], ['despesas', cm.creditoGeral, 'despesas'],
+    ['outras', rf.creditos.reduce((a, r) => a + valorCbs(r), 0), 'outras linhas'], ['saldo', cm.saldoAnterior, 'saldo do mês anterior']];
+  origens.forEach(([k, v]) => { W['cr.' + k] = (Math.max(0, v) / maxCbs * 100) + '%'; });
+  O['cr.legenda'] = origens.filter(([, v]) => v > 0.004)
+    .map(([, v, nome]) => `${nome} ${brl(v)} (${dec(cm.creditoTotal ? v / cm.creditoTotal * 100 : 0, 0, 0)}%)`).join(' · ');
+  V['cr.temLegenda'] = O['cr.legenda'] !== '';
+
+  // receita por tipo: faixa do Simples, DAS de cada tipo e conferência com o DAS declarado
+  const sg = cm.seg, temTab = !!(sg && !sg.excluida);
+  O['r.faixa'] = !ANEXOS[S.anexo] ? 'escolha o anexo para calcular o DAS de cada tipo'
+    : !(+m.rbt12 > 0) ? 'informe a receita dos 12 meses para calcular o DAS de cada tipo'
+    : sg.excluida ? 'acima de R$ 4,8 milhões: fora do Simples Nacional'
+    : `${sg.faixa}ª faixa · efetiva ${dec(sg.total * 100, 2, 2)}%${sg.sexta ? ' · ICMS e ISS pela 5ª faixa' : ''}`;
+  const difDas = temTab ? cm.simples - sg.das : 0;
+  V['r.temTabela'] = temTab;
+  // a conferência só aparece com DAS declarado: em mês em branco não há o que comparar
+  V['r.temConf'] = temTab && cm.simples > 0.004;
+  V['r.confere'] = V['r.temConf'] && Math.abs(difDas) < 1;
+  V['r.naoConfere'] = V['r.temConf'] && !V['r.confere'];
+  O['r.dasCalc'] = temTab ? brl(sg.das) : '—';
+  O['r.dasDeclarado'] = brl(cm.simples);
+  O['r.conferencia'] = !V['r.temConf'] ? '' : V['r.confere'] ? 'Confere com o DAS declarado no PGDAS.'
+    : difDas < 0 ? `O DAS pela receita por tipo passa o declarado em ${brl(-difDas)}: separe as receitas com ICMS-ST, monofásico ou ISS retido.`
+    : `O DAS pela receita por tipo fica ${brl(difDas)} abaixo do declarado: confira o anexo, a receita dos 12 meses e os tipos.`;
+  // as duas CBS têm bases diferentes: a de dentro é uma fatia do DAS; a de fora incide sobre a receita
+  O['r.cbsDentro'] = brl(cm.parcelaCbs);
+  O['r.cbsBase'] = `${dec(cm.parcela * 100, 2, 2)}% do DAS${cm.semDeclarado ? ' calculado' : ''}`;
+  O['r.cbsFora'] = brl(cm.cbsPagar);
+  O['r.foraBase'] = cm.saldoCredor > 0.004 ? `os créditos passam o débito em ${brl(cm.saldoCredor)}`
+    : cm.creditoTotal > 0.004 ? `débito de ${brl(cm.debitoTotal)} menos créditos de ${brl(cm.creditoTotal)}`
+    : `${dec(cm.R > 0 ? cm.debitoTotal / cm.R * 100 : 0, 2, 2)}% da receita`;
+  O['r.dasSemCbs'] = brl(cm.simplesSemCbs);
+  O['r.totalHib'] = brl(cm.naTransicao);
+  O['r.contraHoje'] = `contra ${brl(cm.dasBase)} com a CBS dentro`;
+  O['r.decisao'] = Math.abs(cm.delta) < 0.005 ? 'Com a CBS por fora, o mês custa o mesmo'
+    : cm.delta > 0 ? `Com a CBS por fora, o mês custa ${brl(cm.delta)} a mais`
+    : `Com a CBS por fora, o mês custa ${brl(-cm.delta)} a menos`;
+  V['r.manual'] = !cm.pelaTabela;
+
+  // Convencional × Híbrido: números e uma barra empilhada por regime (DAS + CBS), medidas pelo maior total
+  const maxTot = Math.max(cm.dasBase, cm.naTransicao, 1);
+  Object.assign(O, {
+    'k.dasConv': brl(cm.dasBase), 'k.cbsConv': brl(cm.parcelaCbs), 'k.totConv': brl(cm.dasBase), 'k.cbsConvInfo': 'dentro do DAS',
+    'k.dasHib': brl(cm.simplesSemCbs), 'k.cbsHib': brl(cm.cbsPagar), 'k.totHib': brl(cm.naTransicao),
+    'k.cbsHibInfo': credor ? `crédito de ${brl(cm.saldoCredor)} vai para o mês seguinte`
+      : cm.ibs > 0.004 ? `+ IBS de ${brl(cm.ibs)} no total` : 'apurada por fora',
+    'k.decisao': Math.abs(cm.delta) < 0.005 ? 'Os dois regimes empatam no mês'
+      : cm.delta > 0 ? 'O convencional sai mais barato no mês' : 'O híbrido sai mais barato no mês',
+    'k.dif': brl(Math.abs(cm.delta)),
+    'k.equilibrio': textoEquilibrio(cm, true),
+    // carga tributária do mês em cada regime: todas as despesas tributárias, trocando o DAS pelo par DAS sem CBS + CBS
+    'k.cargaConv': `Tributos do mês: ${brl(cm.trib)} · ${P2(cm.trib, cm.R)} da receita`,
+    'k.cargaHib': `Tributos do mês: ${brl(cm.trib + cm.delta)} · ${P2(cm.trib + cm.delta, cm.R)} da receita`,
+    // alíquota efetiva de cada regime: o que ele custa sobre a receita do mês
+    'k.efetConv': `alíquota efetiva ${P2(cm.dasBase, cm.R)}`,
+    'k.efetHib': `alíquota efetiva ${P2(cm.naTransicao, cm.R)}`
+  });
+  const ppt = Math.abs(cm.delta) / (cm.R || 1) * 100;
+  const pp = `${dec(ppt, 2, 2)} ${ppt < 2 ? 'ponto percentual' : 'pontos percentuais'}`;
+  O['k.variacao'] = !(cm.R > 0.004 && cm.dasBase > 0.004) ? ''
+    : Math.abs(cm.delta) < 0.005 ? `A alíquota efetiva do regime fica em ${P2(cm.dasBase, cm.R)} nos dois.`
+    : `A alíquota efetiva do regime ${cm.delta > 0 ? 'sobe' : 'cai'} de ${P2(cm.dasBase, cm.R)} para ${P2(cm.naTransicao, cm.R)} — ${pp} a ${cm.delta > 0 ? 'mais' : 'menos'}.`;
+  V['k.temVariacao'] = O['k.variacao'] !== '';
+  [['k.convDas', cm.simplesSemCbs], ['k.convCbs', cm.parcelaCbs], ['k.hibDas', cm.simplesSemCbs], ['k.hibCbs', cm.cbsPagar + cm.ibs]]
+    .forEach(([k, v]) => { W[k] = (maxTot > 0 ? Math.max(0, v) / maxTot * 100 : 0) + '%'; });
+  V['k.hibrido'] = cm.delta < -0.004;
+  V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
 
   // resumo do cliente
   O['c.nRec'] = 'declarada no PGDAS'; O['c.nRes'] = 'margem de ' + P(cm.resultado, cm.R);
   O['c.nSim'] = 'regime atual';
   O['c.nCbs'] = credor ? 'vai para o mês seguinte' : 'simulação da reforma';
   O['c.obs'] = textoObservar(cm);
+  O['c.obsCadeia'] = textoClientesCadeia();
+  V['c.temObsCadeia'] = O['c.obsCadeia'] !== '';
 
   // ano
   Object.assign(O, {
@@ -781,7 +1028,7 @@ const editavel = () => ui.editando && !ui.present;
 const semTags = s => String(s).replace(/<[^>]+>/g, '');
 
 function rTopo(){
-  const abas = [['resultado', 'Resultado'], ['reforma', 'Reforma · CBS'],
+  const abas = [['resultado', 'Resultado'],
     ['cliente', 'Resumo<span class="tl-long"> do cliente</span>'], ['anual', 'Anual']];
   const botoes = abas.map(([id, lbl]) => (id === 'anual' ? '<span class="rail-sep" aria-hidden="true"></span>' : '') +
     `<button class="tab" role="tab" id="tab-${id}" aria-selected="${ui.tab === id}" aria-controls="painel"` +
@@ -838,14 +1085,12 @@ function rHeroi(){
     ? linhaH('Despesas operacionais', 'a.despesas', 'a.despesasP') + linhaH('Simples Nacional', 'a.simples', 'a.simplesP')
     : linhaH('Simples Nacional', 'm.simples', 'm.simplesP') +
       linhaH(o('m.cbsRotulo'), 'm.cbsRes', '', 'cbs', ' <span class="suf">(reforma)</span>', 'data-cls="credito:m.temCredor"');
-  const soLinhas = ui.tab === 'cliente';          // no Resumo do cliente o resultado já está nos cartões logo abaixo
-  return `<section class="hero${soLinhas ? ' so-linhas' : ''}" aria-label="Indicadores">
-    ${soLinhas ? '' : `<div class="hero-main"><div class="cap" data-o="h.cap"></div><div class="hero-val" data-o="h.val"></div><div class="hero-ctx" data-o="h.ctx"></div></div>`}
-    <div class="hero-side">${lado}</div></section>`;
+  // sem bloco herói: o resultado líquido já fecha a DRE e está nos cartões do resumo
+  return `<section class="hero" aria-label="Indicadores"><div class="hero-side">${lado}</div></section>`;
 }
 
-function linha(cls, label, kv, kp, path){
-  const val = path && editavel() ? inp(path, 'brl', semTags(label), 'val') : o(kv);
+function linha(cls, label, kv, kp, path, sempre){       // sempre: campo aberto mesmo fora de "Editar valores"
+  const val = path && (sempre || editavel()) ? inp(path, 'brl', semTags(label), 'val') : o(kv);
   return `<div class="dl ${cls}"><span class="l">${label}</span><span class="v">${val}${kp ? o(kp, 'p') : ''}</span></div>`;
 }
 function lista(base, arr, k){
@@ -856,20 +1101,94 @@ const btnDetalhe = () => `<button class="btn" data-act="detalhe" aria-expanded="
 const painel = (cls, tab, html) => `<section class="${cls}" id="painel" role="tabpanel" aria-labelledby="tab-${tab}">${html}</section>`;
 
 function detDespesas(){
-  let h = `<div class="det"><div class="scroll-x"><div class="g5 gh"><span>Item</span><span>Valor</span><span>% base</span><span>Alíquota</span><span>Crédito CBS</span></div>`;
+  let h = `<div class="det"><div class="scroll-x"><div class="g5 gh"><span>Item</span><span>Valor</span><span class="esq">Regra de crédito</span><span>Alíquota</span><span>Crédito CBS</span></div>`;
   S.monthly.ga.forEach((r, i) => {
-    h += `<div class="g5 gr"><span class="nm">${esc(r[0])}</span>
-      <span class="r m">${editavel() ? inp(`monthly.ga.${i}.1`, 'brl', r[0] + ' — valor', 'val') : o(`m.ga.${i}.v`)}</span>
-      ${inp(`monthly.ga.${i}.2`, 'pct0', r[0] + ' — % base')}
+    // a regra é a parte do valor com crédito; parte fora da lista aparece como "Outra"
+    const parte = +r[2] || 0, igual = v => Math.abs(v - parte) < 1e-9, padrao = REGRAS.some(([v]) => igual(v));
+    const opcoes = REGRAS.map(([v, l]) => `<option value="${v}"${igual(v) ? ' selected' : ''}>${l}</option>`).join('') +
+      (padrao ? '' : `<option value="${parte}" selected>Outra: ${FMT.pct0(parte)} com crédito</option>`) + `<option value="outra">Outra parte…</option>`;
+    h += `<div class="g5 gr">
+      <span class="nmcol"><span class="nmwrap">${inp(`monthly.ga.${i}.0`, 'txt', `Despesa ${i + 1}`, 'txt')}
+        <span class="row-ctl"><button class="x" data-act="rm-ga" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover despesa">×</button></span></span></span>
+      <span class="r m">${inp(`monthly.ga.${i}.1`, 'brl', r[0] + ' — valor', 'val')}</span>
+      <span class="sel-wrap regra${parte > 0 ? '' : ' sem'}"><select class="sel" data-regra data-i="${i}" aria-label="Regra de crédito — ${esc(r[0])}"${ui.present ? ' disabled' : ''}>${opcoes}</select></span>
       ${inp(`monthly.ga.${i}.3`, 'pct', r[0] + ' — alíquota')}
       <span class="cr-v" data-o="m.ga.${i}.cr" data-oc="m.ga.${i}.cr"></span></div>`;
   });
-  return h + `</div><div class="det-foot"><span>Crédito de CBS gerado pelas despesas</span><span data-o="m.creditoGeral"></span></div></div>`;
+  return h + `</div>
+    <button class="add" data-act="add-ga">+ adicionar despesa</button>
+    <div class="det-foot"><span>Crédito de CBS gerado pelas despesas</span><span data-o="m.creditoGeral"></span></div></div>`;
+}
+const opcoesSel = (lista, atual) => lista.map(([v, l]) => `<option value="${v}"${v === atual ? ' selected' : ''}>${esc(l)}</option>`).join('');
+// receita por tipo: as linhas do débito da CBS, com a situação no DAS e o tipo da CBS por fora
+function detReceita(){
+  const rf = S.monthly.reforma, ro = ui.present ? ' disabled' : '';
+  let h = `<div class="det seg"><div class="scroll-x">
+    <div class="grec gh"><span>Tipo de receita</span><span>Receita</span><span class="esq">No DAS</span><span class="esq">CBS por fora</span><span>Débito CBS</span></div>`;
+  rf.debitos.forEach((r, i) => {
+    const tipo = TIPOS.some(([v]) => v === r[3]) ? r[3] : 'geral';
+    h += `<div class="grec gr">
+      <span class="nmcol"><span class="nmwrap"><span class="nm">${NOME_RECEITA}</span>
+        <span class="row-ctl"><button class="x" data-act="rm" data-g="debitos" data-i="${i}" aria-label="Remover receita ${i + 1}" title="Remover linha">×</button></span></span></span>
+      ${inp(`monthly.reforma.debitos.${i}.1`, 'base', `Receita ${i + 1}`)}
+      <span class="sel-wrap"><select class="sel" data-sit data-i="${i}" aria-label="No DAS — receita ${i + 1}"${ro}>${opcoesSel(SITUACOES, r[5] || '')}</select></span>
+      <span class="cbscol"><span class="sel-wrap"><select class="sel" data-tipo data-g="debitos" data-i="${i}" aria-label="CBS por fora — receita ${i + 1}"${ro}>${opcoesSel(TIPOS, tipo)}</select></span><small class="m" data-o="m.deb.${i}.aliq"></small></span>
+      <span class="cr-v" data-o="m.deb.${i}.val"></span></div>`;
+  });
+  return h + `</div>
+    <button class="add" data-act="add" data-g="debitos">+ adicionar receita</button>
+  </div>`;
+}
+// o DAS declarado é a linha do Simples nas despesas tributárias (a mesma que o cálculo usa): editável aqui também
+function dasDeclaradoCampo(){
+  const trib = S.monthly.tributarias, ls = linhaSimples(trib), i = trib.indexOf(ls);
+  return i < 0 ? `<span class="v" data-o="r.dasDeclarado"></span>` : inp(`monthly.tributarias.${i}.1`, 'brl', 'DAS declarado no PGDAS');
+}
+// Simples Nacional do mês: o anexo e a receita dos 12 meses dão a faixa e a alíquota efetiva
+function rSimplesMes(){
+  const ro = ui.present ? ' disabled' : '';
+  const anexos = [['', 'Escolha…']].concat(Object.keys(ANEXOS).map(k => [k, `${k} · ${ANEXOS[k].nome}`]));
+  return `<section class="card sn" aria-label="Simples Nacional do mês">
+    <div class="card-h"><div><h2>Simples Nacional do mês</h2><p class="sub">O anexo e a receita dos últimos 12 meses dão a faixa e a alíquota efetiva do mês.</p></div></div>
+    <div class="seg-prem">
+      <label class="seg-campo"><span>Anexo do Simples</span><span class="sel-wrap"><select class="sel" data-b="anexo" data-f="txt" aria-label="Anexo do Simples Nacional"${ro}>${opcoesSel(anexos, S.anexo || '')}</select></span></label>
+      <label class="seg-campo"><span>Receita dos últimos 12 meses</span>${inp('monthly.rbt12', 'brl', 'Receita dos últimos 12 meses')}</label>
+      <span class="seg-faixa" data-o="r.faixa"></span>
+    </div>
+  </section>`;
+}
+// Apuração do mês — DAS por tipo, conferência com o declarado e as duas CBS.
+// FORA DA TELA por enquanto (decisão do usuário): entra depois, no fim da DRE. O cálculo já roda em calcMes().
+function rApuracaoSimples(){
+  return `<div class="sn-l" data-v="r.temTabela"><span>DAS pela receita por tipo</span><span class="v" data-o="r.dasCalc"></span></div>
+    <div class="sn-l"><span>DAS declarado no PGDAS</span>${dasDeclaradoCampo()}</div>
+    <p class="seg-conf" data-v="r.temConf" data-o="r.conferencia" data-cls="ok:r.confere dif:r.naoConfere"></p>
+    <div class="sn-l"><span>CBS dentro do DAS<small data-o="r.cbsBase"></small></span><span class="v" data-o="r.cbsDentro"></span></div>
+    <div class="sn-l"><span>CBS por fora<small data-o="r.foraBase"></small></span><span class="v" data-o="r.cbsFora"></span></div>
+    <div class="sn-l"><span>DAS sem a CBS<small>o que sobraria no Simples</small></span><span class="v" data-o="r.dasSemCbs"></span></div>
+    <div class="sn-l sn-fim"><span data-o="r.decisao"></span><span class="v"><span data-o="r.totalHib"></span><small data-o="r.contraHoje"></small></span></div>`;
+}
+// fecha a aba: o Simples de hoje (CBS dentro do DAS) contra o regime híbrido (DAS sem a CBS + CBS por fora)
+function rComparativo(){
+  const regime = (nome, nota, das, cbs, carga) => `<span class="cmp-n">${nome}<small class="mut11">${nota}</small>` +
+    `<span class="cmp-bar" aria-hidden="true"><span class="c-ink" data-w="${das}"></span><span class="c-brand" data-w="${cbs}"></span></span>` +
+    `<small class="cmp-carga" data-o="${carga}"></small></span>`;
+  const cel = (k, info) => `<span class="cmp-v"><span data-o="${k}"></span>${info ? `<small data-o="${info}"></small>` : ''}</span>`;
+  return `<section class="card" aria-label="Convencional × Híbrido">
+    <div class="card-h"><div><h2>Convencional × Híbrido</h2><p class="sub">O Simples com a CBS dentro do DAS, ou o DAS sem a CBS e a CBS apurada por fora.</p></div></div>
+    <div class="cmp-l cmp-h"><span></span><span>DAS</span><span>CBS</span><span>Total</span></div>
+    <div class="cmp-l">${regime('Simples convencional', 'CBS dentro do DAS', 'k.convDas', 'k.convCbs', 'k.cargaConv')}${cel('k.dasConv')}${cel('k.cbsConv', 'k.cbsConvInfo')}${cel('k.totConv', 'k.efetConv')}</div>
+    <div class="cmp-l">${regime('Regime híbrido', 'DAS sem a CBS e CBS por fora', 'k.hibDas', 'k.hibCbs', 'k.cargaHib')}${cel('k.dasHib')}${cel('k.cbsHib', 'k.cbsHibInfo')}${cel('k.totHib', 'k.efetHib')}</div>
+    <div class="dl res cmp-res" data-cls="hibrido:k.hibrido"><span class="l" data-o="k.decisao"></span><span class="v" data-o="k.dif"></span></div>
+    <p class="cmp-eq" data-v="k.temVariacao" data-o="k.variacao"></p>
+    <p class="cmp-eq" data-v="k.temEquilibrio" data-o="k.equilibrio"></p>
+  </section>`;
 }
 function rResultado(){
   const m = S.monthly;
   let h = `<div class="card-h"><div><h2>Demonstração de resultado</h2><p class="sub">Valores do mês e participação sobre a receita.</p></div>${btnDetalhe()}</div>`;
-  h += linha('rec', 'Receita declarada <span class="tag-src">PGDAS</span>', 'm.receita', 'm.receitaP', 'monthly.receita');
+  h += linha('rec', 'Receita declarada <span class="tag-src">PGDAS</span>', 'm.receita', 'm.receitaP');
+  if(ui.detalhe) h += detReceita();
   if(m.custos.length === 1) h += linha('', '( − ) ' + esc(m.custos[0][0]), 'm.cu.0.v', 'm.cu.0.p', 'monthly.custos.0.1');
   else { h += linha('tot', '( − ) Custos', 'm.custos', 'm.custosP'); if(ui.detalhe) h += lista('monthly.custos', m.custos, 'm.cu'); }
   h += linha('gross', '( = ) Lucro operacional bruto', 'm.lucroBruto', 'm.lucroBrutoP');
@@ -879,34 +1198,39 @@ function rResultado(){
   h += linha('tot', '( − ) Despesas tributárias', 'm.trib', 'm.tribP');
   if(ui.detalhe) h += lista('monthly.tributarias', m.tributarias, 'm.tr');
   h += linha('res', '( = ) Resultado líquido', 'm.resultado', 'm.margem');
-  return painel('card', 'resultado', h) + rEstoque();
+  return rSimplesMes() + painel('card', 'resultado', h) + rEstoque() + rReforma() + rComparativo();
 }
 function rEstoque(){
-  const lst = S.monthly.estoque || [], ed = editavel();
-  let h = `<div class="card-h"><div><h2>Estoque e compras</h2><p class="sub">Compras do mês, posição de estoque e pagamentos.</p></div></div>`;
-  h += linha('rec', 'Compra de mercadoria do mês', 'm.compra', 'm.compraP', 'monthly.compraMercadoria');
-  if(lst.length) h += `<div class="det">` + lst.map((r, i) => `<div class="li">` +
-    `<span class="nm">${ed ? inp(`monthly.estoque.${i}.0`, 'txt', `Descrição ${i + 1}`, 'txt') : esc(r[0])}</span>` +
-    `<span class="v">${ed ? inp(`monthly.estoque.${i}.1`, 'brl', r[0], 'val') : o(`m.es.${i}.v`)}</span></div>`).join('') + `</div>`;
+  const lst = S.monthly.estoque || [];
+  let h = `<div class="card-h"><div><h2>Estoque e compras</h2><p class="sub">Compras do mês, posição de estoque e pagamentos.</p></div>` +
+    `<button class="btn" data-act="estoque" aria-expanded="${ui.estoque}">${ui.estoque ? 'Ocultar detalhamento' : 'Ver detalhamento'}</button></div>`;
+  h += linha('rec', 'Compra de mercadoria do mês', 'm.compra', 'm.compraP', 'monthly.compraMercadoria', true);
+  // descrições e valores editáveis direto, com adicionar e remover
+  if(ui.estoque) h += `<div class="det">` + lst.map((r, i) => `<div class="li">` +
+    `<span class="nm nmwrap">${inp(`monthly.estoque.${i}.0`, 'txt', `Descrição ${i + 1}`, 'txt')}` +
+    `<span class="row-ctl"><button class="x" data-act="rm-es" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span>` +
+    `<span class="v">${inp(`monthly.estoque.${i}.1`, 'brl', r[0] || `Valor ${i + 1}`, 'val')}</span></div>`).join('') +
+    `<button class="add" data-act="add-es">+ adicionar linha</button></div>`;
   return `<section class="card" aria-label="Estoque e compras">${h}</section>`;
 }
 
 function linhasCbs(g){
   const k = g === 'debitos' ? 'deb' : 'cred', cred = g === 'creditos';
   return S.monthly.reforma[g].map((r, i) => {
-    // débito pode puxar a receita do PGDAS; crédito pode ser parte das compras do mês
-    const vinc = cred ? parteCompras(r) !== null : ehPgdas(r);
-    const [rotulo, dica] = cred ? ['compras', 'Calcular a base como parte das compras do mês'] : ['PGDAS', 'Puxar a base da receita declarada no PGDAS'];
-    const chipVinc = `<button class="chip" data-act="vinc" data-g="${g}" data-i="${i}" title="${vinc ? 'Passar a digitar a base' : dica}">${vinc ? rotulo : 'base fixa'}</button>`;
-    const legenda = !vinc ? '' : cred
-      ? `<span class="parte">${inp(`monthly.reforma.creditos.${i}.4`, 'pct0', r[0] + ' — parte das compras', 'mini')}<span>das compras do mês</span></span>`
-      : `<span class="parte" data-o="m.deb.${i}.cap"></span>`;
-    const base = vinc ? `<span class="r m" data-o="m.${k}.${i}.base"></span>` : inp(`monthly.reforma.${g}.${i}.1`, 'base', r[0] + ' — base');
+    // só o crédito pode ser parte das compras do mês; receita é sempre valor digitado
+    const vinc = cred && parteCompras(r) !== null;
+    const chipVinc = cred ? `<button class="chip" data-act="vinc" data-g="${g}" data-i="${i}" title="${vinc ? 'Passar a digitar a base' : 'Calcular a base como parte das compras do mês'}">${vinc ? 'compras' : 'base fixa'}</button>` : '';
+    const legenda = vinc ? `<span class="parte">${inp(`monthly.reforma.creditos.${i}.4`, 'pct0', r[0] + ' — parte das compras', 'mini')}<span>das compras do mês</span></span>` : '';
+    const base = vinc ? `<span class="r m" data-o="m.cred.${i}.base"></span>` : inp(`monthly.reforma.${g}.${i}.1`, 'base', r[0] + ' — base');
+    const tipo = TIPOS.some(([v]) => v === r[3]) ? r[3] : 'geral';
+    const tipoSel = `<select class="chip-sel" data-tipo data-g="${g}" data-i="${i}" aria-label="Tipo de alíquota — ${esc(r[0])}" title="Tipo de alíquota">` +
+      TIPOS.map(([v, l]) => `<option value="${v}"${v === tipo ? ' selected' : ''}>${l}</option>`).join('') + `</select>`;
     return `<div class="g4 cr">
-    <span class="nmcol"><span class="nmwrap">${inp(`monthly.reforma.${g}.${i}.0`, 'txt', `Nome da linha ${i + 1}`, 'txt')}
-      <span class="row-ctl"><button class="chip" data-act="tipo" data-g="${g}" data-i="${i}" data-o="m.${k}.${i}.tipo" title="Alternar entre alíquota geral e reduzida"></button>${chipVinc}<button class="x" data-act="rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span>${legenda}</span>
+    <span class="nmcol"><span class="nmwrap">${cred ? inp(`monthly.reforma.${g}.${i}.0`, 'txt', `Nome da linha ${i + 1}`, 'txt') : `<span class="nm">${NOME_RECEITA}</span>`}
+      <span class="row-ctl">${tipoSel}${chipVinc}<button class="x" data-act="rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span>${legenda}</span>
     ${base}
-    ${inp(`monthly.reforma.${g}.${i}.2`, 'pct', r[0] + ' — alíquota')}
+    ${cred ? inp(`monthly.reforma.${g}.${i}.2`, 'pct', r[0] + ' — alíquota')    // receita: a alíquota sai do tipo
+           : `<span class="r m" data-o="m.deb.${i}.aliq"></span>`}
     <span class="cr-v" data-o="m.${k}.${i}.val"></span></div>`;
   }).join('');
 }
@@ -935,12 +1259,11 @@ function rReforma(){
     <div class="scroll-x"><div class="calc">
       <div class="grp">Débito — receita tributada</div>
       ${linhasCbs('debitos')}
-      <button class="add" data-act="add" data-g="debitos">${S.monthly.reforma.debitos.some(ehPgdas) ? '+ adicionar categoria de receita' : '+ adicionar receita declarada (PGDAS)'}</button>
+      <button class="add" data-act="add" data-g="debitos">+ adicionar receita</button>
       <div class="sum deb"><span>Débito total</span><span data-o="m.debitoTotal"></span></div>
-      <p class="hint deb-hint" data-v="m.debHint" data-o="m.debHint"></p>
       <div class="grp">Crédito</div>
       <div class="g4 cr"><span>Crédito geral (despesas)</span><span class="r m mut12" data-o="m.baseDespesas"></span><span class="r mut11">por item</span><span class="cr-v" data-o="m.creditoGeral"></span></div>
-      <div class="g4 cr"><span class="nmcol"><span>Compras do mês</span><span class="parte" data-v="m.compraCap" data-o="m.compraCap"></span></span>${inp('monthly.compraMercadoria', 'base', 'Compras do mês')}${inp('monthly.reforma.aliqCompras', 'pct', 'Compras do mês — alíquota')}<span class="cr-v" data-o="m.compraCred"></span></div>
+      <div class="g4 cr"><span class="nmcol"><span>Compras do mês</span><span class="parte" data-v="m.compraCap" data-o="m.compraCap"></span><span class="parte" data-v="m.temFornCap" data-o="m.fornCap"></span></span>${inp('monthly.compraMercadoria', 'base', 'Compras do mês')}${inp('monthly.reforma.aliqCompras', 'pct', 'Compras do mês — alíquota')}<span class="cr-v" data-o="m.compraCred"></span></div>
       ${linhasCbs('creditos')}
       <button class="add" data-act="add" data-g="creditos">+ adicionar crédito sobre compras</button>
       <div class="g4 cr"><span class="ink3">Saldo credor do mês anterior</span><span></span>${inp('monthly.reforma.saldoCredorAnterior', 'base', 'Saldo credor do mês anterior')}<span class="r m mut" data-o="m.saldoAnt"></span></div>
@@ -950,18 +1273,15 @@ function rReforma(){
   </div>`;
   const lado = `<div class="side">
     <div class="chart"><h3>Débito, crédito e saldo</h3><p class="sub">Composição do CBS do mês.</p>
-      ${barra('deb', 'Débito de CBS', 'c-ink')}${barra('cred', 'Crédito de CBS', 'c-mut')}${barra('cbs', o('m.cbsRotulo'), 'c-brand', 'data-cls="credito:m.temCredor"')}</div>
-    <div class="chart"><h3>Carga tributária — atual × transição</h3>
-      <p class="sub s6">Na transição, a parcela da CBS sai do Simples e passa a ser apurada em separado.</p>
-      <div class="delta"><span class="dv" data-o="m.delta" data-oc="m.delta"></span><span class="dl2" data-o="m.deltaLbl"></span></div>
-      ${barra('hoje', 'Hoje — Simples Nacional integral', 'c-ink')}${barra('sem', 'Simples sem a parcela da CBS', 'c-mut')}${barra('trans', o('m.lblTrans'), 'c-brand')}
-      <div class="prem2">
-        <label><span>IBS a pagar (informe)</span>${inp('monthly.ibs', 'base', 'IBS a pagar')}</label>
-        <label><span>Parcela da CBS no Simples<small class="m" data-o="m.parcelaInfo"></small></span>${inp('monthly.reforma.cbsSobreEfetiva', 'pct', 'Parcela da CBS no Simples')}</label>
+      ${barra('deb', 'Débito de CBS', 'c-ink')}
+      <div class="bar"><div class="bar-h"><span>Crédito de CBS</span><span data-o="b.cred"></span></div>
+        <div class="track empilhada" aria-hidden="true"><span class="fill c-mut" data-w="cr.compras"></span><span class="fill c-ink3" data-w="cr.despesas"></span><span class="fill c-ink" data-w="cr.outras"></span><span class="fill c-line" data-w="cr.saldo"></span></div>
+        <p class="cr-legenda" data-v="cr.temLegenda" data-o="cr.legenda"></p></div>
+      ${barra('cbs', o('m.cbsRotulo'), 'c-brand', 'data-cls="credito:m.temCredor"')}
       </div>
-      <p class="hint">A memória calcula a CBS. O IBS é premissa sua — ao informar, a barra "Na transição" se atualiza.</p>
-    </div></div>`;
-  return painel('reforma', 'reforma', memo + lado);
+    </div>`;
+  // fecha a aba Resultado: depois de receitas, despesas e resultado, a apuração da CBS
+  return `<section class="reforma" aria-label="Memória de cálculo da CBS">${memo}${lado}</section>`;
 }
 
 function barraComp(k, lbl, cor){
@@ -973,7 +1293,7 @@ function rCliente(){
   return painel('cli', 'cliente', `<h2>O mês em quatro números</h2>
     <p class="sub">Versão sem detalhamento contábil, para conversa com o cliente.</p>
     <div class="cards">${cartao('Receita', 'm.receita', 'c.nRec')}${cartao('Resultado líquido', 'm.resultado', 'c.nRes')}${cartao('Simples Nacional', 'm.simples', 'c.nSim')}${cartao(o('m.cbsRotulo'), 'm.cbsRes', 'c.nCbs', 'brand', 'data-cls="credito:m.temCredor"')}</div>
-    <div class="obs obs-largo"><h4>O que observar</h4><p data-o="c.obs"></p></div>
+    <div class="obs obs-largo"><h4>O que observar</h4><p data-o="c.obs"></p><p data-o="c.obsCadeia" data-v="c.temObsCadeia"></p></div>
     ${rCadeia()}`);
 }
 const REGIMES = ['Simples Nacional', 'Simples Nacional – IBS/CBS por fora', 'MEI', 'Lucro Presumido', 'Lucro Real', 'Pessoa física', 'Imune / isento', 'Outro'];
@@ -1093,7 +1413,7 @@ function render(){
   if(banco.ativo && (!banco.sessao || banco.carregando)){      // sem login, nenhum dado aparece
     app.innerHTML = rLogin(); document.title = 'Entrar — Painel DRE'; return;
   }
-  const telas = {resultado: rResultado, reforma: rReforma, cliente: rCliente, anual: rAnual};
+  const telas = {resultado: rResultado, cliente: rCliente, anual: rAnual};
   app.innerHTML = rTopo() + rBarra() + rPersonalizar() + rHeroi() + telas[ui.tab]() +
     `<footer class="foot"><span data-o="footer"></span><span data-o="comp"></span></footer>`;
   refresh();
@@ -1138,7 +1458,7 @@ function zerarValores(base){
   [d.annual, d.monthly].forEach(x => { x.receita = 0; x.compraMercadoria = 0; ['custos', 'ga', 'vendas', 'tributarias'].forEach(g => zera(x[g])); });
   d.annual.resultadoInformado = 0;
   zera(d.monthly.reforma.debitos); zera(d.monthly.reforma.creditos); zera(d.monthly.estoque || []);
-  d.monthly.reforma.saldoCredorAnterior = 0; d.monthly.ibs = 0;
+  d.monthly.reforma.saldoCredorAnterior = 0; d.monthly.ibs = 0; d.monthly.rbt12 = 0;
   return d;
 }
 function limparTudo(){
@@ -1160,7 +1480,7 @@ async function carregar(){
     else if(window.storage){ const r = await window.storage.get('dre_state', true); if(r && r.value) salvo = JSON.parse(r.value); }
   }catch(err){}
   const m = migrar(salvo);
-  if(m) S = mesclar(defaults(), m);
+  if(m){ S = mesclar(defaults(), m); normalizarDebitos(S.monthly.reforma); }
 }
 function baixar(){
   const clone = document.documentElement.cloneNode(true);
@@ -1210,8 +1530,7 @@ const mesBarra = p => { const [a, m] = String(p).split('-'); return `${m}/${a}`;
 const semAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const hora = d => d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
 function periodoAtual(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; }
-function proximoMes(p){ const [a, m] = p.split('-').map(Number); return m === 12 ? `${a + 1}-01-01` : `${a}-${String(m + 1).padStart(2, '0')}-01`; }
-function lerPeriodo(txt){                     // "12/2025", "2025-12" ou "Dezembro 2025" → "2025-12-01"
+function proximoMes(p){ const [a, m] = p.split('-').map(Number); return m === 12 ? `${a + 1}-01-01` : `${a}-${String(m + 1).padStart(2, '0')}-01`; }function lerPeriodo(txt){                     // "12/2025", "2025-12" ou "Dezembro 2025" → "2025-12-01"
   const s = semAcento(txt); let m, ano, mes;
   if((m = s.match(/(\d{1,2})\s*\/\s*(\d{4})/))){ mes = +m[1]; ano = m[2]; }
   else if((m = s.match(/(\d{4})-(\d{1,2})/))){ ano = m[1]; mes = +m[2]; }
@@ -1340,11 +1659,14 @@ async function abrirMes(empresaId, periodo, op){
   (r.parceiros || []).forEach(p => cadeia[p[0] === 'cliente' ? 'clientes' : 'fornecedores'].push([p[1] || '', p[2] || '', p[3] || '', p[4] || '']));
   const novo = !r.competencia;
   if(!novo){
-    S = mesclar(defaults(), migrar(r.competencia.dados)); S.cadeia = cadeia;
+    S = mesclar(defaults(), migrar(r.competencia.dados)); S.cadeia = cadeia; normalizarDebitos(S.monthly.reforma);
     banco.base = r.competencia.atualizado_em;
   } else {
     // mês ainda não salvo: a tela atual (primeira empresa) ou o mês salvo mais próximo, com os valores zerados
-    if(!op.manterTela){ S = zerarValores(r.modelo ? mesclar(defaults(), migrar(r.modelo)) : defaults()); S.cadeia = cadeia; }
+    if(!op.manterTela){
+      S = zerarValores(r.modelo ? mesclar(defaults(), migrar(r.modelo)) : defaults()); S.cadeia = cadeia; normalizarDebitos(S.monthly.reforma);
+      if(!r.modelo) S.anexo = '';                  // empresa nova: o anexo do exemplo não vale para ela
+    }
     S.co = (banco.empresas.find(e => e.id === empresaId) || {}).nome || S.co;
     banco.base = '-infinity';                      // no banco, "este mês ainda não pode existir"
   }
@@ -1494,6 +1816,25 @@ async function sair(){
   render();
 }
 
+// regra de crédito da despesa: "sem crédito" tira a linha das premissas; passar a ter crédito entra pela alíquota geral
+async function aplicarRegra(i, valor){
+  const r = S.monthly.ga[i];
+  let parte = +valor;
+  if(valor === 'outra'){
+    const res = await modal({
+      titulo: 'Outra regra de crédito', texto: `Quanto do valor de "${r[0]}" dá direito a crédito de CBS.`,
+      campos: [['parte', 'Parte com crédito (%)', dec((+r[2] || 0) * 100, 0, 2)]],
+      botoes: [['cancelar', 'Cancelar'], ['ok', 'Aplicar', 'prim']], padrao: 'ok'
+    });
+    if(res.botao !== 'ok'){ render(); focar(`select[data-regra][data-i="${i}"]`); return; }
+    parte = Math.max(0, Math.min(1, num(res.valores.parte) / 100));
+  }
+  r[2] = parte;
+  if(parte === 0) r[3] = 0;
+  else if(!((+r[3] || 0) > 0)) r[3] = S.monthly.reforma.aliqGeral;
+  render(); focar(`select[data-regra][data-i="${i}"]`);
+}
+
 /* ---------- eventos ---------- */
 const app = document.getElementById('app');
 app.addEventListener('focusin', e => {
@@ -1503,6 +1844,7 @@ app.addEventListener('focusout', e => { if(e.target.dataset && e.target.dataset.
 app.addEventListener('input', e => {
   const t = e.target; if(!t.matches('input[data-b]')) return;
   setPath(t.dataset.b, PARSE[t.dataset.f](t.value));
+  if(/^monthly\.reforma\.debitos\.\d+\.1$/.test(t.dataset.b)) sincronizarReceita();   // receita = soma das linhas
   if(t.dataset.premissa) propagar(t.dataset.premissa);
   refresh();
 });
@@ -1514,6 +1856,11 @@ app.addEventListener('change', e => {
     return;
   }
   if(t.matches('select[data-banco]')){ trocar(t.dataset.banco, t.value); return; }
+  if(t.matches('select[data-tipo]')){
+    const r = S.monthly.reforma[t.dataset.g][+t.dataset.i]; r[3] = t.value; r[2] = aliqTipo(r[3]); refresh(); return;
+  }
+  if(t.matches('select[data-regra]')){ aplicarRegra(+t.dataset.i, t.value); return; }
+  if(t.matches('select[data-sit]')){ S.monthly.reforma.debitos[+t.dataset.i][5] = t.value; refresh(); return; }
   if(t.matches('select[data-b]')){ setPath(t.dataset.b, t.value); refresh(); return; }
   if(!t.matches('input[data-b]') || t.type === 'color') return;
   if(t.dataset.f === 'txt' && t.dataset.b.startsWith('monthly.reforma') && !t.value.trim()) setPath(t.dataset.b, '(sem nome)');
@@ -1526,7 +1873,7 @@ app.addEventListener('keydown', e => {
   if(t.matches('[data-file-trigger]') && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); t.querySelector('input').click(); return; }
   if(t.matches('.tab') && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)){
     e.preventDefault();
-    const ordem = ['resultado', 'reforma', 'cliente', 'anual'], n = ordem.length;
+    const ordem = ['resultado', 'cliente', 'anual'], n = ordem.length;
     let i = ordem.indexOf(t.dataset.id);
     i = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : (i + (e.key === 'ArrowRight' ? 1 : -1) + n) % n;
     irPara(ordem[i], true);
@@ -1540,6 +1887,7 @@ app.addEventListener('click', e => {
     case 'tab': irPara(b.dataset.id); break;
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;
     case 'detalhe': ui.detalhe = !ui.detalhe; render(); focar('[data-act="detalhe"]'); break;
+    case 'estoque': ui.estoque = !ui.estoque; render(); focar('[data-act="estoque"]'); break;
     case 'memoria': ui.memoria = !ui.memoria; render(); focar('[data-act="memoria"]'); break;
     case 'editar': ui.editando = !ui.editando; ui.menu = false; render();
       toast(ui.editando ? 'Edição ligada — clique nos valores da DRE' : 'Edição desligada'); break;
@@ -1563,27 +1911,27 @@ app.addEventListener('click', e => {
       }
       break;
     case 'add':
-      if(g === 'debitos' && !rf.debitos.some(ehPgdas)) rf.debitos.push(['Receita PGDAS', 0, rf.aliqGeral, 'geral', 'pgdas']);
-      else if(g === 'debitos') rf.debitos.push(['Nova categoria', 0, rf.aliqGeral, 'geral']);
+      if(g === 'debitos') rf.debitos.push([NOME_RECEITA, 0, rf.aliqGeral, 'geral']);
       else rf.creditos.push(['Novo crédito', 0, rf.aliqCompras || 0, 'geral']);   // mesma alíquota das compras: não muda o total
       render();
-      { const n = app.querySelector(`input[data-b="monthly.reforma.${g}.${rf[g].length - 1}.0"]`); if(n){ n.focus(); n.select(); } }
+      { const campo = g === 'debitos' ? '1' : '0';   // receita já entra pelo valor; crédito, pelo nome
+        const n = app.querySelector(`input[data-b="monthly.reforma.${g}.${rf[g].length - 1}.${campo}"]`); if(n){ n.focus(); n.select(); } }
       break;
-    case 'rm': rf[g].splice(i, 1); render(); break;
-    case 'tipo': {
-      const r = rf[g][i]; r[3] = r[3] === 'reduzida' ? 'geral' : 'reduzida';
-      r[2] = r[3] === 'reduzida' ? rf.aliqReduzida : rf.aliqGeral; refresh(); break;
-    }
-    case 'vinc': {                                   // base vinculada ↔ base fixa
-      if(g === 'debitos'){                           // só uma linha puxa o PGDAS; ao soltar, fica com a base atual
-        const bases = basesDebito().bases, r = rf.debitos[i];
-        if(ehPgdas(r)){ r[1] = bases[i]; r[4] = null; }
-        else { rf.debitos.forEach((x, j) => { if(ehPgdas(x)){ x[1] = bases[j]; x[4] = null; } }); r[4] = 'pgdas'; }
-      } else {                                       // crédito mantém a mesma base ao trocar de modo
-        const r = rf.creditos[i], compras = S.monthly.compraMercadoria || 0;
-        if(parteCompras(r) !== null){ r[1] = baseLinha(r); r[4] = null; }
-        else r[4] = compras > 0 ? (r[1] || 0) / compras : 0;
-      }
+    case 'rm': rf[g].splice(i, 1); if(g === 'debitos') sincronizarReceita(); render(); break;
+    case 'add-ga':                                   // despesa nova entra com crédito integral pela alíquota geral
+      S.monthly.ga.push(['Nova despesa', 0, 1, rf.aliqGeral]); render();
+      { const n = app.querySelector(`input[data-b="monthly.ga.${S.monthly.ga.length - 1}.0"]`); if(n){ n.focus(); n.select(); } }
+      break;
+    case 'rm-ga': S.monthly.ga.splice(i, 1); render(); break;
+    case 'add-es':
+      (S.monthly.estoque = S.monthly.estoque || []).push(['Nova linha', 0]); render();
+      { const n = app.querySelector(`input[data-b="monthly.estoque.${S.monthly.estoque.length - 1}.0"]`); if(n){ n.focus(); n.select(); } }
+      break;
+    case 'rm-es': S.monthly.estoque.splice(i, 1); render(); break;
+    case 'vinc': {                                   // crédito: base fixa ↔ parte das compras do mês
+      const r = rf.creditos[i], compras = S.monthly.compraMercadoria || 0;
+      if(parteCompras(r) !== null){ r[1] = baseLinha(r); r[4] = null; }
+      else r[4] = compras > 0 ? (r[1] || 0) / compras : 0;
       render(); focar(`[data-act="vinc"][data-g="${g}"][data-i="${i}"]`); break;
     }
     case 'logo-padrao': S.logo = null; refresh(); break;
@@ -1617,7 +1965,7 @@ window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e
 
 /* ---------- início ---------- */
 let S = defaults();
-const ui = {tab: 'resultado', detalhe: true, memoria: true, cadeia: 'fornecedores', editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
