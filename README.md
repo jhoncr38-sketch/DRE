@@ -263,9 +263,9 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   topo e no quadro Convencional × Híbrido. Saíram com eles `textoObservar()` e `textoClientesCadeia()`
 - **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráficos **A e B**: as barras
   por regime e, ao lado, a pizza de 108px com a proporção do total. O handoff pedia escolher só um;
-  o usuário pediu os dois — as barras quebram por regime, o anel dá a proporção. A legenda é única,
-  ao lado do anel, com o percentual de cada categoria. O disco virou **anel** (`mask` radial) nos dois
-  blocos: mesmo dado com bem menos tinta na tela):
+  o usuário pediu os dois — as barras quebram por regime, a pizza dá a proporção. A legenda é única,
+  ao lado da pizza, com o percentual de cada categoria. O anel (donut) chegou a ser testado nos dois
+  blocos e foi recusado pelo usuário: fica a pizza cheia):
   - cabeçalho com a frase que responde "quantos geram crédito" e o alternador Fornecedores / Clientes
     com as contagens; concordância obrigatória (singular/plural; fornecedor *gera crédito*, cliente
     *aproveita o crédito*; "todos" e "nenhum") em `resumoCadeia()`
@@ -295,7 +295,7 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   - a 3ª posição da linha guardou "situação no DAS" na primeira versão do bloco; valor que não seja
     `produto`/`servico` cai em "Escolha…" em vez de aparecer como lixo
   - gráficos por **quantidade de itens** em cada faixa (decisão do usuário): uma barra por faixa e um
-    **anel** com a proporção, nas mesmas cores. A escala marca a **exceção**, não o padrão: alíquota
+    **pizza** com a proporção, nas mesmas cores. A escala marca a **exceção**, não o padrão: alíquota
     cheia no tom mais claro (`line-2`) e, quanto maior a redução, mais escuro, com a alíquota zero em
     `brand`. Antes era o contrário e um catálogo quase todo cheio virava um disco preto
   - dados em `produtos` (`[nome, tipo, natureza, NCM, NBS, cClassTrib]`), **por empresa** (tabela

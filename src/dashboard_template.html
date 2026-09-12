@@ -331,9 +331,7 @@
   .cad-grafico{display:flex; align-items:flex-start; gap:24px 32px; flex-wrap:wrap; margin-bottom:22px}
   .cg-linhas{flex:1 1 280px; max-width:520px; min-width:0}
   .cg-pizza{display:flex; align-items:center; gap:16px; flex:0 1 auto}
-  /* anel em vez de disco cheio: o mesmo dado com bem menos tinta na tela (handoff 5, opção B) */
-  .cg-disco{width:108px; height:108px; border-radius:50%; flex:none;
-    -webkit-mask:radial-gradient(circle, transparent 53%, #000 54%); mask:radial-gradient(circle, transparent 53%, #000 54%)}
+  .cg-disco{width:108px; height:108px; border-radius:50%; flex:none}   /* pizza cheia (o anel foi testado e recusado) */
   .cg-linha{display:flex; flex-direction:column; gap:4px; margin-bottom:10px}
   .cg-linha .bar-h > span:first-child{color:var(--ink-3)}
   .cg-linha .bar-h > span:last-child{font-family:var(--mono)}
