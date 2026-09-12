@@ -320,11 +320,6 @@
   .cad-h-txt p{margin:0; font-size:13px; color:var(--muted); line-height:1.5}
   .cli-blocos > .cadeia:first-child{margin-top:0; padding-top:0; border-top:0}   /* primeiro bloco da aba: sem risco solto no topo */
   .cad-ctl{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
-  /* com os dois cadastros recolhidos sobra só gráfico: os blocos cabem lado a lado */
-  @media (min-width:1140px){
-    .cli-blocos:not(:has(.cadeia:not(.so-grafico))){display:grid; grid-template-columns:1fr 1fr; gap:40px}
-    .cli-blocos:not(:has(.cadeia:not(.so-grafico))) > .cadeia{margin-top:0; padding-top:0; border-top:0}
-  }
   .cad-alt{display:flex; gap:6px; background:#F2F1ED; padding:4px; border-radius:2px}
   .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--muted); cursor:pointer}
   .cad-aba[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--line-2)}
@@ -1458,7 +1453,7 @@ function rCadeia(){
         </div>
       </div>`}`;
   }
-  return `<div class="cadeia${lst.length && !cadastroAberto('cadeia') ? ' so-grafico' : ''}">
+  return `<div class="cadeia">
     <div class="cad-h">
       <div class="cad-h-txt"><h3>Cadeia de crédito</h3><p data-o="cad.resumo"></p></div>
       <div class="cad-ctl">
@@ -1508,7 +1503,7 @@ function rProdutos(){
       </div>
       <button class="cad-mais" data-act="pr-add">+ adicionar produto</button>`}`;
   }
-  return `<div class="cadeia${lst.length && !cadastroAberto('produtos') ? ' so-grafico' : ''}">
+  return `<div class="cadeia">
     <div class="cad-h">
       <div class="cad-h-txt"><h3>Produtos e serviços</h3><p data-o="pr.resumo"></p></div>
       ${lst.length && !ui.present ? `<div class="cad-ctl">${btnCadastro('produtos')}</div>` : ''}

@@ -244,9 +244,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   serviços**, cada um com o cadastro **recolhido por padrão** ("Ver cadastro" / "Ocultar cadastro",
   `ui.cadastro`): sobra a frase-resumo e os dois gráficos, que é o que serve à conversa com o cliente.
   Quem clica em "+ adicionar" abre o cadastro junto (adicionar é editar). O **Modo apresentação**
-  recolhe os dois e não oferece o botão. Com os dois recolhidos e tela ≥ 1140px, os blocos ficam
-  **lado a lado** e a aba cabe numa dobra. O aviso de CNPJ inválido continua visível mesmo recolhido —
-  é problema a resolver, não detalhe. "Para onde foi a receita", os quatro cartões ("O mês em quatro números") e o "O que
+  recolhe os dois e não oferece o botão. Os blocos ficam **um abaixo do outro**, em largura cheia
+  (chegou a existir um lado a lado com os dois recolhidos; o usuário preferiu empilhado, que mantém a
+  pizza ao lado das barras). O aviso de CNPJ inválido continua visível mesmo recolhido — é problema a
+  resolver, não detalhe. "Para onde foi a receita", os quatro cartões ("O mês em quatro números") e o "O que
   observar" foram retirados a pedido do usuário — os mesmos números já estão na faixa de indicadores do
   topo e no quadro Convencional × Híbrido. Saíram com eles `textoObservar()` e `textoClientesCadeia()`
 - **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráficos **A e B**: as barras
