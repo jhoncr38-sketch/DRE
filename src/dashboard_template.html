@@ -107,7 +107,9 @@
   .dl.res .p{color:var(--muted-3); font-size:13px}
   .det{background:var(--surface-2); padding:6px 14px 10px; margin-bottom:4px}
   .scroll-x{overflow-x:auto}
-  .g5{display:grid; grid-template-columns:minmax(0,1fr) 110px 138px 70px 92px; gap:10px; align-items:center}
+  /* nome curto não precisa de meia tela: o item tem teto e a folga vai para as colunas de números */
+  .g5{display:grid; grid-template-columns:minmax(0,360px) minmax(120px,1fr) 150px 84px minmax(100px,1fr); gap:10px; align-items:center}
+  .g5 .in.val{width:100%}                        /* 15ch fixo estourava a célula e acendia a rolagem */
   .g5 > :nth-child(3){padding-left:14px}                               /* regra afastada do valor à esquerda */
   .g5.gh > span.esq, .grec.gh > span.esq{text-align:left}
   .regra .sel{font-size:12px}
