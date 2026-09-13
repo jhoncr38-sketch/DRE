@@ -268,8 +268,17 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **De onde vem o crédito da CBS:** a barra "Crédito de CBS" é empilhada por origem — compras, despesas,
   outras linhas e saldo do mês anterior — com a legenda em reais e % embaixo
 - **Ponto de equilíbrio** (`textoEquilibrio()`, no quadro Convencional × Híbrido, fim da aba Resultado):
-  quanto faltaria em compras com crédito para o híbrido empatar com o convencional, ou quanto elas podem
-  cair com ele ainda mais barato. O IBS a pagar (`monthly.ibs`) e a parcela da CBS (`cbsSobreEfetiva`,
+  quanto falta para o híbrido empatar com o convencional, ou quanta folga ele tem, dito **no gasto** que
+  produz o crédito: "*faltam no mês R$ 16.917,42 em compras (9%) ou R$ 19.032,10 em despesas com direito
+  a crédito (8%)*". Compra e despesa creditável servem igual; o que muda é a alíquota de cada uma, e por
+  isso o gasto necessário é diferente (quanto maior a alíquota, menos gasto). Com as duas alíquotas iguais
+  vira uma conversão só; com uma delas zerada, sobra a outra; sem nenhuma — única situação em que não há
+  conversão possível — fica o crédito em reais. **O crédito não entra no texto** quando há conversão: é o
+  mesmo número da barra preta logo acima, e repeti-lo atrasava a leitura até o que interessa. O texto diz
+  "despesas **com direito a crédito**" de propósito: folha e retirada de sócio não geram crédito de CBS,
+  e "despesas" sem qualificar convida a somá-las. O "no mês" vem antes do valor porque no fim da frase
+  cairia depois do parêntese da alíquota, longe do verbo.
+  O IBS a pagar (`monthly.ibs`) e a parcela da CBS (`cbsSobreEfetiva`,
   padrão 15,33%) continuam no estado e no cálculo, mas **sem campo na tela** (decisão do usuário)
 - **Cadeia nos textos:** em "Compras do mês", avisa quantos fornecedores não geram crédito cheio
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),

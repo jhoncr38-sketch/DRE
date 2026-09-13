@@ -974,19 +974,25 @@ function graficoProdutos(lst){
     </div>`;
 }
 
-// Quanto de crédito separa os dois regimes, dito em compras — a alavanca que a empresa controla.
-// Falta crédito para empatar, ou há folga para as compras caírem sem perder a vantagem.
+// Quanto de crédito separa os dois regimes, dito no gasto que produz esse crédito — compra e despesa
+// creditável servem igual, só que em valores diferentes, porque a alíquota de cada uma é outra.
+// O crédito em reais não entra no texto: é o mesmo número da barra logo acima.
 function textoEquilibrio(c){
   if(!(c.dasBase > 0.004)) return '';
   if(c.faltaCredito === null) return 'Nem zerando a CBS o híbrido empataria: o IBS informado já passa a CBS que está dentro do DAS.';
-  const aliq = S.monthly.reforma.aliqCompras || 0, v = Math.abs(c.faltaCredito);
+  const v = Math.abs(c.faltaCredito);
   if(v < 0.005) return '';
-  // dito em compras, que é a alavanca que a empresa controla; sem alíquota de compras, em crédito
-  const falta = aliq > 0 ? `${brl(v / aliq)} em compras com crédito de ${FMT.pct0(aliq)}` : `${brl(v)} de crédito`;
-  const cai = aliq > 0 ? `as compras com crédito caiam ${brl(v / aliq)}` : `o crédito caia ${brl(v)}`;
+  const rf = S.monthly.reforma, aC = +rf.aliqCompras || 0, aD = +rf.aliqGeral || 0;
+  // "despesa" sem qualificar induz a somar folha e retirada, que não geram crédito de CBS
+  const emC = a => `${brl(v / a)} em compras (${FMT.pct0(a)})`, emD = a => `${brl(v / a)} em despesas com direito a crédito (${FMT.pct0(a)})`;
+  // sem nenhuma alíquota não há conversão possível, e aí só resta dizer o crédito
+  const quanto = aC > 0 && aD > 0
+    ? (Math.abs(aC - aD) < 1e-9 ? `${brl(v / aC)} em compras ou despesas com direito a crédito (${FMT.pct0(aC)})` : `${emC(aC)} ou ${emD(aD)}`)
+    : aC > 0 ? emC(aC) : aD > 0 ? emD(aD) : `${brl(v)} de crédito de CBS`;
+  // "no mês" vem antes do valor: no fim ele cairia depois do parêntese da alíquota, longe do verbo
   return c.faltaCredito > 0
-    ? `Para o híbrido empatar com o convencional, faltam ${falta} no mês.`
-    : `O híbrido continua mais barato mesmo que ${cai} no mês.`;
+    ? `Para o híbrido empatar com o convencional, faltam no mês ${quanto}.`
+    : `O híbrido continua mais barato mesmo perdendo no mês ${quanto}.`;
 }
 /* ---------- saídas: todo texto calculado da tela, por chave ---------- */
 function saidas(){
