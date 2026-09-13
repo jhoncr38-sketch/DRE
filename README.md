@@ -172,6 +172,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   Redução de 70% (aluguel), Sem crédito e
   "Outra parte…" (janela para digitar o %). Por baixo continua a parte da base (`ga[i][2]`):
   "Sem crédito" zera a alíquota; passar a ter crédito entra pela alíquota geral
+- **Alíquota efetiva embaixo da cheia** (despesas e compras): quando a regra reduz a base, o que de fato
+  incide é menor — 30% da base × 8% = "*efetiva 2,40%*", em cinza sob o campo da alíquota. Só aparece na
+  linha que gera crédito: sem redução a efetiva é a própria alíquota, e linha sem valor lançado não gera
+  crédito nenhum. O espaço da segunda linha fica reservado em toda linha, para a tabela manter um ritmo só
 - **Memória de cálculo da CBS** recolhível ("Ocultar memória"): fechada, mostra só débito total,
   crédito total e a faixa da CBS; aberta, as premissas e linha a linha
 - **CBS Crédito:** quando o crédito passa do débito, a CBS aparece em verde (`--ok #1D7A4E`) como

@@ -108,7 +108,7 @@
   .det{background:var(--surface-2); padding:6px 14px 10px; margin-bottom:4px}
   .scroll-x{overflow-x:auto}
   /* nome curto não precisa de meia tela: o item tem teto e a folga vai para as colunas de números */
-  .g5{display:grid; grid-template-columns:minmax(0,360px) minmax(120px,1fr) 150px 84px minmax(100px,1fr); gap:10px; align-items:center}
+  .g5{display:grid; grid-template-columns:minmax(0,360px) minmax(120px,1fr) 150px 104px minmax(100px,1fr); gap:10px; align-items:center}
   .g5 .in.val{width:100%}                        /* 15ch fixo estourava a célula e acendia a rolagem */
   .g5 > :nth-child(3){padding-left:14px}                               /* regra afastada do valor à esquerda */
   .g5.gh > span.esq, .grec.gh > span.esq{text-align:left}
@@ -264,6 +264,8 @@
   .seg .gr .sel{font-size:12px}
   .cbscol{display:flex; flex-direction:column; gap:1px; min-width:0}
   .cbscol small{font-size:11px; color:var(--muted-2); padding-left:2px}
+  .cbscol.dir{align-items:flex-end}
+  .cbscol.dir small{padding:0 2px 0 0; min-height:14px; white-space:nowrap}   /* efetiva embaixo da cheia; altura reservada e sem quebra mantêm o mesmo talhe em toda linha */
   .sn .seg-prem{padding:0}
   .sn-l{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid var(--line); font-size:13px}
   .sn-l > span:first-child{color:var(--ink-3)}
@@ -687,6 +689,10 @@ const soma = arr => (arr || []).reduce((a, r) => a + (+r[1] || 0), 0);
 // de tomar outra despesa tributária (INSS, FGTS…) por DAS — as listas agora podem ser editadas e removidas
 const linhaSimples = trib => (trib || []).find(r => /^simples nacional/i.test(r[0])) || null;
 const credLinha = r => (r[1] || 0) * (r[2] || 0) * (r[3] || 0);   // valor × % base × alíquota
+// quando a regra reduz a base, a alíquota que de fato incide é menor: 70% × 9% = 6,30%. Sem redução a efetiva
+// é a própria alíquota, e sem valor lançado não há crédito nenhum: nos dois casos o segundo número só faria ruído
+const efetivaCredito = r => { const v = +r[1] || 0, p = +r[2] || 0, a = +r[3] || 0;
+  return v > 0.004 && p > 0 && p < 1 && a > 0 ? 'efetiva ' + FMT.pct(p * a) : ''; };
 const baseLinha = r => (r[1] || 0);
 const valorCbs = r => baseLinha(r) * (r[2] || 0);                  // base × alíquota (créditos)
 // a receita declarada do mês é a soma das linhas de receita (cada uma com a sua situação no DAS)
@@ -1010,7 +1016,8 @@ function saidas(){
   });
   itens(m.custos, 'm.cu', cm.R); itens(m.vendas, 'm.ve', cm.R); itens(m.tributarias, 'm.tr', cm.R);
   m.ga.forEach((r, i) => { const c = credLinha(r);
-    O[`m.ga.${i}.v`] = brl(r[1] || 0); O[`m.ga.${i}.cr`] = brl(c); C[`m.ga.${i}.cr`] = c > 0.004 ? 'var(--ink)' : 'var(--disabled)'; });
+    O[`m.ga.${i}.v`] = brl(r[1] || 0); O[`m.ga.${i}.cr`] = brl(c); O[`m.ga.${i}.ef`] = efetivaCredito(r);
+    C[`m.ga.${i}.cr`] = c > 0.004 ? 'var(--ink)' : 'var(--disabled)'; });
 
   // mês — CBS
   const forn =(S.cadeia && S.cadeia.fornecedores) || [], fq = forn.filter(r => r[3] === 'nao' || r[3] === 'parcial').length;
@@ -1028,7 +1035,8 @@ function saidas(){
   V['m.temCredor'] = cm.saldoCredor > 0.004;
   O['m.compraCred'] = brl(cm.creditoCompras);
   m.compras.forEach((r, i) => { const c = credLinha(r);
-    O[`m.co.${i}.cr`] = brl(c); C[`m.co.${i}.cr`] = c > 0.004 ? 'var(--ink)' : 'var(--disabled)'; });
+    O[`m.co.${i}.cr`] = brl(c); O[`m.co.${i}.ef`] = efetivaCredito(r);
+    C[`m.co.${i}.cr`] = c > 0.004 ? 'var(--ink)' : 'var(--disabled)'; });
   O['m.compra'] = brl(cm.compras); O['m.compraP'] = P(cm.compras, cm.R);
   // herança do mês novo: de onde veio o saldo credor e quantos meses entraram no RBT12
   const hz = banco.heranca || {};
@@ -1307,7 +1315,7 @@ function detDespesas(){
         <span class="row-ctl"><button class="x" data-act="rm-ga" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover despesa">×</button></span></span></span>
       <span class="r m">${inp(`monthly.ga.${i}.1`, 'brl', r[0] + ' — valor', 'val')}</span>
       <span class="sel-wrap regra${parte > 0 ? '' : ' sem'}"><select class="sel" data-regra="ga" data-i="${i}" aria-label="Regra de crédito — ${esc(r[0])}"${ui.present ? ' disabled' : ''}>${opcoes}</select></span>
-      ${inp(`monthly.ga.${i}.3`, 'pct', r[0] + ' — alíquota')}
+      <span class="cbscol dir">${inp(`monthly.ga.${i}.3`, 'pct', r[0] + ' — alíquota')}<small class="m" data-o="m.ga.${i}.ef"></small></span>
       <span class="cr-v" data-o="m.ga.${i}.cr" data-oc="m.ga.${i}.cr"></span></div>`;
   });
   return h + `</div>
@@ -1412,7 +1420,7 @@ function tabelaCompras(){
         <span class="row-ctl"><button class="x" data-act="rm-co" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover compra">×</button></span></span></span>
       <span class="r m">${inp(`monthly.compras.${i}.1`, 'brl', r[0] + ' — valor', 'val')}</span>
       <span class="sel-wrap regra${parte > 0 ? '' : ' sem'}"><select class="sel" data-regra="compras" data-i="${i}" aria-label="Regra de crédito — ${esc(r[0])}"${ui.present ? ' disabled' : ''}>${opcoes}</select></span>
-      ${inp(`monthly.compras.${i}.3`, 'pct', r[0] + ' — alíquota')}
+      <span class="cbscol dir">${inp(`monthly.compras.${i}.3`, 'pct', r[0] + ' — alíquota')}<small class="m" data-o="m.co.${i}.ef"></small></span>
       <span class="cr-v" data-o="m.co.${i}.cr" data-oc="m.co.${i}.cr"></span></div>`;
   });
   return h + `</div>
