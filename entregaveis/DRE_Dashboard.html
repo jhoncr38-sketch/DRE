@@ -692,10 +692,10 @@ const soma = arr => (arr || []).reduce((a, r) => a + (+r[1] || 0), 0);
 // de tomar outra despesa tributária (INSS, FGTS…) por DAS — as listas agora podem ser editadas e removidas
 const linhaSimples = trib => (trib || []).find(r => /^simples nacional/i.test(r[0])) || null;
 const credLinha = r => (r[1] || 0) * (r[2] || 0) * (r[3] || 0);   // valor × % base × alíquota
-// quando a regra reduz a base, a alíquota que de fato incide é menor: 70% × 9% = 6,30%. Sem redução a efetiva
-// é a própria alíquota, e sem valor lançado não há crédito nenhum: nos dois casos o segundo número só faria ruído
-const efetivaCredito = r => { const v = +r[1] || 0, p = +r[2] || 0, a = +r[3] || 0;
-  return v > 0.004 && p > 0 && p < 1 && a > 0 ? 'efetiva ' + FMT.pct(p * a) : ''; };
+// quando a regra reduz a base, a alíquota que de fato incide é menor: 70% × 9% = 6,30%. Vale também na linha
+// ainda zerada — é a taxa que valerá quando ela receber valor. Sem redução a efetiva é a própria alíquota
+const efetivaCredito = r => { const p = +r[2] || 0, a = +r[3] || 0;
+  return p > 0 && p < 1 && a > 0 ? 'efetiva ' + FMT.pct(p * a) : ''; };
 const baseLinha = r => (r[1] || 0);
 const valorCbs = r => baseLinha(r) * (r[2] || 0);                  // base × alíquota (créditos)
 // a receita declarada do mês é a soma das linhas de receita (cada uma com a sua situação no DAS)
