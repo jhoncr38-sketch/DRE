@@ -971,19 +971,19 @@ function graficoProdutos(lst){
     </div>`;
 }
 
-// quanto de crédito separa hoje da CBS por fora — em compras quando há alíquota de compras (o valor em crédito já é o delta)
-// hib: na linguagem do quadro Convencional × Híbrido; sem ele, na do resumo do cliente
-function textoEquilibrio(c, hib){
+// Quanto de crédito separa os dois regimes, dito em compras — a alavanca que a empresa controla.
+// Falta crédito para empatar, ou há folga para as compras caírem sem perder a vantagem.
+function textoEquilibrio(c){
   if(!(c.dasBase > 0.004)) return '';
-  const [quem, Quem, barato, ref] = hib ? ['o híbrido', 'O híbrido', 'mais barato', 'o convencional']
-                                        : ['a apuração separada', 'A apuração separada', 'mais barata', 'hoje'];
-  if(c.faltaCredito === null) return `Nem com a CBS zerada ${quem} empataria: o IBS informado já passa a parcela da CBS no Simples.`;
+  if(c.faltaCredito === null) return 'Nem zerando a CBS o híbrido empataria: o IBS informado já passa a CBS que está dentro do DAS.';
   const aliq = S.monthly.reforma.aliqCompras || 0, v = Math.abs(c.faltaCredito);
-  if(v < 0.005) return hib ? '' : 'Hoje e a apuração separada empatam.';
-  const quanto = aliq > 0 ? `${brl(v / aliq)} em compras com crédito de ${FMT.pct0(aliq)}` : `${brl(v)} de crédito`;
+  if(v < 0.005) return '';
+  // dito em compras, que é a alavanca que a empresa controla; sem alíquota de compras, em crédito
+  const falta = aliq > 0 ? `${brl(v / aliq)} em compras com crédito de ${FMT.pct0(aliq)}` : `${brl(v)} de crédito`;
+  const cai = aliq > 0 ? `as compras com crédito caiam ${brl(v / aliq)}` : `o crédito caia ${brl(v)}`;
   return c.faltaCredito > 0
-    ? `Para ${quem} empatar com ${ref}, faltariam cerca de ${quanto} no mês.`
-    : `${Quem} segue ${barato} que ${ref} mesmo com até ${quanto} a menos no mês.`;
+    ? `Para o híbrido empatar com o convencional, faltam ${falta} no mês.`
+    : `O híbrido continua mais barato mesmo que ${cai} no mês.`;
 }
 /* ---------- saídas: todo texto calculado da tela, por chave ---------- */
 function saidas(){
@@ -1113,7 +1113,7 @@ function saidas(){
     'k.decisao': Math.abs(cm.delta) < 0.005 ? 'Os dois regimes empatam no mês'
       : cm.delta > 0 ? 'O convencional sai mais barato no mês' : 'O híbrido sai mais barato no mês',
     'k.dif': brl(Math.abs(cm.delta)),
-    'k.equilibrio': textoEquilibrio(cm, true),
+    'k.equilibrio': textoEquilibrio(cm),
     // zero no quadro não explica nada: diga o que falta para o DAS existir
     'k.semDas': !ANEXOS[S.anexo]
       ? 'Sem o anexo do Simples o painel não calcula o DAS. Escolha o anexo no cartão "Simples Nacional do mês", no topo — ou lance o DAS declarado na linha "Simples Nacional" das despesas tributárias.'
@@ -1137,6 +1137,9 @@ function saidas(){
   V['k.hibrido'] = cm.delta < -0.004;
   V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
   V['k.semDas'] = cm.dasBase <= 0.004;
+  // "Tributos do mês" soma as despesas tributárias da DRE. Sem nenhuma lançada, o convencional daria
+  // R$ 0,00 e o híbrido, só a diferença — dois números que não se comparam. Melhor não mostrar.
+  V['k.temCarga'] = cm.trib > 0.004;
 
   // ano
   Object.assign(O, {
@@ -1371,7 +1374,7 @@ function rApuracaoSimples(){
 function rComparativo(){
   const regime = (nome, nota, das, cbs, carga) => `<span class="cmp-n">${nome}<small class="mut11">${nota}</small>` +
     `<span class="cmp-bar" aria-hidden="true"><span class="c-ink" data-w="${das}"></span><span class="c-brand" data-w="${cbs}"></span></span>` +
-    `<small class="cmp-carga" data-o="${carga}"></small></span>`;
+    `<small class="cmp-carga" data-o="${carga}" data-v="k.temCarga"></small></span>`;
   const cel = (k, info) => `<span class="cmp-v"><span data-o="${k}"></span>${info ? `<small data-o="${info}"></small>` : ''}</span>`;
   return `<section class="card" aria-label="Convencional × Híbrido">
     <div class="card-h"><div><h2>Convencional × Híbrido</h2><p class="sub">O Simples com a CBS dentro do DAS, ou o DAS sem a CBS e a CBS apurada por fora.</p></div></div>
