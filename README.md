@@ -167,6 +167,16 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **Despesas editáveis no detalhamento:** nome e valor de cada despesa são campos (sem precisar de
   "Editar valores"), com "+ adicionar despesa" e × para remover. A despesa nova entra com crédito
   integral pela alíquota geral
+- **DAS não digitado: a DRE usa o calculado** (`dasNaDre`, 13/09/2026). Enquanto a linha "Simples Nacional"
+  estiver zerada e houver anexo e receita dos 12 meses, ela mostra o **DAS que sai da receita por tipo**,
+  com "*calculado · digitar*" embaixo, e esse valor entra nas despesas tributárias, no resultado e na
+  margem. Antes o quadro "Convencional × Híbrido" já usava o DAS calculado e a DRE contava zero — o lucro
+  do mês aparecia maior do que é. O link **digitar** passa o valor para o campo (vira declarado, editável).
+  Nada é gravado sozinho; quem digita, manda. Os dois formatos ficam no DOM e o `data-v` escolhe, porque
+  digitar a receita só dá `refresh()`. **Sem a linha do Simples** na lista não há onde mostrar o valor, e
+  aí ele fica fora do total da DRE (o cálculo da comparação continua usando o DAS calculado).
+  A conferência com o PGDAS segue olhando o **declarado** (`simplesDeclarado`), senão a diferença seria
+  sempre zero
 - **Regra de crédito por despesa e por compra** (no lugar do "% base"): Integral, Redução de 30%
   (profissões regulamentadas: contabilidade, advocacia), **Redução de 40%**, Redução de 50%,
   Redução de 60%, Redução de 70% (aluguel), Sem crédito e

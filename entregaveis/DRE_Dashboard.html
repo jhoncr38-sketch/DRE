@@ -267,6 +267,10 @@
   .seg .gr .sel{font-size:12px}
   .cbscol{display:flex; flex-direction:column; gap:1px; min-width:0}
   .cbscol small{font-size:11px; color:var(--muted-2); padding-left:2px}
+  .dasauto{display:inline-flex; flex-direction:column; align-items:flex-end; gap:1px}
+  .dasauto small{font-size:11px; color:var(--muted-2)}
+  .dasauto .lk{border:0; background:none; padding:0; font:inherit; color:var(--ink-3); text-decoration:underline; cursor:pointer}
+  .dasauto .lk:hover{color:var(--brand)}
   .cbscol.dir{align-items:flex-end}
   .cbscol.dir small{padding:0 2px 0 0; min-height:14px; white-space:nowrap}   /* efetiva embaixo da cheia; altura reservada e sem quebra mantêm o mesmo talhe em toda linha */
   .sn .seg-prem{padding:0}
@@ -703,8 +707,8 @@ function sincronizarReceita(){ S.monthly.receita = somaDebitos(); }
 
 function calcMes(){
   const m = S.monthly, rf = m.reforma, R = somaDebitos();
-  const custos = soma(m.custos), ga = soma(m.ga), vendas = soma(m.vendas), trib = soma(m.tributarias);
-  const lucroBruto = R - custos, resultado = lucroBruto - ga - vendas - trib;
+  const custos = soma(m.custos), ga = soma(m.ga), vendas = soma(m.vendas), tribLancado = soma(m.tributarias);
+  const lucroBruto = R - custos;
   const creditoGeral = m.ga.reduce((a, r) => a + credLinha(r), 0);
   const baseDespesas = m.ga.reduce((a, r) => a + ((r[3] || 0) > 0 ? (r[1] || 0) * (r[2] || 0) : 0), 0);
   const debitoTotal = rf.debitos.reduce((a, r) => a + (+r[1] || 0) * (r[2] || 0), 0);
@@ -715,16 +719,23 @@ function calcMes(){
   const creditoTotal = rf.creditos.reduce((a, r) => a + valorCbs(r), 0) + creditoGeral + creditoCompras + saldoAnterior;
   const cbsPagar = Math.max(0, debitoTotal - creditoTotal);          // nunca negativo
   const saldoCredor = Math.max(0, creditoTotal - debitoTotal);       // excedente vai para o mês seguinte
-  const ls = linhaSimples(m.tributarias), simples = ls ? (ls[1] || 0) : 0;
-  const efetiva = R > 0 ? simples / R * 100 : 0;                     // Simples pago ÷ receita
+  const ls = linhaSimples(m.tributarias), simplesDeclarado = ls ? (ls[1] || 0) : 0;
   // CBS dentro do DAS: pela receita por tipo quando há anexo e receita dos 12 meses; sem eles, a parcela informada
   const seg = segregacao();
   const pelaTabela = !!(seg && !seg.excluida && seg.das > 0.004);
   const parcela = pelaTabela ? seg.cbs / seg.das : (rf.cbsSobreEfetiva || 0);
   // enquanto o DAS declarado estiver zerado, a comparação usa o DAS que sai da receita por tipo
   const dasCalculado = pelaTabela ? seg.das : 0;
-  const dasBase = simples > 0.004 ? simples : dasCalculado;
-  const semDeclarado = simples <= 0.004 && dasBase > 0.004;
+  const dasBase = simplesDeclarado > 0.004 ? simplesDeclarado : dasCalculado;
+  const semDeclarado = simplesDeclarado <= 0.004 && dasBase > 0.004;
+  // o Simples do mês é o declarado ou, enquanto ele não vier, o calculado pela receita por tipo — o quadro
+  // de baixo já fazia isso, e a DRE mostrava zero: o lucro do mês aparecia maior do que é
+  const simples = dasBase;
+  const efetiva = R > 0 ? simples / R * 100 : 0;                     // Simples do mês ÷ receita
+  // sem a linha "Simples Nacional" não há onde mostrar o valor na DRE, então ele fica fora do total
+  const dasNaDre = semDeclarado && !!ls;
+  const trib = tribLancado + (dasNaDre ? dasBase : 0);
+  const resultado = lucroBruto - ga - vendas - trib;
   const parcelaCbs = dasBase * parcela;                              // a CBS é uma fatia do DAS
   const simplesSemCbs = dasBase - parcelaCbs;
   const ibs = m.ibs || 0;
@@ -735,7 +746,8 @@ function calcMes(){
   const faltaCredito = limite > 0.004 ? (debitoTotal - limite) - creditoTotal : null;
   return {R, custos, ga, vendas, trib, lucroBruto, resultado, creditoGeral, baseDespesas, debitoTotal,
     saldoAnterior, creditoTotal, cbsPagar, saldoCredor, simples, efetiva, seg, pelaTabela, parcela, parcelaCbs, simplesSemCbs, ibs,
-    dasCalculado, dasBase, semDeclarado, naTransicao, delta: naTransicao - dasBase, faltaCredito, compras, creditoCompras};
+    dasCalculado, dasBase, semDeclarado, dasNaDre, simplesDeclarado, naTransicao, delta: naTransicao - dasBase,
+    faltaCredito, compras, creditoCompras};
 }
 
 // Resumo do mês, gravado junto com o estado: é daqui que o mês seguinte herda o saldo credor e
@@ -1027,6 +1039,10 @@ function saidas(){
     'm.simples': brl(cm.simples), 'm.simplesP': P2(cm.simples, cm.R), 'm.cbsPagar': brl(cm.cbsPagar)
   });
   itens(m.custos, 'm.cu', cm.R); itens(m.vendas, 'm.ve', cm.R); itens(m.tributarias, 'm.tr', cm.R);
+  // DAS não digitado: a linha do Simples mostra o calculado, e é ele que entra no total e no resultado
+  V['m.dasAuto'] = cm.dasNaDre; V['m.dasMan'] = !cm.dasNaDre;
+  if(cm.dasNaDre){ const i = m.tributarias.indexOf(linhaSimples(m.tributarias));
+    O[`m.tr.${i}.v`] = brl(cm.dasBase); O[`m.tr.${i}.p`] = P(cm.dasBase, cm.R); }
   m.ga.forEach((r, i) => { const c = credLinha(r);
     O[`m.ga.${i}.v`] = brl(r[1] || 0); O[`m.ga.${i}.cr`] = brl(c); O[`m.ga.${i}.ef`] = efetivaCredito(r);
     C[`m.ga.${i}.cr`] = c > 0.004 ? 'var(--ink)' : 'var(--disabled)'; });
@@ -1099,14 +1115,14 @@ function saidas(){
   V['r.umAnexo'] = !varios;
   O['r.snSub'] = varios ? 'A receita dos últimos 12 meses dá a faixa; o anexo de cada linha de receita dá a sua alíquota efetiva.'
     : 'O anexo e a receita dos últimos 12 meses dão a faixa e a alíquota efetiva do mês.';
-  const difDas = temTab ? cm.simples - sg.das : 0;
+  const difDas = temTab ? cm.simplesDeclarado - sg.das : 0;
   V['r.temTabela'] = temTab;
   // a conferência só aparece com DAS declarado: em mês em branco não há o que comparar
-  V['r.temConf'] = temTab && cm.simples > 0.004;
+  V['r.temConf'] = temTab && cm.simplesDeclarado > 0.004;
   V['r.confere'] = V['r.temConf'] && Math.abs(difDas) < 1;
   V['r.naoConfere'] = V['r.temConf'] && !V['r.confere'];
   O['r.dasCalc'] = temTab ? brl(sg.das) : '—';
-  O['r.dasDeclarado'] = brl(cm.simples);
+  O['r.dasDeclarado'] = brl(cm.simplesDeclarado);
   O['r.conferencia'] = !V['r.temConf'] ? '' : V['r.confere'] ? 'Confere com o DAS declarado no PGDAS.'
     : difDas < 0 ? `O DAS pela receita por tipo passa o declarado em ${brl(-difDas)}: separe as receitas com ICMS-ST, monofásico ou ISS retido.`
     : `O DAS pela receita por tipo fica ${brl(difDas)} abaixo do declarado: confira o anexo, a receita dos 12 meses e os tipos.`;
@@ -1308,10 +1324,18 @@ function linha(cls, label, kv, kp, path, sempre){       // sempre: campo aberto 
 const ITEM = {custos: 'custo', ga: 'despesa', vendas: 'despesa de vendas', tributarias: 'despesa tributária'};
 function lista(base, arr, k){
   const rotulo = ITEM[base.split('.').pop()] || 'item';
+  // enquanto o DAS não for digitado, a linha do Simples mostra o calculado pela receita por tipo. Os dois
+  // formatos ficam no DOM e o data-v escolhe: digitar a receita só dá refresh, e um render tardio atrasaria a troca
+  const iSimples = base === 'monthly.tributarias' ? arr.indexOf(linhaSimples(arr)) : -1;
+  const campo = (r, i) => inp(`${base}.${i}.1`, 'brl', r[0] || rotulo, 'val');
+  const valor = (r, i) => i !== iSimples ? campo(r, i)
+    : `<span class="dasauto" data-v="m.dasAuto"><span class="m" data-o="${k}.${i}.v"></span>` +
+      `<small class="m">calculado · <button class="lk" type="button" data-act="das-digitar">digitar</button></small></span>` +
+      `<span data-v="m.dasMan">${campo(r, i)}</span>`;
   return `<div class="det">` + arr.map((r, i) => `<div class="li">
     <span class="nmcol"><span class="nmwrap">${inp(`${base}.${i}.0`, 'txt', `Nome — ${rotulo} ${i + 1}`, 'txt')}
       <span class="row-ctl"><button class="x" data-act="li-rm" data-lista="${base}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover">×</button></span></span></span>
-    <span class="v">${inp(`${base}.${i}.1`, 'brl', r[0] || rotulo, 'val')}${o(`${k}.${i}.p`, 'p')}</span></div>`).join('') +
+    <span class="v">${valor(r, i)}${o(`${k}.${i}.p`, 'p')}</span></div>`).join('') +
     `<button class="add" data-act="li-add" data-lista="${base}">+ adicionar ${rotulo}</button></div>`;
 }
 const btnDetalhe = () => `<button class="btn" data-act="detalhe" aria-expanded="${ui.detalhe}">${ui.detalhe ? 'Ocultar detalhamento' : 'Ver detalhamento'}</button>`;
@@ -2465,6 +2489,12 @@ app.addEventListener('click', e => {
       const n = app.querySelector(`input[data-b="${cam}.${lst.length - 1}.0"]`); if(n) n.focus();
     } break;
     case 'li-rm': getPath(b.dataset.lista).splice(i, 1); render(); break;
+    case 'das-digitar': {                            // passa o DAS calculado para o campo, para conferir ou ajustar
+      const l = linhaSimples(S.monthly.tributarias); if(!l) break;
+      l[1] = calcMes().dasBase; render();
+      const n = app.querySelector(`input[data-b="monthly.tributarias.${S.monthly.tributarias.indexOf(l)}.1"]`);
+      if(n){ n.focus(); n.select(); }
+    } break;
     case 'add-es':
       (S.monthly.estoque = S.monthly.estoque || []).push(['Nova linha', 0]); render();
       { const n = app.querySelector(`input[data-b="monthly.estoque.${S.monthly.estoque.length - 1}.0"]`); if(n){ n.focus(); n.select(); } }
