@@ -541,7 +541,7 @@ function defaults(){ return {
     // compras do mês, itemizadas: [item, valor, % da base com direito a crédito, alíquota CBS] — como as despesas
     compras: [["Compra de mercadoria do mês", 62239.31, 1, 0.09]],
     reforma: {
-      aliqGeral: 0.08, aliqReduzida: 0.032,
+      aliqGeral: 0.08,
       aliqCompras: 0.09,                        // crédito sobre as compras do mês; não segue as premissas
       cbsSobreEfetiva: 0.1533,                  // parcela da CBS dentro do Simples (README, pendência 3)
       // [nome, receita, alíquota, tipo, —, situação no DAS]: a receita declarada do mês é a soma destas linhas.
@@ -583,10 +583,9 @@ function migrar(s){
       ? arr.map(r => [r[0], r[1] || 0, r[2] || 0, (r[2] || 0) > 0 && (r[2] || 0) < geral ? 'reduzida' : 'geral'])
       : undefined;
     const debitos = conv(rf.debitos), creditos = conv(rf.creditosCompra);
-    const red = (debitos || []).concat(creditos || []).find(r => r[3] === 'reduzida');
     if(s.monthly){
       const mm = s.monthly;
-      mm.reforma = { aliqGeral: geral, aliqReduzida: red ? red[2] : undefined,
+      mm.reforma = { aliqGeral: geral,
         cbsSobreEfetiva: rf.cbsSobreEfetiva, debitos, creditos, saldoCredorAnterior: rf.saldoCredorAnterior };
       // v1 guardava estoque em campos soltos; sem eles, a lista fica vazia (não herda os números do padrão)
       mm.estoque = [['Estoque atualizado — custo total', mm.estoqueCusto], ['Estoque atualizado — preço total', mm.estoquePreco],
@@ -621,7 +620,7 @@ function migrar(s){
   }
   if(s.v < 6){
     // v6: a alíquota da receita deixa de ser campo e passa a sair do tipo. Quem acerta a linha é
-    // normalizarDebitos(), aplicado em todo carregamento — inclusive em mês já salvo nesta versão.
+    // normalizarLinhas(), aplicado em todo carregamento — inclusive em mês já salvo nesta versão.
     s.v = 6;
   }
   if(s.v < 7){
@@ -754,30 +753,30 @@ function resumoDe(st){
 // estado salvo → pronto para calcular (mesma sequência de abrirMes)
 function prontoParaCalculo(dados){
   const st = mesclar(defaults(), migrar(dados));
-  normalizarDebitos(st.monthly.reforma);
+  normalizarLinhas(st.monthly.reforma);
   return st;
 }
 
 /* ---------- reforma: tipos de alíquota e regras de crédito (LC 214/2025) ---------- */
-// tipo da linha de débito/crédito: a reduzida (−60%) tem premissa própria; cheia, −30%, −70% e zero seguem a alíquota geral
-const TIPOS = [['geral', 'Alíquota cheia'], ['red30', 'Redução de 30%'], ['red50', 'Redução de 50%'],
-  ['reduzida', 'Redução de 60%'], ['red70', 'Redução de 70%'], ['zero', 'Alíquota zero']];
-const FATOR_TIPO = {red30: 0.7, red50: 0.5, red70: 0.3, zero: 0};
+// tipo da linha de débito/crédito: toda redução é um fator sobre a alíquota geral — a de 60% tinha premissa
+// própria e digitada, que descolava da geral (geral a 9% e a reduzida parada em 3,20%, 40% de 8%)
+const TIPOS = [['geral', 'Alíquota cheia'], ['red30', 'Redução de 30%'], ['red40', 'Redução de 40%'],
+  ['red50', 'Redução de 50%'], ['reduzida', 'Redução de 60%'], ['red70', 'Redução de 70%'], ['zero', 'Alíquota zero']];
+const FATOR_TIPO = {red30: 0.7, red40: 0.6, red50: 0.5, reduzida: 0.4, red70: 0.3, zero: 0};
 function aliqTipo(tipo){
-  const rf = S.monthly.reforma;
-  return tipo === 'reduzida' ? rf.aliqReduzida : (tipo in FATOR_TIPO ? FATOR_TIPO[tipo] : 1) * rf.aliqGeral;
+  return (tipo in FATOR_TIPO ? FATOR_TIPO[tipo] : 1) * S.monthly.reforma.aliqGeral;
 }
 // A receita não tem alíquota própria: ela sai do tipo da linha. Todo mês carregado passa por aqui, senão
 // uma alíquota antiga gravada (ex.: 15,33%, que é a parcela da CBS no DAS) apareceria até trocarem o tipo.
-function normalizarDebitos(rf){
-  if(!rf || !Array.isArray(rf.debitos)) return;
-  rf.debitos.forEach(r => {
-    r[2] = r[3] === 'reduzida' ? (rf.aliqReduzida || 0) : ((r[3] in FATOR_TIPO ? FATOR_TIPO[r[3]] : 1) * (rf.aliqGeral || 0));
-  });
+function normalizarLinhas(rf){
+  if(!rf) return;
+  const aplicar = arr => Array.isArray(arr) &&
+    arr.forEach(r => { r[2] = (r[3] in FATOR_TIPO ? FATOR_TIPO[r[3]] : 1) * (rf.aliqGeral || 0); });
+  aplicar(rf.debitos); aplicar(rf.creditos);
 }
 // regra de crédito da despesa = parte do valor que dá direito a crédito (profissões regulamentadas −30%, locação de imóveis −70%)
-const REGRAS = [[1, 'Integral'], [0.7, 'Redução de 30%'], [0.5, 'Redução de 50%'], [0.4, 'Redução de 60%'],
-  [0.3, 'Redução de 70%'], [0, 'Sem crédito']];
+const REGRAS = [[1, 'Integral'], [0.7, 'Redução de 30%'], [0.6, 'Redução de 40%'], [0.5, 'Redução de 50%'],
+  [0.4, 'Redução de 60%'], [0.3, 'Redução de 70%'], [0, 'Sem crédito']];
 
 /* ---------- Simples Nacional: faixa e partilha (LC 123/2006; a partir de 2027 com CBS e IBS, LC 214/2025) ---------- */
 // faixa: [receita dos 12 meses até, alíquota nominal, parcela a deduzir, ICMS, ISS, PIS+Cofins (até 2026), CBS (2027 em diante)]
@@ -847,6 +846,9 @@ function anexoEmpresa(){
   const r = (S.monthly.reforma.debitos || []).find(x => ANEXOS[x[6]]);   // sem anexo na empresa, vale o da 1ª linha
   return r ? r[6] : '';
 }
+// com mais de um anexo entre as linhas não existe "o anexo da empresa": cada linha tem o seu, e o campo
+// único da empresa passa a mostrar um dos dois como se fosse o de todos
+const variosAnexos = () => new Set((S.monthly.reforma.debitos || []).map(anexoLinha)).size > 1;
 function segregacao(){
   const base = baseRbt12(), ano = anoCompetencia(), cache = {};
   const faixaDe = a => a in cache ? cache[a] : (cache[a] = simplesFaixa(a, base.valor, ano));
@@ -878,11 +880,12 @@ function calcAno(){
 let alvoGeral = null;          // linhas de despesa afetadas, fixadas ao entrar no campo
 function linhasComCredito(){ return alvoGeral || S.monthly.ga.map(r => (r[3] || 0) > 0); }
 function propagar(tipo){
-  const rf = S.monthly.reforma, v = tipo === 'reduzida' ? rf.aliqReduzida : tipo === 'compras' ? rf.aliqCompras : rf.aliqGeral;
+  const rf = S.monthly.reforma, v = tipo === 'compras' ? rf.aliqCompras : rf.aliqGeral;
   // a alíquota das compras só vale para as linhas de compra que têm crédito
   if(tipo === 'compras'){ S.monthly.compras.forEach(r => { if((r[2] || 0) > 0) r[3] = v; }); return; }
-  if(tipo === 'geral'){ const alvo = linhasComCredito(); S.monthly.ga.forEach((r, i) => { if(alvo[i]) r[3] = v; }); }
-  rf.debitos.concat(rf.creditos).forEach(r => { if((r[3] === 'reduzida') === (tipo === 'reduzida')) r[2] = aliqTipo(r[3]); });
+  const alvo = linhasComCredito(); S.monthly.ga.forEach((r, i) => { if(alvo[i]) r[3] = v; });
+  // toda redução é um fator da geral, então mexer nela move todas as linhas, e não só as de alíquota cheia
+  rf.debitos.concat(rf.creditos).forEach(r => { r[2] = aliqTipo(r[3]); });
 }
 
 /* ---------- textos ---------- */
@@ -1035,7 +1038,6 @@ function saidas(){
     'm.debitoTotal': brl(cm.debitoTotal), 'm.creditoTotal': brl(cm.creditoTotal),
     'm.saldoAnt': brl(cm.saldoAnterior), 'm.saldoCredor': brl(cm.saldoCredor),
     'm.linhas': `${linhasComCredito().filter(Boolean).length} de ${m.ga.length} linhas de despesa`,
-    'm.lblRed': 'Alíquota reduzida',
     // fornecedores da cadeia que não geram crédito cheio: o crédito das compras pode estar alto
     'm.fornCap': forn.length === 1 ? '1 de 1 fornecedor cadastrado não gera crédito cheio — confira a alíquota'
       : `${fq} dos ${forn.length} fornecedores cadastrados não ${fq === 1 ? 'gera' : 'geram'} crédito cheio — confira a alíquota`
@@ -1059,7 +1061,7 @@ function saidas(){
   (m.estoque || []).forEach((r, i) => { O[`m.es.${i}.v`] = brl(r[1] || 0); });
   // a alíquota da linha aparece na tabela: é fácil confundir a alíquota da CBS com a parcela dela dentro do DAS
   rf.debitos.forEach((r, i) => { O[`m.deb.${i}.val`] = brl((+r[1] || 0) * (r[2] || 0)); O[`m.deb.${i}.aliq`] = FMT.pct(r[2]); });
-  rf.creditos.forEach((r, i) => { O[`m.cred.${i}.val`] = brl(valorCbs(r)); });
+  rf.creditos.forEach((r, i) => { O[`m.cred.${i}.val`] = brl(valorCbs(r)); O[`m.cred.${i}.aliq`] = FMT.pct(r[2]); });
   // crédito maior que o débito: a CBS vira "CBS Crédito" (verde) com o saldo que vai para o mês seguinte
   const credor = V['m.temCredor'];
   O['m.cbsRotulo'] = credor ? 'CBS Crédito' : 'CBS a pagar';
@@ -1077,7 +1079,8 @@ function saidas(){
 
   // receita por tipo: faixa do Simples, DAS de cada tipo e conferência com o DAS declarado
   const sg = cm.seg, temTab = !!(sg && !sg.excluida);
-  O['r.faixa'] = !ANEXOS[S.anexo] ? 'escolha o anexo para calcular o DAS de cada tipo'
+  // pelo anexo efetivo, não por S.anexo: com o anexo só nas linhas, o cálculo roda e a tela mandava escolher
+  O['r.faixa'] = !ANEXOS[anexoEmpresa()] ? 'escolha o anexo para calcular o DAS de cada tipo'
     : sg && sg.excluida ? 'acima de R$ 4,8 milhões: fora do Simples Nacional'
     : !temTab ? 'informe a receita dos 12 meses ou a do mês para calcular o DAS de cada tipo'
     : `${sg.faixa}ª faixa · ` + (() => {                 // uma efetiva por anexo com receita no mês
@@ -1091,6 +1094,11 @@ function saidas(){
   // o campo "Situação" só existe enquanto não há receita dos 12 meses: por data-v, some na hora em que
   // o valor é digitado (render() só acontece depois, e até lá a tela dizia "sem movimento" com valor)
   V['r.semRbt12'] = !(+m.rbt12 > 0);
+  // duas atividades: o anexo passa a ser da linha, e o campo único da empresa sai da tela
+  const varios = variosAnexos();
+  V['r.umAnexo'] = !varios;
+  O['r.snSub'] = varios ? 'A receita dos últimos 12 meses dá a faixa; o anexo de cada linha de receita dá a sua alíquota efetiva.'
+    : 'O anexo e a receita dos últimos 12 meses dão a faixa e a alíquota efetiva do mês.';
   const difDas = temTab ? cm.simples - sg.das : 0;
   V['r.temTabela'] = temTab;
   // a conferência só aparece com DAS declarado: em mês em branco não há o que comparar
@@ -1363,9 +1371,9 @@ function rSimplesMes(){
   const ro = ui.present ? ' disabled' : '';
   const anexos = [['', 'Escolha…']].concat(Object.keys(ANEXOS).map(k => [k, `${k} · ${ANEXOS[k].nome}`]));
   return `<section class="card sn" aria-label="Simples Nacional do mês">
-    <div class="card-h"><div><h2>Simples Nacional do mês</h2><p class="sub">O anexo e a receita dos últimos 12 meses dão a faixa e a alíquota efetiva do mês.</p></div></div>
+    <div class="card-h"><div><h2>Simples Nacional do mês</h2><p class="sub" data-o="r.snSub"></p></div></div>
     <div class="seg-prem">
-      <label class="seg-campo"><span>Anexo do Simples</span><span class="sel-wrap"><select class="sel" data-b="anexo" data-f="txt" aria-label="Anexo do Simples Nacional"${ro}>${opcoesSel(anexos, S.anexo || '')}</select></span></label>
+      <label class="seg-campo" data-v="r.umAnexo"><span>Anexo do Simples</span><span class="sel-wrap"><select class="sel" data-b="anexo" data-f="txt" aria-label="Anexo do Simples Nacional"${ro}>${opcoesSel(anexos, S.anexo || '')}</select></span></label>
       <label class="seg-campo"><span>Receita dos últimos 12 meses</span>${inp('monthly.rbt12', 'brl', 'Receita dos últimos 12 meses')}</label>
       <label class="seg-campo larga" data-v="r.semRbt12"><span>Situação</span><span class="sel-wrap"><select class="sel" data-b="monthly.inicioAtividade" data-f="txt" aria-label="Situação da empresa sem receita nos 12 meses"${ro}>${opcoesSel([['', 'Sem movimento'], ['sim', 'Início de atividade']], S.monthly.inicioAtividade || '')}</select></span></label>
       <span class="seg-faixa" data-o="r.faixa"></span>
@@ -1462,8 +1470,7 @@ function linhasCbs(g){
     <span class="nmcol"><span class="nmwrap">${cred ? inp(`monthly.reforma.${g}.${i}.0`, 'txt', `Nome da linha ${i + 1}`, 'txt') : `<span class="nm">${NOME_RECEITA}</span>`}
       <span class="row-ctl">${tipoSel}<button class="x" data-act="rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(r[0])}" title="Remover linha">×</button></span></span></span>
     ${base}
-    ${cred ? inp(`monthly.reforma.${g}.${i}.2`, 'pct', r[0] + ' — alíquota')    // receita: a alíquota sai do tipo
-           : `<span class="r m" data-o="m.deb.${i}.aliq"></span>`}
+    <span class="r m" data-o="m.${k}.${i}.aliq"></span>
     <span class="cr-v" data-o="m.${k}.${i}.val"></span></div>`;
   }).join('');
 }
@@ -1486,7 +1493,6 @@ function rReforma(){
       <div class="prem-t"><span class="cap">Premissas</span><span>Alterar aqui vale para <span data-o="m.linhas"></span> e para débitos e créditos.</span></div>
       <div class="prem-f">
         <label><span>Alíquota geral</span>${inp('monthly.reforma.aliqGeral', 'pct', 'Alíquota geral', 'main', 'data-premissa="geral"')}</label>
-        <label><span data-o="m.lblRed"></span>${inp('monthly.reforma.aliqReduzida', 'pct', 'Alíquota reduzida', 'main', 'data-premissa="reduzida"')}</label>
         <label><span>Alíquota das compras</span>${inp('monthly.reforma.aliqCompras', 'pct', 'Alíquota das compras', 'main', 'data-premissa="compras"')}</label>
       </div>
     </div>
@@ -1795,7 +1801,7 @@ async function carregar(){
     else if(window.storage){ const r = await window.storage.get('dre_state', true); if(r && r.value) salvo = JSON.parse(r.value); }
   }catch(err){}
   const m = migrar(salvo);
-  if(m){ S = mesclar(defaults(), m); normalizarDebitos(S.monthly.reforma); }
+  if(m){ S = mesclar(defaults(), m); normalizarLinhas(S.monthly.reforma); }
 }
 function baixar(){
   const clone = document.documentElement.cloneNode(true);
@@ -2127,13 +2133,13 @@ async function abrirMes(empresaId, periodo, op){
   const novo = !r.competencia;
   banco.heranca = null; banco.ano = null;          // o quadro do ano é refeito ao entrar na aba Anual
   if(!novo){
-    S = mesclar(defaults(), migrar(r.competencia.dados)); S.cadeia = cadeia; normalizarDebitos(S.monthly.reforma);
+    S = mesclar(defaults(), migrar(r.competencia.dados)); S.cadeia = cadeia; normalizarLinhas(S.monthly.reforma);
     banco.base = r.competencia.atualizado_em;
   } else {
     // mês ainda não salvo: a tela atual (primeira empresa) ou o mês salvo mais próximo, com os valores zerados
     if(!op.manterTela){
       const h = op.heranca || HERANCA;
-      S = zerarValores(r.modelo ? mesclar(defaults(), migrar(r.modelo)) : defaults(), h); S.cadeia = cadeia; normalizarDebitos(S.monthly.reforma);
+      S = zerarValores(r.modelo ? mesclar(defaults(), migrar(r.modelo)) : defaults(), h); S.cadeia = cadeia; normalizarLinhas(S.monthly.reforma);
       if(!r.modelo) S.anexo = '';                  // empresa nova: o anexo do exemplo não vale para ela
       S.mesLabel = rotuloMes(periodo);             // a herança calcula pelo ano desta competência
       await herdarDoAnterior(empresaId, periodo, r.anterior, h);
@@ -2442,7 +2448,7 @@ app.addEventListener('click', e => {
       break;
     case 'add':
       if(g === 'debitos') rf.debitos.push([NOME_RECEITA, 0, rf.aliqGeral, 'geral']);
-      else rf.creditos.push(['Novo crédito', 0, rf.aliqCompras || 0, 'geral']);   // mesma alíquota das compras: não muda o total
+      else rf.creditos.push(['Novo crédito', 0, aliqTipo('geral'), 'geral']);   // pelo tipo, como as demais
       render();
       { const campo = g === 'debitos' ? '1' : '0';   // receita já entra pelo valor; crédito, pelo nome
         const n = app.querySelector(`input[data-b="monthly.reforma.${g}.${rf[g].length - 1}.${campo}"]`); if(n){ n.focus(); n.select(); } }

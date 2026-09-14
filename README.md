@@ -168,8 +168,8 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   "Editar valores"), com "+ adicionar despesa" e × para remover. A despesa nova entra com crédito
   integral pela alíquota geral
 - **Regra de crédito por despesa e por compra** (no lugar do "% base"): Integral, Redução de 30%
-  (profissões regulamentadas: contabilidade, advocacia), **Redução de 50%**, Redução de 60%,
-  Redução de 70% (aluguel), Sem crédito e
+  (profissões regulamentadas: contabilidade, advocacia), **Redução de 40%**, Redução de 50%,
+  Redução de 60%, Redução de 70% (aluguel), Sem crédito e
   "Outra parte…" (janela para digitar o %). Por baixo continua a parte da base (`ga[i][2]`):
   "Sem crédito" zera a alíquota; passar a ter crédito entra pela alíquota geral
 - **Alíquota efetiva embaixo da cheia** (despesas e compras): quando a regra reduz a base, o que de fato
@@ -201,16 +201,25 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **Padrão x Excel:** com Receita PGDAS a 8% e compras a 9%, a CBS padrão do Aragão é R$ 2.272,19.
   Para reproduzir o Excel (R$ 815,54): receita 2.734,37 integral + 103.685,52 reduzida; e as compras
   em duas linhas — 60.372,13 a 3,2% e 1.867,18 a 8%
-- **Premissas** "Alíquota geral" e "Alíquota reduzida" propagam para as linhas de receita, de crédito e
-  de despesa com crédito
-- **Alíquota da receita sempre calculada pelo tipo:** na memória ela é texto, não campo — quem manda são
-  as premissas. A migração v6 acerta meses salvos com alíquota antiga gravada na linha (ex.: 15,33%, que
-  é a parcela da CBS no DAS, não a alíquota da CBS). As linhas de crédito seguem com alíquota própria
+- **Premissas** "Alíquota geral" e "Alíquota das compras" propagam para as linhas de receita, de crédito
+  e de despesa com crédito. A premissa **"Alíquota reduzida" saiu da tela** (13/09/2026): a redução é
+  escolhida na linha, na hora de lançar, e o campo só existia para alimentar a de 60%
+- **Alíquota sempre calculada pelo tipo, na receita e no crédito** (`normalizarLinhas()`): na memória ela
+  é texto, não campo — quem manda é o tipo da linha. A migração v6 acerta meses salvos com alíquota antiga
+  gravada na linha (ex.: 15,33%, que é a parcela da CBS no DAS, não a alíquota da CBS). A **linha de
+  crédito passou a seguir a mesma regra** (13/09/2026): antes tinha campo de alíquota editável, mas a
+  alíquota geral já a sobrescrevia — o campo aceitava um número e o desfazia depois. Agora as duas listas
+  são normalizadas em todo carregamento, e a linha de crédito nova entra pelo tipo (`aliqTipo('geral')`)
+  em vez da alíquota das compras
 - **Tipo de alíquota** de cada débito e crédito (etiqueta ao passar o mouse): Alíquota cheia,
-  Redução de 30% (geral × 0,7), **Redução de 50% (geral × 0,5)**, Redução de 60% (segue a premissa
-  "reduzida"), Redução de 70% (geral × 0,3) e Alíquota zero. Guardado em `r[3]`: `geral`, `red30`,
-  `red50`, `reduzida`, `red70`, `zero`. A de 60% é a única que não é fórmula: vem da premissa, porque
-  a lei às vezes dá um número que não é exatamente 40% da cheia (decisão do usuário)
+  Redução de 30% (geral × 0,7), **Redução de 40% (geral × 0,6)**, Redução de 50% (geral × 0,5),
+  **Redução de 60% (geral × 0,4)**, Redução de 70% (geral × 0,3) e Alíquota zero. Guardado em `r[3]`:
+  `geral`, `red30`, `red40`, `red50`, `reduzida`, `red70`, `zero` (o nome `reduzida` é herança de
+  quando ela era a única redução).
+  **A de 60% deixou de ter premissa própria** (13/09/2026): digitada à parte, ela descolava da geral —
+  a tela do usuário mostrava geral 9,00% com a reduzida parada em 3,20%, que é 40% de 8%. Em troca,
+  perdeu-se a saída para um caso em que a lei dê um número que não seja exatamente 40% da cheia; se
+  aparecer, o lugar dele é uma alíquota própria **na linha**, não uma premissa do mês
 - **Receita por tipo** (detalhamento da receita, aba Resultado — seção 2 da planilha "Simples CBS
   Convencional vs Híbrido"): tipo, receita, **situação no DAS** (`r[5]`: Integral, ICMS-ST, Monofásico,
   ICMS-ST + monofásico, ISS retido), **tipo da CBS por fora** (com a alíquota da linha embaixo, para não
@@ -225,7 +234,14 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   receita no mês ("*5ª faixa · I 9,91% · V 19,88%*"); com um anexo só, volta a "*efetiva 9,91%*".
   **Sem migração:** linha sem anexo próprio usa o da empresa, então mês salvo antes disso não muda de
   número. O **Fator R** (Anexo V ↔ III pela folha) **não é calculado** — decisão do usuário: o
-  enquadramento é o que ele escolher na linha
+  enquadramento é o que ele escolher na linha.
+  Com **mais de um anexo entre as linhas** (`variosAnexos()`), o campo **"Anexo do Simples" some da tela**
+  (`data-v="r.umAnexo"`): não existe *o* anexo da empresa, e o campo único mostrava o de uma linha como se
+  fosse o de todas. O subtítulo do cartão acompanha — "*A receita dos últimos 12 meses dá a faixa; o anexo
+  de cada linha de receita dá a sua alíquota efetiva*" —, e quem quiser trocar o anexo o faz na própria
+  linha, onde ele já estava. A mensagem "*escolha o anexo*" passou a testar o **anexo efetivo**
+  (`anexoEmpresa()`) e não `S.anexo`: com o anexo só nas linhas o cálculo roda, e a tela mandava escolher
+  por um campo que nesse caso nem está mais lá
 - **Receita dos 12 meses zerada** (`baseRbt12()`): são **dois casos diferentes**, e só quem preenche
   sabe qual é — por isso aparece um campo **Situação** ao lado, só quando o RBT12 está zerado
   (`monthly.inicioAtividade`):
@@ -360,7 +376,7 @@ Os dados em si ficam no Supabase, nunca no navegador.
 ```js
 monthly.ga = [ [label, valor, %base, alíquota], ... ]   // crédito por item
 monthly.reforma = {
-  aliqGeral, aliqReduzida, aliqCompras, cbsSobreEfetiva, saldoCredorAnterior,
+  aliqGeral, aliqCompras, cbsSobreEfetiva, saldoCredorAnterior,
   debitos:  [ [nome, base, alíquota, 'geral'|'reduzida', 'pgdas'?], ... ], // 'pgdas' = base é a receita
                                                                            // declarada menos as outras linhas
   creditos: [ [nome, base, alíquota, 'geral'|'reduzida'], ... ]          // crédito que não vem de compra
