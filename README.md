@@ -54,6 +54,7 @@ src/
   dashboard_template.html  # dashboard completo (1 arquivo, sem dependências externas)
 supabase/
   migrations/20260911120000_estrutura_inicial.sql   # tabelas, segurança (RLS) e funções de salvar/carregar
+  migrations/20260916130000_protecao_dos_dados.sql  # lixeira, versões e trava das listas da empresa
   scripts/adicionar_membro.sql                       # dar acesso a alguém da equipe
   scripts/conferir_instalacao.sql                    # conferir se o banco ficou configurado
 scripts/
@@ -495,7 +496,9 @@ protege os dados é o **RLS** do banco: a chave pública sozinha não lê nada.
 2. **Criar as tabelas:** SQL Editor → cole `supabase/migrations/20260911120000_estrutura_inicial.sql`
    inteiro → Run; depois o mesmo com `20260912120000_resumo_e_heranca.sql` (resumo do mês,
    herança e a função `resumos`) e `20260912130000_produtos_por_empresa.sql` (catálogo por empresa,
-   com backfill do que já estava salvo). Para conferir, rode `supabase/scripts/conferir_instalacao.sql`.
+   com backfill do que já estava salvo), e por último `20260916130000_protecao_dos_dados.sql`
+   (lixeira, versões e trava — ver "Proteção dos dados" abaixo). Para conferir, rode
+   `supabase/scripts/conferir_instalacao.sql`.
    Enquanto a segunda migração não for aplicada o painel continua funcionando — só não herda
    nada no mês novo e a aba Anual não soma os meses.
 3. **Fechar o cadastro público:** Authentication → Sign In / Providers → desligue
@@ -524,6 +527,9 @@ Com a CLI, os passos 2 e 3 viram: `npx supabase init`, `npx supabase link --proj
 | `competencias` | um painel por empresa e mês: `periodo` (dia 1), `dados` (jsonb com o estado inteiro, sem a cadeia), `resumo` (números já calculados do mês), `atualizado_em/por` |
 | `parceiros` | cadeia de crédito da empresa: tipo, CNPJ, nome, regime, gera crédito, ordem |
 | `produtos` | catálogo da empresa: nome, tipo da alíquota, produto/serviço, NCM, NBS, cClassTrib, ordem |
+| `competencias_lixeira` | mês excluído, inteiro, por 30 dias (gatilho em todo `DELETE`) |
+| `competencias_versoes` | estado anterior do mês a cada alteração dos `dados` (30 por mês) |
+| `cadastros_versoes` | fornecedores, clientes e catálogo da empresa antes de cada troca (30 por empresa) |
 
 O `resumo` é gravado pelo próprio painel a cada salvamento (`resumoDe()`): receita, DAS, Simples, CBS,
 saldo credor, resultado, custos, despesas, compras, alíquota efetiva, RBT12, anexo e faixa. É ele que
@@ -536,24 +542,42 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
   o mês **imediatamente anterior** (`anterior`, origem da herança) e a cadeia.
 - `resumos(empresa, de, até)` → os meses do intervalo com `{periodo, resumo, receita}`. Usada pelo
   RBT12 (12 meses anteriores) e pela aba Anual (o exercício).
-- `salvar_painel(empresa, período, dados, parceiros, base, resumo)` → grava o mês e a cadeia **numa transação**.
+- `salvar_painel(empresa, período, dados, parceiros, base, resumo, produtos, apagar_listas)` → grava o mês e a cadeia **numa transação**.
+  Lista de fornecedores/clientes ou catálogo que chega **vazia** não apaga a da empresa, a não ser com
+  `apagar_listas = true`; lista igual à do banco não é regravada; lista que muda deixa a anterior em `cadastros_versoes`.
+- `listar_lixeira()` / `restaurar_competencia(id)`, `listar_versoes(empresa, período)` / `restaurar_versao(id)`,
+  `listar_versoes_cadastros(empresa)` / `restaurar_cadastros(id)` → lixeira e histórico. Restaurar uma versão guarda
+  o estado de agora (dá para desfazer); restaurar da lixeira recusa (`OCUPADO`) se o mês foi recriado no mesmo período.
   `base` é o `atualizado_em` de quando o mês foi aberto: se outra pessoa salvou depois, dá `CONFLITO`
   e o painel pergunta se sobrescreve ou abre a versão salva (`'-infinity'` = criar mês que não pode existir).
 
 ### Como o painel usa
 - Sem login, nenhum dado aparece. A sessão fica guardada e renova sozinha; se cair no meio do
   trabalho, o painel pede o login e **salva o que estava na tela** depois.
-- **Primeira empresa:** o que está na tela é salvo nela. **Nova empresa** e **novo mês** começam com
-  as categorias e alíquotas (do padrão ou do mês salvo mais próximo) e os valores zerados.
+- **Nova empresa** (inclusive a primeira) começa **em branco**: categorias genéricas (`modeloEmBranco()`), as
+  alíquotas e regras de crédito padrão e os valores zerados. **Novo mês** copia as categorias do mês salvo mais
+  próximo, com os valores zerados. Nenhum dos dois usa mais o exemplo da farmácia (ver "Incidente de 16/09/2026").
+- **Empresa sem mês salvo** abre o mês atual e **não grava sozinha**: fica "Alterações não salvas" até alguém salvar.
+- **"Restaurar padrão"** só existe no modo local: com banco, ele carregava o exemplo da farmácia na empresa aberta.
 - Trocar de empresa/mês ou sair com alterações pendentes pergunta antes: salvar, descartar ou cancelar.
   Fechar a aba com alterações também avisa.
 - A cadeia de crédito é por empresa (vale para todos os meses dela).
 - **Excluir um mês:** menu "Opções" → "Excluir *mês* do banco", com janela de confirmação (o botão
-  padrão é Cancelar). Apaga a competência para toda a equipe e não dá para desfazer; a cadeia de
-  crédito, que é da empresa, não é tocada. Depois abre o mês salvo mais recente — e, se não sobrou
-  nenhum, o mês atual **sem gravar**, para não recriar sozinho o que você acabou de apagar. O item
-  só aparece quando o mês aberto existe no banco. Usa `DELETE` direto na tabela: o RLS já restringe
-  à equipe, não precisou de função nova.
+  padrão é Cancelar). Tira a competência da lista de toda a equipe e **manda para a lixeira por 30 dias**
+  (gatilho no banco; o painel continua usando `DELETE`). A cadeia de crédito, que é da empresa, não é tocada.
+  Depois abre o mês salvo mais recente — e, se não sobrou nenhum, o mês atual **sem gravar**.
+- **Proteção dos dados** (16/09/2026):
+  - **Opções → Lixeira:** meses excluídos nos últimos 30 dias, de todas as empresas, com data, autor e receita;
+    "Restaurar" devolve o mês como estava (desativado se já houver mês salvo no período).
+  - **Opções → Histórico de *mês*:** versões anteriores dos valores do mês e das listas de fornecedores, clientes e
+    produtos da empresa; "Restaurar" em qualquer uma (e restaurar também vira versão).
+  - **Trava ao salvar:** se a tela não tem fornecedores/clientes ou produtos que a empresa tem no banco, pergunta
+    antes — "Manter os salvos" (padrão, devolve as listas à tela) ou "Apagar e salvar". O banco tem a mesma trava:
+    vale até para uma versão antiga do painel aberta em outra aba.
+  - Painel publicado antes da migração: histórico e lixeira avisam que não estão ativos; "Apagar e salvar" reenvia
+    sem o parâmetro novo.
+- **Conflito ao salvar** não desliga mais o envio do catálogo: antes, o `CONFLITO` (HTTP 400) caía na regra de
+  "banco sem a migração do resumo" e o painel parava de gravar produtos pelo resto da sessão.
 - **Mês novo herda do anterior** (janela "Novo mês", uma caixa por item): o **saldo credor da CBS**
   do mês imediatamente anterior vira o crédito inicial deste, e a **receita dos 12 meses** é somada
   pelos meses salvos. Estoque e valores das despesas gerais são opcionais (vêm desmarcados).
@@ -569,7 +593,26 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
 ### Testes
 Não há Postgres nesta máquina: o SQL foi validado com o parser do Postgres 17 (libpg_query) e o
 painel foi testado contra um servidor que imita o Supabase (login, REST, RPC, conflito, sessão
-expirada). Na primeira instalação real, rode `conferir_instalacao.sql` e faça um salvamento de teste.
+expirada, lixeira, histórico e trava). Na primeira instalação real, rode `conferir_instalacao.sql` e faça
+um salvamento de teste.
+
+A migração de proteção foi validada **no banco real sem gravar nada**: migração e 29 testes numa única
+requisição que termina com erro de propósito — o Postgres desfaz tudo. Antes, duas sondas confirmaram que a API
+roda a requisição numa transação só e que até `create table` é desfeito; depois, uma consulta confirmou que nada
+ficou (sem tabelas novas, `salvar_painel` original, sem empresa de teste).
+
+### Incidente de 16/09/2026 — por que essas proteções existem
+Reconstruído pelo registro de requisições do Supabase (a API guarda método, rota, navegador e origem):
+- 07:38 e 07:55, no site publicado: "Excluir mês" em jun, mai, abr, mar, fev e jan/2026 da **Consult RL**. O
+  `DELETE` apagava de vez e **o projeto não tem backup** (lista de backups vazia, sem PITR): não houve como recuperar.
+- 07:55:46, página recarregada: empresa sem nenhum mês → `abrirEmpresa` abriu o mês atual e **gravou sozinho**, montado
+  do exemplo da farmácia. O janeiro recriado herdou "Energia / Cagece", "Corpvs Segurança" e o anual inteiro do
+  exemplo — nomes de fornecedores reais de outro cliente. Toda empresa nova nascia assim (a marcenaria também).
+- Salvar substituía fornecedores/clientes e catálogo da empresa pelo que estava na tela: lista vazia apagava tudo.
+- Não foram os testes (servidor simulado, `127.0.0.1`) nem as versões abertas para conferência (só leram; nenhuma
+  gravação no dia antes das 07:34).
+Lições: todo `DELETE` e toda substituição de lista passam por gatilho/trava no banco; nada grava sem ação da pessoa;
+dado de um cliente nunca serve de modelo para outro; ativar backup no Supabase continua recomendado.
 
 ---
 
@@ -680,3 +723,7 @@ Formato sugerido: painel no topo — verde (ok), amarelo (conferir), vermelho (n
    explicitamente `False`.
 6. Itens de CSS grid não encolhem sem `min-width:0` → rolagem lateral no celular.
 7. Gráficos e imagens **sobrevivem** ao recalc do LibreOffice.
+8. `mesclar(defaults(), dados)` preenche o que faltar no mês salvo com o **exemplo da farmácia**. Para mês ou empresa
+   nova, usar `modeloEmBranco()`, nunca `defaults()`.
+9. Erro `CONFLITO` do `salvar_painel` vem como HTTP 400 — o mesmo código de "função não encontrada" em alguns casos.
+   Tratar pela mensagem antes de cair em qualquer regra de compatibilidade.

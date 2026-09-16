@@ -349,6 +349,15 @@
   .modal-fundo{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--veu)}
   .modal-caixa{width:min(440px,100%); background:var(--surface); padding:24px 26px; display:flex; flex-direction:column; gap:14px; box-shadow:0 0 0 1px var(--line-2)}
   .modal-caixa .sub{margin:0}
+  /* lixeira e histórico: lista com um botão por linha dentro da janela */
+  .hist-t{margin:4px 0 0; font-size:13px; font-weight:600; color:var(--ink)}
+  .hist-lista{display:flex; flex-direction:column; max-height:40vh; overflow-y:auto; border-top:1px solid var(--line)}
+  .hist-item{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line)}
+  .hist-item b{display:block; font-size:13px; font-weight:600; color:var(--ink)}
+  .hist-item small{display:block; margin-top:1px; font-size:11px; color:var(--muted-2)}
+  .hist-item .hist-aviso{color:var(--brand)}
+  .hist-item .btn{flex:none; padding:7px 12px}
+  .hist-vazio{margin:0; font-size:12px; color:var(--muted)}
   .modal-campos{display:flex; flex-direction:column; gap:12px}
   /* herança do mês novo: uma linha por item, com a explicação em letra miúda */
   .modal-cx{display:flex; align-items:flex-start; gap:9px; font-size:13px; color:var(--ink-3); cursor:pointer}
@@ -1384,8 +1393,10 @@ function rMenu(){
     <div class="sep" role="separator"></div>
     ${banco.ativo ? '' : it('salvar', 'Salvar (compartilhar no link)')}
     ${it('baixar', 'Baixar HTML')}
+    ${banco.ativo && banco.empresaId && (banco.meses || []).includes(banco.periodo) ? it('historico', `Histórico de ${mesCurto(banco.periodo)}`) : ''}
+    ${banco.ativo && banco.sessao ? it('lixeira', 'Lixeira') : ''}
     <div class="sep" role="separator"></div>
-    ${it('restaurar', 'Restaurar padrão')}
+    ${banco.ativo ? '' : it('restaurar', 'Restaurar padrão')}
     <button role="menuitem" data-act="limpar" class="${ui.armado ? 'armed' : ''}">${ui.armado ? 'Confirmar limpeza?' : 'Limpar tudo'}</button>
     ${banco.ativo && banco.empresaId && (banco.meses || []).includes(banco.periodo)
       ? it('excluir-mes', `Excluir ${mesCurto(banco.periodo)} do banco`) : ''}
@@ -1993,6 +2004,32 @@ function zerarValores(base, manter){
   d.monthly.reforma.saldoCredorAnterior = 0; d.monthly.ibs = 0; d.monthly.rbt12 = 0;
   return d;
 }
+// Mês de empresa sem nenhum mês salvo. Antes saía do exemplo da farmácia zerado e levava "Cagece", "Corpvs Segurança",
+// o "Conselho Regional de Farmácia" e o inventário de 25/11/2025 para toda empresa nova — foi o que apareceu na
+// Consult RL e na marcenaria em 16/09/2026. Categorias genéricas; regras de crédito e alíquotas são as do exemplo.
+function modeloEmBranco(){
+  const d = zerarValores(defaults()), rf = d.monthly.reforma, g = rf.aliqGeral;
+  d.co = ''; d.anexo = ''; d.cadeia = {fornecedores: [], clientes: []}; d.produtos = [];
+  d.annual.custos = [['Custo das mercadorias e serviços vendidos', 0]];
+  d.annual.ga = [['Pró-labore e retirada de sócio', 0], ['Folha de pagamento e encargos', 0], ['Aluguel', 0], ['Seguros', 0],
+    ['Telefone e internet', 0], ['Energia e água', 0], ['Contabilidade', 0], ['Segurança e vigilância', 0],
+    ['Tarifas bancárias e de cartão', 0], ['Sistemas', 0], ['Manutenção e equipamentos', 0], ['Outras despesas', 0]];
+  d.annual.vendas = [['Despesas com vendas', 0]];
+  d.annual.tributarias = [['Simples Nacional', 0], ['INSS', 0], ['FGTS', 0], ['Taxas e impostos diversos', 0], ['Parcelamentos', 0]];
+  d.monthly.custos = [['Custo das mercadorias e serviços vendidos', 0]];
+  // [item, valor, parte da base com crédito, alíquota]: aluguel −70% e contabilidade −30%, como no exemplo
+  d.monthly.ga = [['Pró-labore e retirada de sócio', 0, 0, 0], ['Plano de saúde', 0, 0, 0], ['Folha de pagamento', 0, 0, 0],
+    ['Aluguel', 0, 0.30, g], ['Seguros', 0, 1, g], ['Telefone e internet', 0, 1, g], ['Energia e água', 0, 1, g],
+    ['Contabilidade', 0, 0.70, g], ['Segurança e vigilância', 0, 1, g], ['Tarifas bancárias e de cartão', 0, 1, g],
+    ['Sistemas', 0, 1, g], ['Manutenção e equipamentos', 0, 1, g], ['Outras despesas', 0, 0, 0]];
+  d.monthly.vendas = [];
+  d.monthly.tributarias = [['Simples Nacional', 0], ['INSS', 0], ['FGTS', 0], ['Taxas e impostos diversos', 0]];
+  d.monthly.compras = [['Compras do mês', 0, 1, rf.aliqCompras]];
+  d.monthly.estoque = [['Estoque — custo total', 0], ['Estoque — preço de venda total', 0], ['Pagamento a fornecedores', 0]];
+  rf.debitos = [['Receita PGDAS', 0, g, 'geral']];
+  rf.creditos = [];
+  return d;
+}
 function limparTudo(){
   // o cadastro da empresa fica: cadeia de crédito e produtos são estrutura, como as categorias da DRE,
   // e custam caro para refazer (CNPJ, NCM, NBS). Para começar do zero existe "+ Nova empresa".
@@ -2065,6 +2102,7 @@ const mesCurto = p => { const [a, m] = String(p).split('-'); return `${MESES[+m 
 const mesBarra = p => { const [a, m] = String(p).split('-'); return `${m}/${a}`; };
 const semAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const hora = d => d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+const dataHora = t => t ? new Date(t).toLocaleString('pt-BR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '—';
 function periodoAtual(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`; }
 // competência ± n meses (n negativo anda para trás): base do RBT12 e da herança do mês novo
 function somarMeses(p, n){ const [a, m] = String(p).split('-').map(Number); const t = a * 12 + (m - 1) + n; return `${Math.floor(t / 12)}-${String(t % 12 + 1).padStart(2, '0')}-01`; }
@@ -2140,7 +2178,7 @@ function modal(cfg){
       `<label class="modal-cx"><input type="checkbox" name="${nome}"${marcado ? ' checked' : ''}><span>${esc(rotulo)}${nota ? `<small>${esc(nota)}</small>` : ''}</span></label>`).join('');
     const botoes = cfg.botoes.map(([k, rotulo, estilo]) => `<button type="button" class="btn ${estilo || ''}" data-modal="${k}">${esc(rotulo)}</button>`).join('');
     caixa.innerHTML = `<div class="modal-fundo"><form class="modal-caixa" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
-      <h2 id="modal-titulo">${esc(cfg.titulo)}</h2>${cfg.texto ? `<p class="sub">${esc(cfg.texto)}</p>` : ''}
+      <h2 id="modal-titulo">${esc(cfg.titulo)}</h2>${cfg.texto ? `<p class="sub">${esc(cfg.texto)}</p>` : ''}${cfg.html || ''}
       ${campos ? `<div class="modal-campos">${campos}</div>` : ''}${caixas ? `<div class="modal-campos">${caixas}</div>` : ''}${cfg.erro ? `<p class="modal-erro" role="alert">${esc(cfg.erro)}</p>` : ''}
       <div class="modal-acoes">${botoes}</div><button type="submit" hidden tabindex="-1"></button></form></div>`;
     caixa.hidden = false;
@@ -2192,7 +2230,10 @@ async function listarMeses(empresaId){
 }
 async function abrirEmpresa(id, periodo){
   await listarMeses(id);
-  await abrirMes(id, periodo && banco.meses.includes(periodo) ? periodo : (banco.meses[0] || periodoAtual()));
+  // empresa sem mês salvo abre o mês atual em branco e NÃO grava: quem grava é a pessoa. Antes gravava sozinho — foi
+  // assim que um mês montado do exemplo virou mês salvo da Consult RL ao recarregar a página, em 16/09/2026
+  if(!banco.meses.length) return abrirMes(id, periodoAtual(), {semSalvar: true});
+  await abrirMes(id, periodo && banco.meses.includes(periodo) ? periodo : banco.meses[0]);
 }
 // O que o mês novo traz do mês IMEDIATAMENTE anterior. É cópia etiquetada, não vínculo vivo: o número
 // fica gravado neste mês e editável, e a tela diz de onde veio (banco.heranca).
@@ -2351,7 +2392,8 @@ async function abrirMes(empresaId, periodo, op){
     // mês ainda não salvo: a tela atual (primeira empresa) ou o mês salvo mais próximo, com os valores zerados
     if(!op.manterTela){
       const h = op.heranca || HERANCA;
-      S = zerarValores(r.modelo ? mesclar(defaults(), migrar(r.modelo)) : defaults(), h); S.cadeia = cadeia; normalizarLinhas(S.monthly.reforma);
+      S = r.modelo ? zerarValores(mesclar(defaults(), migrar(r.modelo)), h) : modeloEmBranco();
+      S.cadeia = cadeia; normalizarLinhas(S.monthly.reforma);
       if(!r.modelo) S.anexo = '';                  // empresa nova: o anexo do exemplo não vale para ela
       S.mesLabel = rotuloMes(periodo);             // a herança calcula pelo ano desta competência
       await herdarDoAnterior(empresaId, periodo, r.anterior, h);
@@ -2364,6 +2406,9 @@ async function abrirMes(empresaId, periodo, op){
   if(Array.isArray(r.produtos) && r.produtos.length)
     S.produtos = r.produtos.map(p => [p[0] || '', p[1] || 'geral', p[2] || '', p[3] || '', p[4] || '', p[5] || '']);
   S.mesLabel = rotuloMes(periodo);
+  // fornecedores, clientes e catálogo como estão no banco: se a tela chegar sem eles ao salvar, é com estes que se pergunta
+  banco.listas = {cadeia: JSON.parse(JSON.stringify(cadeia)),
+                  produtos: Array.isArray(r.produtos) ? r.produtos.map(x => [x[0] || '', x[1] || 'geral', x[2] || '', x[3] || '', x[4] || '', x[5] || '']) : null};
   Object.assign(banco, {empresaId, periodo, erro: '', salvoEm: null, instantaneo: novo ? null : instantaneo()});
   guarda.gravar('dre.ultimo', {empresaId, periodo});
   ui.menu = false;
@@ -2378,7 +2423,7 @@ async function excluirMes(){
   const empresa = (banco.empresas.find(e => e.id === banco.empresaId) || {}).nome || S.co, alvo = banco.periodo;
   const r = await modal({
     titulo: 'Excluir este mês',
-    texto: `${empresa} · ${mesCurto(alvo)} será apagado do banco de dados, para toda a equipe. Não dá para desfazer.`,
+    texto: `${empresa} · ${mesCurto(alvo)} sai da lista de meses de toda a equipe e vai para a lixeira, onde fica 30 dias (Opções → Lixeira).`,
     botoes: [['cancelar', 'Cancelar', 'prim'], ['excluir', 'Excluir o mês']],
     padrao: 'cancelar'
   });
@@ -2392,6 +2437,71 @@ async function excluirMes(){
   return abrirMes(banco.empresaId, periodoAtual(), {semSalvar: true});
 }
 
+// Lixeira: meses excluídos nos últimos 30 dias, de todas as empresas. Restaurar devolve o mês como estava
+async function abrirLixeira(){
+  let itens;
+  try { itens = await sb('rpc/listar_lixeira', {metodo: 'POST', corpo: {}}); }
+  catch(e){ if(e.status === 404){ toast('A lixeira ainda não está ativa: falta aplicar a atualização do banco de dados.'); return; } throw e; }
+  const linha = x => {
+    const trava = x.sem_empresa ? 'a empresa não existe mais' : x.ocupado ? 'já existe um mês salvo nesse período' : '';
+    return `<div class="hist-item"><div><b>${esc(x.empresa || '—')} · ${mesCurto(x.periodo)}</b>
+      <small>excluído em ${dataHora(x.excluido_em)}${x.por ? ' por ' + esc(x.por) : ''} · receita ${brl(+x.receita || 0)}</small>
+      ${trava ? `<small class="hist-aviso">${trava}</small>` : ''}</div>
+      <button type="button" class="btn" data-modal="restaurar:${x.id}"${trava ? ' disabled' : ''}>Restaurar</button></div>`;
+  };
+  const r = await modal({
+    titulo: 'Lixeira',
+    texto: itens.length ? 'Meses excluídos nos últimos 30 dias. Restaurar devolve o mês como estava quando foi excluído.'
+      : 'Nenhum mês excluído nos últimos 30 dias.',
+    html: itens.length ? `<div class="hist-lista">${itens.map(linha).join('')}</div>` : '',
+    botoes: [['cancelar', 'Fechar', 'prim']], padrao: 'cancelar'
+  });
+  if(!r.botao.startsWith('restaurar:')){ render(); return; }
+  const item = itens.find(x => x.id === r.botao.slice('restaurar:'.length));
+  const feito = await sb('rpc/restaurar_competencia', {metodo: 'POST', corpo: {p_id: item.id}});
+  toast(`${item.empresa} · ${mesCurto(item.periodo)} restaurado`);
+  // mês da empresa aberta: volta para a lista, e abre se não houver o que perder na tela
+  if(feito.empresa_id === banco.empresaId){
+    await listarMeses(banco.empresaId);
+    if(await podeSair()) return abrirMes(banco.empresaId, feito.periodo);
+  }
+  render();
+}
+
+// Histórico do mês aberto: versões anteriores dos valores do mês e das listas da empresa (fornecedores, clientes, produtos).
+// Restaurar guarda o que havia antes — dá para desfazer
+async function abrirHistorico(){
+  const emp = banco.empresaId, per = banco.periodo, nomeMes = mesCurto(per);
+  let versoes, cadastros;
+  try {
+    [versoes, cadastros] = await Promise.all([
+      sb('rpc/listar_versoes', {metodo: 'POST', corpo: {p_empresa_id: emp, p_periodo: per}}),
+      sb('rpc/listar_versoes_cadastros', {metodo: 'POST', corpo: {p_empresa_id: emp}})]);
+  } catch(e){ if(e.status === 404){ toast('O histórico ainda não está ativo: falta aplicar a atualização do banco de dados.'); return; } throw e; }
+  const doMes = v => `<div class="hist-item"><div><b>Como estava em ${dataHora(v.salvo_em)}</b>
+      <small>receita ${brl(+v.receita || 0)}${v.salvo_por ? ' · salvo por ' + esc(v.salvo_por) : ''} · substituído em ${dataHora(v.substituido_em)}</small></div>
+      <button type="button" class="btn" data-modal="mes:${v.id}">Restaurar</button></div>`;
+  const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+  const daEmpresa = v => `<div class="hist-item"><div><b>Lista até ${dataHora(v.substituido_em)}</b>
+      <small>${plural(v.fornecedores, 'fornecedor', 'fornecedores')} · ${plural(v.clientes, 'cliente', 'clientes')} · ${plural(v.produtos, 'produto', 'produtos')}${v.por ? ' · trocada por ' + esc(v.por) : ''}</small></div>
+      <button type="button" class="btn" data-modal="cad:${v.id}">Restaurar</button></div>`;
+  const r = await modal({
+    titulo: `Histórico de ${nomeMes}`,
+    texto: 'Cada salvamento guarda o que havia antes. Restaurar também guarda, então dá para desfazer.',
+    html: `<h3 class="hist-t">Valores do mês</h3>` +
+      (versoes.length ? `<div class="hist-lista">${versoes.map(doMes).join('')}</div>` : '<p class="hist-vazio">Nenhuma versão anterior deste mês ainda.</p>') +
+      `<h3 class="hist-t">Fornecedores, clientes e produtos da empresa</h3>` +
+      (cadastros.length ? `<div class="hist-lista">${cadastros.map(daEmpresa).join('')}</div>` : '<p class="hist-vazio">Nenhuma lista anterior guardada ainda.</p>'),
+    botoes: [['cancelar', 'Fechar', 'prim']], padrao: 'cancelar'
+  });
+  if(!/^(mes|cad):/.test(r.botao)){ render(); return; }
+  if(!(await podeSair())){ render(); return; }       // o que está na tela sem salvar seria substituído
+  const [tipo, id] = r.botao.split(':');
+  await sb(tipo === 'mes' ? 'rpc/restaurar_versao' : 'rpc/restaurar_cadastros', {metodo: 'POST', corpo: {p_id: id}});
+  toast(tipo === 'mes' ? `${nomeMes} voltou à versão escolhida` : 'Fornecedores, clientes e produtos restaurados');
+  return abrirMes(emp, per);
+}
+
 async function salvarBanco(forcar){
   if(!banco.ativo){ toast('Banco de dados não configurado — veja "Banco de dados" no README.'); return; }
   if(!banco.sessao){ banco.aposLogin = () => salvarBanco(forcar); render(); return; }
@@ -2401,6 +2511,28 @@ async function salvarBanco(forcar){
   const cadeia = dados.cadeia || {fornecedores: [], clientes: []}; delete dados.cadeia;
   const linha = tipo => r => [tipo, limpaCnpj(r[0]), r[1] || '', r[2] || '', r[3] || ''];
   const parceiros = cadeia.fornecedores.map(linha('fornecedor')).concat(cadeia.clientes.map(linha('cliente')));
+  // trava: a tela chegou sem fornecedores/clientes ou sem produtos que a empresa tem no banco. Salvar trocaria a lista da
+  // empresa — de todos os meses — pela vazia. Pergunta antes; o banco também recusa sem confirmação (migração de 16/09/2026)
+  const salvas = banco.listas || {cadeia: {fornecedores: [], clientes: []}, produtos: null};
+  const nParc = salvas.cadeia.fornecedores.length + salvas.cadeia.clientes.length, nProd = (salvas.produtos || []).length;
+  const faltaParc = !parceiros.length && nParc > 0, faltaProd = !(dados.produtos || []).length && nProd > 0;
+  let apagarListas = false;
+  if(faltaParc || faltaProd){
+    const oQue = [faltaParc && `${nParc} ${nParc === 1 ? 'fornecedor ou cliente' : 'fornecedores e clientes'}`,
+                  faltaProd && `${nProd} ${nProd === 1 ? 'produto' : 'produtos'}`].filter(Boolean).join(' e ');
+    const r = await modal({
+      titulo: 'Faltam cadastros na tela',
+      texto: `A empresa tem ${oQue} salvos que não estão na tela. Salvar assim apaga essa lista da empresa, que vale para todos os meses.`,
+      botoes: [['cancelar', 'Cancelar'], ['apagar', 'Apagar e salvar'], ['manter', 'Manter os salvos', 'prim']], padrao: 'manter'
+    });
+    if(r.botao === 'cancelar'){ render(); return; }
+    if(r.botao === 'manter'){
+      if(faltaParc) S.cadeia = JSON.parse(JSON.stringify(salvas.cadeia));
+      if(faltaProd) S.produtos = JSON.parse(JSON.stringify(salvas.produtos));
+      render(); return salvarBanco(forcar);
+    }
+    apagarListas = true;
+  }
   banco.salvando = true; banco.erro = ''; atualizarBarra();
   try{
     // p_resumo: os números do mês, para a herança e para a aba Anual. Banco ainda sem a migração
@@ -2410,13 +2542,24 @@ async function salvarBanco(forcar){
     // o catálogo vai para a tabela da empresa e continua no estado do mês, que é o que vale
     // enquanto o banco não tiver a migração
     if(!banco.semResumo){ corpo.p_resumo = resumoDe(S); corpo.p_produtos = dados.produtos || []; }
+    if(apagarListas) corpo.p_apagar_listas = true;
     try { banco.base = await sb('rpc/salvar_painel', {metodo: 'POST', corpo}); }
     catch(err){
-      if(banco.semResumo || !(err.status === 404 || err.status === 400)) throw err;
-      banco.semResumo = true; delete corpo.p_resumo; delete corpo.p_produtos;
-      banco.base = await sb('rpc/salvar_painel', {metodo: 'POST', corpo});
+      // CONFLITO também é 400, e antes caía aqui: o painel achava que o banco era antigo e parava de enviar o catálogo
+      // pelo resto da sessão. Conflito vai direto para a janela de conflito.
+      if(err.message === 'CONFLITO' || !(err.status === 404 || err.status === 400)) throw err;
+      if(corpo.p_apagar_listas){                     // banco sem a migração de 16/09/2026: lá a lista vazia já apaga
+        delete corpo.p_apagar_listas;
+        banco.base = await sb('rpc/salvar_painel', {metodo: 'POST', corpo});
+      } else {
+        if(banco.semResumo) throw err;
+        banco.semResumo = true; delete corpo.p_resumo; delete corpo.p_produtos;
+        banco.base = await sb('rpc/salvar_painel', {metodo: 'POST', corpo});
+      }
     }
     banco.instantaneo = enviado; banco.salvoEm = new Date(); banco.salvando = false;
+    banco.listas = {cadeia: JSON.parse(JSON.stringify(S.cadeia || {fornecedores: [], clientes: []})),
+                    produtos: JSON.parse(JSON.stringify(S.produtos || []))};
     const mesNovo = !banco.meses.includes(banco.periodo);
     if(mesNovo) banco.meses = banco.meses.concat(banco.periodo).sort().reverse();
     const emp = banco.empresas.find(e => e.id === banco.empresaId), nome = String(S.co || '').trim();
@@ -2469,12 +2612,12 @@ async function trocar(tipo, valor){
 async function novaEmpresa(){
   if(!(await podeSair())){ render(); return; }
   const primeira = !banco.empresas.length;
-  let valores = {nome: primeira ? S.co : '', cnpj: '', periodo: mesBarra(primeira ? (lerPeriodo(S.mesLabel) || periodoAtual()) : periodoAtual())};
+  let valores = {nome: '', cnpj: '', periodo: mesBarra(periodoAtual())};
   let erro = '';
   for(;;){
     const r = await modal({
       titulo: primeira ? 'Cadastre a primeira empresa' : 'Nova empresa',
-      texto: primeira ? 'O que está na tela agora será salvo nesta empresa.' : 'A empresa começa com as categorias e alíquotas padrão e os valores zerados.',
+      texto: 'A empresa começa com categorias genéricas, as alíquotas padrão e os valores zerados.',
       campos: [['nome', 'Nome da empresa', valores.nome], ['cnpj', 'CNPJ (opcional)', valores.cnpj], ['periodo', 'Competência (mês/ano)', valores.periodo]],
       erro, botoes: [['cancelar', 'Cancelar'], ['criar', 'Cadastrar e salvar', 'prim']], padrao: 'criar'
     });
@@ -2489,8 +2632,7 @@ async function novaEmpresa(){
       const [empresa] = await sb('empresas?select=id,nome,cnpj', {metodo: 'POST', corpo: {nome, cnpj: cnpj || null}, prefer: 'return=representation'});
       banco.empresas = banco.empresas.concat(empresa).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
       banco.meses = [];
-      if(primeira) S.co = nome;
-      return abrirMes(empresa.id, periodo, {manterTela: primeira});
+      return abrirMes(empresa.id, periodo);
     }catch(e){
       if(e.status === 401) throw e;
       erro = e.status === 409 ? 'Já existe uma empresa com esse CNPJ.' : 'Não foi possível cadastrar: ' + e.message;
@@ -2650,6 +2792,10 @@ app.addEventListener('click', e => {
     case 'sair': ui.menu = false; sair(); break;
     case 'senha': ui.menu = false; render(); comErro(alterarSenha); break;
     case 'excluir-mes': ui.menu = false; render(); comErro(excluirMes); break;
+    case 'lixeira': ui.menu = false; render(); comErro(abrirLixeira); break;
+    case 'historico': ui.menu = false; render(); comErro(abrirHistorico); break;
+    // "Restaurar padrão" carrega o exemplo da farmácia: com banco, um salvamento depois gravaria o exemplo na empresa
+    // (e renomearia a empresa). Por isso só existe no modo local
     case 'pr-add':
       ui.cadastro.produtos = true;                   // quem adiciona quer ver a tabela
       S.produtos.push(['', 'geral', 'produto', '', '', '']); render();
