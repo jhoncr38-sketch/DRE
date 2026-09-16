@@ -13,7 +13,9 @@
     --ink:#14161A; --fill:#14161A; --ink-2:#33363B; --ink-3:#4A4D53;
     --muted:#6E7178; --muted-2:#8A8D94; --muted-3:#9A9DA4; --disabled:#B6B8BC;
     --brand:#B3122B; --brand-dark:#7d0c1e; --brand-wash:#FBF3F4;
-    --canvas:#EFEEEA; --surface:#FFFFFF; --surface-2:#F8F7F4; --rail:#E3E2DD;
+    /* fundo um tom abaixo do antigo #EFEEEA: com ele, cartão branco e página quase não se separavam.
+       A barra das abas desce junto, senão some no fundo novo (que tem o tom que ela tinha) */
+    --canvas:#E3E2DD; --surface:#FFFFFF; --surface-2:#F8F7F4; --rail:#DAD8D2;
     --line:#E7E5E0; --line-2:#DAD8D2; --line-3:#C7C5BF; --on-fill:#C9CCD2;
     --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
     --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
@@ -46,9 +48,14 @@
   .rail{display:flex; gap:6px; background:var(--rail); padding:4px; border-radius:2px; max-width:100%; overflow-x:auto; scrollbar-width:none}
   .tab{padding:7px 14px; font:500 13px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap}
   .tab[aria-selected="true"]{background:var(--fill); color:#fff}
+  .tab:not([aria-selected="true"]):hover{background:rgba(255,255,255,.6); color:var(--ink)}
   .rail-sep{flex:0 0 1px; background:var(--line-3); margin:4px 1px}
   .btn{padding:10px 13px; font:500 12px/1 var(--sans); background:var(--surface); color:var(--ink); border:1px solid var(--line-2); border-radius:2px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px}
-  .btn:hover{border-color:var(--line-3)}
+  .btn:hover{border-color:var(--line-3); background:var(--surface-2)}
+  /* resposta ao toque: cor muda em 150ms e o botão afunda 1px enquanto está pressionado */
+  .btn, .tab, .add, .lk, .x{transition:background-color .15s ease, border-color .15s ease, color .15s ease, filter .15s ease, transform .1s ease}
+  .btn:active:not(:disabled), .tab:active, .add:active{transform:translateY(1px)}
+  .in{transition:border-color .15s ease}
   .card-h .btn{padding:7px 13px}
 
   /* Menu de opções */
@@ -215,17 +222,30 @@
   .prem2 .in:focus{border-bottom-color:var(--brand)}
   .hint{margin:12px 0 0; font-size:11px; color:var(--muted-2); line-height:1.5}
 
-  /* Convencional × Híbrido: números com uma barra empilhada por regime (DAS escuro + CBS em brand) */
-  .cmp-l{display:grid; grid-template-columns:minmax(0,1fr) 140px 200px 140px; gap:16px; align-items:baseline; padding:12px 0; border-top:1px solid var(--line)}
-  .cmp-h{padding:0 0 7px; border-top:0; border-bottom:1px solid var(--ink); font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
-  .cmp-h + .cmp-l{border-top:0}
-  .cmp-h > span{text-align:right}
-  .cmp-n{display:flex; flex-direction:column; gap:6px; font-size:14px; font-weight:600}
-  .cmp-bar{display:flex; height:8px; background:var(--canvas); max-width:320px}
-  .cmp-bar > span{display:block; height:100%; width:0}
-  .cmp-carga{font-family:var(--sans); font-size:11px; font-weight:400; color:var(--muted-2)}
-  .cmp-v{display:flex; flex-direction:column; align-items:flex-end; gap:1px; text-align:right; font-family:var(--mono); font-size:15px; white-space:nowrap}
-  .cmp-v small{font-family:var(--sans); font-size:11px; font-weight:400; color:var(--muted-2); white-space:normal}
+  /* Convencional × Híbrido: um cartão por regime — os números em cima, a composição dos tributos embaixo.
+     Cada barra é o total do próprio regime; quem compara o tamanho dos dois é a faixa da decisão */
+  .cmp2{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; margin:4px 0 16px}
+  .cmp-card{display:flex; flex-direction:column; min-width:0; border:1px solid var(--line-2); padding:18px 20px 16px; background:var(--surface-2)}
+  .cmp-card h3{font-size:16px}
+  .cmp-nota{margin:0 0 10px; font-size:12px; color:var(--muted)}
+  .cmp-row{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:9px 0; border-top:1px solid var(--line); font-size:13px; color:var(--ink-2)}
+  .cmp-row > span:first-child{min-width:0}
+  .cmp-row small{display:block; font-size:11px; color:var(--muted-2)}
+  .cmp-row .v{font-family:var(--mono); font-size:14px; color:var(--ink); white-space:nowrap}
+  .cmp-row.dest > span:first-child, .cmp-row.tot > span:first-child{font-weight:600; color:var(--ink)}
+  .cmp-row.dest .v, .cmp-row.tot .v{font-size:17px; font-weight:600}
+  .cmp-row.sub, .cmp-row.tot{margin-top:4px; padding:9px 10px; border-top:0; background:var(--surface)}   /* faixa branca no cartão cinza */
+  .cmp-row.sub, .cmp-row.sub .v{color:var(--muted)}               /* parte do DAS, não soma a ele */
+  .cmp-comp{margin-top:auto; padding-top:16px}                    /* as duas composições na mesma altura */
+  .cmp-comp h4{margin:0 0 8px; padding-top:14px; border-top:1px solid var(--line-2); font-size:12px; font-weight:500; color:var(--ink-3)}
+  .cmp-bar2{display:flex; height:10px; background:var(--canvas)}
+  .cmp-bar2 > span{display:block; height:100%; width:0}
+  .cmp-leg{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px 12px; margin-top:10px}
+  .cmp-parte{display:flex; align-items:flex-start; gap:7px; min-width:0; font-size:11px; color:var(--muted)}
+  .cmp-parte .cg-q{margin-top:3px}
+  .cmp-parte b{display:block; font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink); white-space:nowrap}
+  .cmp-parte .m{display:block; color:var(--muted-2); white-space:nowrap}   /* "R$" nunca fica numa linha e o número na outra */
+  .cmp-carga{display:block; margin-top:10px; font-size:11px; color:var(--muted-2)}
   .cmp-res.hibrido{background:var(--ok)}
   .cmp-eq{margin:12px 0 0; font-size:12px; color:var(--ink-3); line-height:1.5}
 
@@ -426,7 +446,59 @@
   .toast{position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--fill); color:#fff; padding:10px 16px; border-radius:2px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; max-width:calc(100% - 32px)}
   .toast.show{opacity:1; transform:translate(-50%,0)}
 
+  /* Movimento. Só recebe .entra o que não estava na tela antes do render() — ver animarNovos().
+     O preenchimento é "backwards": terminado o efeito, quem manda é o estilo normal (o esmaecido da troca de mês,
+     por exemplo); com "both" a opacidade final ficaria presa em 1 */
+  @keyframes entra{from{opacity:0; transform:translateY(6px)}}
+  @keyframes cai{from{opacity:0; transform:translateY(-4px)}}
+  @keyframes esmaece{from{opacity:0}}
+  .entra{animation:entra .24s cubic-bezier(.2,.7,.2,1) backwards}
+  #app > .entra{animation-delay:calc(min(var(--i, 0), 6) * 35ms)}        /* os blocos da aba entram em cascata */
+  .menu.entra{animation:cai .14s ease-out backwards}
+  .modal-fundo{animation:esmaece .16s ease-out backwards}
+  .modal-caixa{animation:entra .2s cubic-bezier(.2,.7,.2,1) backwards}
+  /* troca de mês ou de empresa: o conteúdo esmaece e uma barra corre no topo enquanto o banco responde */
+  #app > *{transition:opacity .15s ease}
+  body.trocando #app > :not(.top):not(.barra):not(.fixo){opacity:.45; pointer-events:none}
+  .progresso{position:fixed; top:0; left:0; right:0; height:3px; z-index:90; overflow:hidden; pointer-events:none}
+  .progresso::before{content:""; position:absolute; top:0; bottom:0; left:-40%; width:40%; background:var(--brand); animation:progresso 1s ease-in-out infinite}
+  @keyframes progresso{to{left:100%}}
+  /* Barra compacta ao rolar: abas e Salvar à mão sem voltar ao topo numa aba Resultado longa. Fica fora do
+     fluxo e desce quando a barra de seleção (no modo local, o aviso) sai da tela — ver marcarRolagem() */
+  html{scroll-padding-top:64px}                                   /* campo focado não fica escondido atrás dela */
+  .fixo{position:fixed; top:0; left:0; right:0; z-index:40; background:var(--surface); border-bottom:1px solid var(--line-2);
+        transform:translateY(-100%); visibility:hidden; transition:transform .2s ease, visibility 0s linear .2s}
+  body.rolou .fixo{transform:none; visibility:visible; transition:transform .2s ease, visibility 0s}
+  .fixo-in{max-width:1140px; margin:0 auto; padding:8px 24px; display:flex; align-items:center; gap:10px 18px}
+  .fixo-id{display:flex; align-items:baseline; gap:10px; min-width:0; padding:4px 0; border:0; background:none; cursor:pointer; text-align:left}
+  .fixo-id b{font-size:13px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .fixo-id span{font-family:var(--mono); font-size:11px; letter-spacing:.02em; text-transform:uppercase; color:var(--muted); white-space:nowrap}
+  .fixo-id:hover b{text-decoration:underline}
+  .fixo-abas{display:flex; gap:4px; margin-left:auto; padding:3px; background:var(--rail); border-radius:2px; overflow-x:auto; scrollbar-width:none}
+  .tabf{padding:6px 11px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap; transition:background-color .15s ease, color .15s ease}
+  .tabf:hover{background:rgba(255,255,255,.6); color:var(--ink)}
+  .tabf[aria-current="page"]{background:var(--fill); color:#fff}
+  .fixo-acao{display:flex; align-items:center; gap:12px}
+  .fixo-acao .bstatus{margin-left:0}
+  .fixo-acao .btn{padding:7px 13px}
+  .present .fixo-acao{display:none}                                /* apresentação não salva, como a barra de seleção */
+  @media (max-width:640px){
+    .fixo-in{padding:6px 16px; gap:8px}
+    .fixo-id span, .fixo-acao .bstatus{display:none}
+    .fixo-id b{max-width:34vw}
+  }
+  @media (max-width:480px){                                        /* celular estreito: as três abas dividem a largura */
+    .fixo-id{display:none}
+    .fixo-abas{flex:1; margin-left:0}
+    .tabf{flex:1; padding:7px 6px}
+  }
+  /* quem pediu ao sistema menos movimento não recebe nenhum destes efeitos */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation-duration:1ms !important; animation-delay:0s !important; animation-iteration-count:1 !important; transition-duration:1ms !important}
+  }
+
   @media (max-width:900px){ .reforma{grid-template-columns:minmax(0,1fr)} }
+  @media (max-width:800px){ .cmp2{grid-template-columns:minmax(0,1fr)} }   /* um cartão embaixo do outro */
   @media (max-width:640px){
     .card{padding:22px 18px 18px}
     .memo, .chart{padding:22px 18px}
@@ -444,10 +516,12 @@
     .g5 > :nth-child(4){grid-area:aliq}
     .g5 > :nth-child(5){grid-area:cred}
     .g5.gh{display:none}
-    .cmp-l{grid-template-columns:repeat(3, minmax(0,1fr)); gap:2px 10px}
-    .cmp-l > .cmp-n{grid-column:1 / -1; margin-bottom:4px}
-    .cmp-h > span:first-child{display:none}
-    .cmp-v{font-size:13px}
+    .cmp-card{padding:16px 14px 14px}
+    .cmp-leg{grid-template-columns:minmax(0,1fr); gap:6px}             /* uma fatia por linha: três colunas não cabem */
+    .cmp-parte{align-items:center}
+    .cmp-parte .cg-q{margin-top:0}
+    .cmp-parte > span:last-child{display:flex; align-items:baseline; gap:10px; flex:1; min-width:0}
+    .cmp-parte b{margin-left:auto}
     /* receita por tipo: nome e receita; situação no DAS e tipo da CBS; débito embaixo */
     .grec{grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"nome receita" "sit cbs" "deb deb"; gap:4px 10px}
     .grec > :nth-child(1){grid-area:nome}
@@ -478,7 +552,8 @@
   @media print{
     body{background:#fff}
     .page{padding:0}
-    .nav, .panel, .toast, .row-ctl, .add, .card-h .btn{display:none !important}
+    .nav, .panel, .toast, .row-ctl, .add, .card-h .btn, .progresso, .fixo{display:none !important}
+    .entra{animation:none}
     .hero, .card, .memo, .chart, .cli{break-inside:avoid}
     .in{border-bottom-color:transparent !important}
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
@@ -488,6 +563,7 @@
 <body>
 <div class="page"><div class="wrap" id="app"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="progresso" id="progresso" hidden></div>
 <div id="modal" hidden></div>
 <script>
 const LOGO_DEFAULT = "data:image/png;base64,{{LOGO_B64}}";
@@ -1138,13 +1214,12 @@ function saidas(){
     : `Com a CBS por fora, o mês custa ${brl(-cm.delta)} a menos`;
   V['r.manual'] = !cm.pelaTabela;
 
-  // Convencional × Híbrido: números e uma barra empilhada por regime (DAS + CBS), medidas pelo maior total
-  const maxTot = Math.max(cm.dasBase, cm.naTransicao, 1);
+  // Convencional × Híbrido: um cartão por regime, com os números e a composição dos tributos do mês
   Object.assign(O, {
-    'k.dasConv': brl(cm.dasBase), 'k.cbsConv': brl(cm.parcelaCbs), 'k.totConv': brl(cm.dasBase), 'k.cbsConvInfo': 'dentro do DAS',
-    'k.dasHib': brl(cm.simplesSemCbs), 'k.cbsHib': brl(cm.cbsPagar), 'k.totHib': brl(cm.naTransicao),
-    'k.cbsHibInfo': credor ? `crédito de ${brl(cm.saldoCredor)} vai para o mês seguinte`
-      : cm.ibs > 0.004 ? `+ IBS de ${brl(cm.ibs)} no total` : 'apurada por fora',
+    'k.dasConv': brl(cm.dasBase), 'k.cbsConv': brl(cm.parcelaCbs),
+    'k.dasHib': brl(cm.simplesSemCbs), 'k.cbsHib': brl(cm.cbsPagar), 'k.ibsHib': brl(cm.ibs), 'k.totHib': brl(cm.naTransicao),
+    // o rótulo já diz "por fora": a nota embaixo só aparece quando há o que contar
+    'k.cbsHibInfo': credor ? `crédito de ${brl(cm.saldoCredor)} vai para o mês seguinte` : '',
     'k.decisao': Math.abs(cm.delta) < 0.005 ? 'Os dois regimes empatam no mês'
       : cm.delta > 0 ? 'O convencional sai mais barato no mês' : 'O híbrido sai mais barato no mês',
     'k.dif': brl(Math.abs(cm.delta)),
@@ -1158,8 +1233,8 @@ function saidas(){
     'k.cargaConv': `Tributos do mês: ${brl(cm.trib)} · ${P2(cm.trib, cm.R)} da receita`,
     'k.cargaHib': `Tributos do mês: ${brl(cm.trib + cm.delta)} · ${P2(cm.trib + cm.delta, cm.R)} da receita`,
     // alíquota efetiva de cada regime: o que ele custa sobre a receita do mês
-    'k.efetConv': `alíquota efetiva ${P2(cm.dasBase, cm.R)}`,
-    'k.efetHib': `alíquota efetiva ${P2(cm.naTransicao, cm.R)}`
+    'k.efetConv': P2(cm.dasBase, cm.R),
+    'k.efetHib': P2(cm.naTransicao, cm.R)
   });
   const ppt = Math.abs(cm.delta) / (cm.R || 1) * 100;
   const pp = `${dec(ppt, 2, 2)} ${ppt < 2 ? 'ponto percentual' : 'pontos percentuais'}`;
@@ -1167,8 +1242,15 @@ function saidas(){
     : Math.abs(cm.delta) < 0.005 ? `A alíquota efetiva do regime fica em ${P2(cm.dasBase, cm.R)} nos dois.`
     : `A alíquota efetiva do regime ${cm.delta > 0 ? 'sobe' : 'cai'} de ${P2(cm.dasBase, cm.R)} para ${P2(cm.naTransicao, cm.R)} — ${pp} a ${cm.delta > 0 ? 'mais' : 'menos'}.`;
   V['k.temVariacao'] = O['k.variacao'] !== '';
-  [['k.convDas', cm.simplesSemCbs], ['k.convCbs', cm.parcelaCbs], ['k.hibDas', cm.simplesSemCbs], ['k.hibCbs', cm.cbsPagar + cm.ibs]]
-    .forEach(([k, v]) => { W[k] = (maxTot > 0 ? Math.max(0, v) / maxTot * 100 : 0) + '%'; });
+  // composição: cada parte sobre o total do próprio regime (barra, percentual e valor da legenda)
+  const compor = (pre, total, partes) => partes.forEach(([id, v]) => {
+    const x = total > 0.004 ? Math.max(0, v) / total * 100 : 0;
+    W[`${pre}.${id}`] = x + '%'; O[`${pre}.${id}.p`] = `${dec(x, 2, 2)}%`; O[`${pre}.${id}.v`] = brl(Math.max(0, v));
+  });
+  compor('k.conv', cm.dasBase, [['das', cm.simplesSemCbs], ['cbs', cm.parcelaCbs]]);
+  compor('k.hib', cm.naTransicao, [['das', cm.simplesSemCbs], ['cbs', cm.cbsPagar], ['ibs', cm.ibs]]);
+  V['k.temIbs'] = cm.ibs > 0.004;
+  V['k.semIbs'] = !V['k.temIbs'] && cm.dasBase > 0.004;
   V['k.hibrido'] = cm.delta < -0.004;
   V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
   V['k.semDas'] = cm.dasBase <= 0.004;
@@ -1413,21 +1495,37 @@ function rApuracaoSimples(){
     <div class="sn-l"><span>DAS sem a CBS<small>o que sobraria no Simples</small></span><span class="v" data-o="r.dasSemCbs"></span></div>
     <div class="sn-l sn-fim"><span data-o="r.decisao"></span><span class="v"><span data-o="r.totalHib"></span><small data-o="r.contraHoje"></small></span></div>`;
 }
-// fecha a aba: o Simples de hoje (CBS dentro do DAS) contra o regime híbrido (DAS sem a CBS + CBS por fora)
+// fecha a aba: o Simples de hoje (CBS dentro do DAS) contra o regime híbrido (DAS sem a CBS + CBS por fora),
+// um cartão por regime, com os números e a composição dos tributos do mês
 function rComparativo(){
-  const regime = (nome, nota, das, cbs, carga) => `<span class="cmp-n">${nome}<small class="mut11">${nota}</small>` +
-    `<span class="cmp-bar" aria-hidden="true"><span class="c-ink" data-w="${das}"></span><span class="c-brand" data-w="${cbs}"></span></span>` +
-    `<small class="cmp-carga" data-o="${carga}" data-v="k.temCarga"></small></span>`;
-  const cel = (k, info) => `<span class="cmp-v"><span data-o="${k}"></span>${info ? `<small data-o="${info}"></small>` : ''}</span>`;
+  const linha = (rot, k, cls, info) => `<div class="cmp-row${cls ? ' ' + cls : ''}"><span>${rot}${info ? `<small data-o="${info}"></small>` : ''}</span>` +
+    `<span class="v" data-o="${k}"></span></div>`;
+  const parte = (pre, id, rot, cor) => `<div class="cmp-parte"><span class="cg-q ${cor}"></span>` +
+    `<span>${rot}<b data-o="${pre}.${id}.p"></b><span class="m" data-o="${pre}.${id}.v"></span></span></div>`;
+  // o IBS só entra onde existe número para ele: dentro do DAS o painel não o separa, e por fora é o informado
+  const comp = (pre, rotDas, rotCbs, rotIbs, carga) => `<div class="cmp-comp"><h4>Composição dos tributos do mês</h4>
+      <div class="cmp-bar2" aria-hidden="true"><span class="c-ink" data-w="${pre}.das"></span><span class="c-brand" data-w="${pre}.cbs"></span>` +
+      (rotIbs ? `<span class="c-line" data-w="${pre}.ibs"></span>` : '') + `</div>
+      <div class="cmp-leg">${parte(pre, 'das', rotDas, 'c-ink')}${parte(pre, 'cbs', rotCbs, 'c-brand')}` +
+      (rotIbs ? `<div data-v="k.temIbs">${parte(pre, 'ibs', rotIbs, 'c-line')}</div>` : '') + `</div>
+      <small class="cmp-carga" data-o="${carga}" data-v="k.temCarga"></small></div>`;
   return `<section class="card" aria-label="Convencional × Híbrido">
-    <div class="card-h"><div><h2>Convencional × Híbrido</h2><p class="sub">O Simples com a CBS dentro do DAS, ou o DAS sem a CBS e a CBS apurada por fora.</p></div></div>
-    <div class="cmp-l cmp-h"><span></span><span>DAS</span><span>CBS</span><span>Total</span></div>
-    <div class="cmp-l">${regime('Simples convencional', 'CBS dentro do DAS', 'k.convDas', 'k.convCbs', 'k.cargaConv')}${cel('k.dasConv')}${cel('k.cbsConv', 'k.cbsConvInfo')}${cel('k.totConv', 'k.efetConv')}</div>
-    <div class="cmp-l">${regime('Regime híbrido', 'DAS sem a CBS e CBS por fora', 'k.hibDas', 'k.hibCbs', 'k.cargaHib')}${cel('k.dasHib')}${cel('k.cbsHib', 'k.cbsHibInfo')}${cel('k.totHib', 'k.efetHib')}</div>
+    <div class="card-h"><div><h2>Convencional × Híbrido</h2><p class="sub">Compare os dois cenários e veja qual sai mais barato neste mês.</p></div></div>
+    <div class="cmp2">
+      <article class="cmp-card"><h3>Simples convencional</h3><p class="cmp-nota">CBS dentro do DAS</p>
+        ${linha('DAS total', 'k.dasConv', 'dest')}${linha('Alíquota efetiva', 'k.efetConv')}${linha('CBS dentro do DAS', 'k.cbsConv', 'sub')}
+        ${comp('k.conv', 'DAS base', 'CBS', '', 'k.cargaConv')}</article>
+      <article class="cmp-card"><h3>Regime híbrido</h3><p class="cmp-nota">DAS sem a CBS e CBS por fora</p>
+        ${linha('DAS sem CBS', 'k.dasHib')}${linha('CBS por fora', 'k.cbsHib', '', 'k.cbsHibInfo')}
+        <div data-v="k.temIbs">${linha('IBS por fora', 'k.ibsHib')}</div>
+        ${linha('Total', 'k.totHib', 'tot')}${linha('Alíquota efetiva', 'k.efetHib')}
+        ${comp('k.hib', 'DAS sem CBS', 'CBS por fora', 'IBS por fora', 'k.cargaHib')}</article>
+    </div>
     <div class="dl res cmp-res" data-cls="hibrido:k.hibrido"><span class="l" data-o="k.decisao"></span><span class="v" data-o="k.dif"></span></div>
     <div class="flag" data-v="k.semDas" data-o="k.semDas"></div>
     <p class="cmp-eq" data-v="k.temVariacao" data-o="k.variacao"></p>
     <p class="cmp-eq" data-v="k.temEquilibrio" data-o="k.equilibrio"></p>
+    <p class="cmp-eq" data-v="k.semIbs">O IBS ainda não é calculado: os dois cenários comparam só o DAS e a CBS.</p>
   </section>`;
 }
 function rResultado(){
@@ -1740,18 +1838,76 @@ function atualizarBarra(){
   if(st.textContent !== texto) st.textContent = texto;
   st.className = 'bstatus ' + classe;
   bt.disabled = banco.salvando;
+  const fs = app.querySelector('.fixo-status'), fb = app.querySelector('.fixo-salvar');
+  if(fs){ if(fs.textContent !== texto) fs.textContent = texto; fs.className = 'bstatus fixo-status ' + classe; }
+  if(fb) fb.disabled = banco.salvando;
+}
+
+/* ---------- movimento ---------- */
+// render() refaz a tela inteira, então animar tudo faria a página piscar a cada linha adicionada. Entra com efeito
+// só o que não estava na tela: a aba nova, a seção que abriu, o menu, a linha recém-criada. Na troca de mês ou de
+// empresa (ui.animarTela) o conteúdo todo entra de novo, menos o cabeçalho e a barra de seleção, que não mudaram.
+const SEL_ANIM = '#app > *, .det, .prem, .calc, .menu, .panel, .li, .gr, .cr, .cad-row:not(.gh), .gprod:not(.gh)';
+function chaveAnim(el){
+  if(el.parentElement === app)
+    return 'bloco:' + (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.id || el.classList[0] || el.tagName);
+  // linha e seção se reconhecem pelo primeiro campo (ou botão) que carregam: é o que não muda entre um render e outro
+  const b = el.querySelector('[data-b]'), a = el.querySelector('[data-act]'), d = a ? a.dataset : {};
+  return el.classList[0] + ':' + (b ? b.dataset.b : a ? [d.act, d.id, d.i, d.g, d.lista].join('|') : '');
+}
+function chavesNaTela(){
+  const k = new Set();
+  app.querySelectorAll(SEL_ANIM).forEach(el => {
+    if(ui.animarTela && el.closest('#app > :not(.top):not(.barra):not(.fixo)')) return;
+    k.add(chaveAnim(el));
+  });
+  return k;
+}
+function animarNovos(antes){
+  let n = 0;
+  app.querySelectorAll(SEL_ANIM).forEach(el => {
+    // dentro de um bloco que já está entrando, o filho entra junto: animar os dois daria o efeito em dobro
+    if(antes.has(chaveAnim(el)) || (el.parentElement !== app && el.parentElement.closest('.entra'))) return;
+    el.classList.add('entra');
+    if(el.parentElement === app) el.style.setProperty('--i', n++);
+  });
+}
+// barra compacta: desce quando a barra de seleção sai da tela. Nome e competência vêm dos mesmos data-o do
+// cabeçalho; o status é uma cópia sem aria-live, senão o leitor de tela anunciaria cada salvamento duas vezes
+function rFixo(){
+  const abas = [['resultado', 'Resultado'], ['cliente', 'Resumo<span class="tl-long"> do cliente</span>'], ['anual', 'Anual']]
+    .map(([id, lbl]) => `<button class="tabf" type="button" data-act="tab-fixo" data-id="${id}"${ui.tab === id ? ' aria-current="page"' : ''}>${lbl}</button>`).join('');
+  const salvar = banco.ativo && banco.sessao
+    ? `<span class="fixo-acao"><span class="bstatus fixo-status" aria-hidden="true"></span>` +
+      `<button class="btn prim fixo-salvar" type="button" data-act="salvar-banco" title="Salvar (Ctrl+S)">Salvar</button></span>` : '';
+  return `<div class="fixo" role="region" aria-label="Navegação rápida"><div class="fixo-in">
+    <button class="fixo-id" type="button" data-act="topo" title="Voltar ao topo para trocar de empresa ou de competência"><b data-o="co"></b><span data-o="ctx"></span></button>
+    <nav class="fixo-abas" aria-label="Seções do painel">${abas}</nav>${salvar}</div></div>`;
+}
+let rolagemRAF = 0;
+function marcarRolagem(){
+  const ref = app.querySelector('.barra') || app.querySelector('.top');
+  document.body.classList.toggle('rolou', !!ref && ref.getBoundingClientRect().bottom < 0);
+}
+addEventListener('scroll', () => { if(!rolagemRAF) rolagemRAF = requestAnimationFrame(() => { rolagemRAF = 0; marcarRolagem(); }); }, {passive: true});
+function ocupado(sim){
+  document.body.classList.toggle('trocando', sim);
+  document.getElementById('progresso').hidden = !sim;
 }
 
 function render(){
   document.body.classList.toggle('editando', editavel());
   document.body.classList.toggle('present', ui.present);
   if(banco.ativo && (!banco.sessao || banco.carregando)){      // sem login, nenhum dado aparece
-    app.innerHTML = rLogin(); document.title = 'Entrar — Painel DRE'; return;
+    app.innerHTML = rLogin(); document.title = 'Entrar — Painel DRE'; document.body.classList.remove('rolou'); return;
   }
+  const antes = chavesNaTela();
   const telas = {resultado: rResultado, cliente: rCliente, anual: rAnual};
-  app.innerHTML = rTopo() + rBarra() + rPersonalizar() + rHeroi() + telas[ui.tab]() +
+  app.innerHTML = rFixo() + rTopo() + rBarra() + rPersonalizar() + rHeroi() + telas[ui.tab]() +
     `<footer class="foot"><span data-o="footer"></span><span data-o="comp"></span></footer>`;
   refresh();
+  animarNovos(antes);
+  marcarRolagem();
 }
 function refresh(){
   const root = document.documentElement.style;
@@ -2270,7 +2426,10 @@ async function podeSair(){
 async function trocar(tipo, valor){
   if(valor === '__nova__'){ render(); return comErro(tipo === 'empresa' ? novaEmpresa : novoMes); }
   if(!(await podeSair())){ render(); return; }
-  await comErro(() => tipo === 'empresa' ? abrirEmpresa(valor) : abrirMes(banco.empresaId, valor));
+  // sem isto a tela congela até o banco responder, e parece que o clique não pegou
+  ocupado(true); ui.animarTela = true;
+  try { await comErro(() => tipo === 'empresa' ? abrirEmpresa(valor) : abrirMes(banco.empresaId, valor)); }
+  finally { ocupado(false); ui.animarTela = false; }
 }
 async function novaEmpresa(){
   if(!(await podeSair())){ render(); return; }
@@ -2431,6 +2590,10 @@ app.addEventListener('click', e => {
   const rf = S.monthly.reforma, g = b.dataset.g, i = +b.dataset.i;
   switch(b.dataset.act){
     case 'tab': irPara(b.dataset.id); if(b.dataset.id === 'anual') garantirAno(); break;
+    // da barra compacta a aba nova começa do topo, e não no meio de onde a outra estava
+    case 'tab-fixo': irPara(b.dataset.id); if(b.dataset.id === 'anual') garantirAno(); scrollTo(0, 0); break;
+    // rolagem suave é JavaScript: a regra de movimento reduzido do CSS não chega aqui, então pergunta de novo
+    case 'topo': scrollTo({top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); break;
     case 'ano-atualizar': garantirAno(true); break;
     case 'ano-preencher': comErro(preencherAno); break;
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;

@@ -88,8 +88,14 @@ Essa tabela vale para o **Excel/PDF** (fonte Arial).
 
 O **dashboard** segue os tokens do handoff `design_handoff_painel_dre/`: texto `#14161A`,
 reforma/CBS `#B3122B` (o vermelho só aparece em valores da reforma e no foco), fundo
-`#EFEEEA`, IBM Plex Sans na interface e IBM Plex Mono em todos os números. Cantos retos,
+`#E3E2DD`, IBM Plex Sans na interface e IBM Plex Mono em todos os números. Cantos retos,
 sem sombras. Só tema claro.
+
+**Fundo e cartões em três níveis** (16/09/2026): página `#E3E2DD`, cartão branco e, dentro dele, cartão
+em `--surface-2` com faixas brancas (hoje no quadro Convencional × Híbrido). O fundo era `#EFEEEA` e, sem
+sombra, cartão branco e página quase não se separavam. A barra das abas (`--rail`) desceu junto para
+`#DAD8D2`, porque o fundo novo tem o tom que ela tinha e ela sumiria. Escolhido entre quatro versões
+renderizadas lado a lado.
 
 **Cuidado:** as cores personalizáveis são `--fill` (preenchimentos: aba
 ativa, barra do débito, faixa do resultado) e `--brand`. O texto usa `--ink`, que nunca
@@ -162,6 +168,38 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   operacionais e Simples no ano (o lucro operacional bruto fica só na DRE)
 - **Abas:** Resultado · Resumo do cliente (mês) · Anual; setas do teclado navegam. A aba Resultado vai da
   DRE à apuração: Simples Nacional do mês → DRE → Estoque e compras → memória de cálculo da CBS
+- **Movimento** (16/09/2026), para a navegação não parecer seca:
+  - **Botões e abas** mudam de cor em 150ms ao passar o mouse e **afundam 1px** enquanto pressionados; aba
+    não selecionada clareia no hover (antes não tinha efeito nenhum).
+  - **Só o que é novo entra com efeito** (sobe 6px e aparece, 240ms). O cuidado é que `render()` refaz a
+    tela inteira: animar tudo faria a página piscar a cada linha adicionada. `chavesNaTela()` anota o que
+    existia antes, e `animarNovos()` marca `.entra` só no que não existia — a aba nova (blocos em cascata de
+    35ms), a seção que abriu, o menu, a linha recém-criada. Linha e seção se reconhecem pelo primeiro
+    `data-b` (ou botão) que carregam; dentro de um bloco que já entra, o filho não anima de novo.
+  - **Troca de mês ou de empresa** (`trocar()` → `ocupado()`): o conteúdo esmaece e trava, uma barra
+    corre no topo enquanto o banco responde, e o mês novo entra por inteiro — cabeçalho e barra de seleção
+    ficam parados. Antes a tela congelava e parecia que o clique não tinha pegado.
+  - **Janelas** (salvar antes de trocar, novo mês, senha) aparecem com o fundo esmaecendo e a caixa subindo.
+  - Preenchimento `backwards`, não `both`: terminado o efeito, vale o estilo normal. Com `both` a opacidade
+    ficaria presa em 1 e o esmaecido da troca de mês não funcionaria mais nos blocos já animados.
+  - **Barra compacta ao rolar** (`rFixo()`, `marcarRolagem()`): quando a barra de seleção sai da tela, desce
+    uma barra fina com nome e competência, as abas e — com banco — o status e o Salvar. A aba Resultado é
+    longa e, para salvar ou trocar de aba lá do fim, era preciso rolar tudo de volta. Clicar no nome sobe
+    suave até o topo (para trocar empresa ou mês); trocar de aba por ela já começa a aba nova do topo. O
+    nome e a competência reaproveitam `data-o="co"`/`"ctx"`; o status é cópia **sem `aria-live`**, senão o
+    leitor de tela anunciaria cada salvamento duas vezes. `scroll-padding-top` evita campo focado escondido
+    atrás dela. No celular as abas encurtam como as principais ("Resumo") e, até 480px, o nome sai e as
+    três dividem a largura — antes disso a aba Anual ficava escondida numa rolagem lateral invisível.
+    Na apresentação as abas continuam, o Salvar não.
+  - **`prefers-reduced-motion`** desliga tudo: quem pediu ao sistema menos movimento não recebe efeito. No
+    Windows é "Mostrar animações no Windows" — se estiver desligado, o painel fica sem os efeitos.
+  - Testes (seção 11): redesenhar sem mudança não anima nada; adicionar despesa anima só a linha nova;
+    remover não anima o resto; abrir o menu anima só o menu; troca de mês deixa topo e barra parados.
+    Seção 12: a barra compacta fica escondida no topo, aparece ao rolar com a aba certa, troca de aba e
+    volta ao topo, sobrevive a um render lá embaixo; no teste com banco, o status repetido sem `aria-live`.
+  - **Nota para quem testa:** o Chrome sem janela no Windows não desce de 484px de largura nem fotografa a
+    página rolada. As conferências de celular (360px) e da barra compacta foram feitas com a página dentro
+    de um iframe.
 - **Detalhamento** recolhível e **fechado por padrão** (receita por tipo, despesas com regra de
   crédito/alíquota/crédito e tributárias); "Estoque e compras" tem o seu próprio botão, também fechado
 - **Despesas editáveis no detalhamento:** nome e valor de cada despesa são campos (sem precisar de
@@ -283,14 +321,26 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **As duas CBS lado a lado** (fim do cartão, também fora da tela por enquanto): a de dentro é uma fatia do DAS (15,33% dele) e a de fora
   incide sobre a receita (8% dela) — bases diferentes, por isso aparecem com a legenda de cada uma, mais
   o DAS sem a CBS e a conclusão ("Com a CBS por fora, o mês custa R$ X a mais", com o total ao lado)
-- **Convencional × Híbrido** (último bloco da aba Resultado — seção 4 da planilha): DAS, CBS e total de
-  cada regime em números, com uma **barra empilhada** por regime (DAS escuro + CBS em `--brand`, medidas
-  pelo maior total), faixa com a decisão (verde quando o híbrido ganha) e o ponto de equilíbrio embaixo.
-  A CBS do convencional aparece com a legenda "dentro do DAS" porque não soma no total. Embaixo de cada
-  regime, a **carga tributária do mês**: todas as despesas tributárias em reais e em % da receita (no
-  híbrido, trocando o DAS pelo par DAS sem CBS + CBS). No total de cada regime vem a **alíquota efetiva**
-  (regime ÷ receita) e, abaixo da faixa, quanto ela sobe ou cai de um regime para o outro, em pontos
-  percentuais
+- **Convencional × Híbrido** (último bloco da aba Resultado — seção 4 da planilha), **um cartão por regime**
+  (16/09/2026, a partir de um modelo do usuário, nas cores do sistema: cantos retos, sem sombra):
+  - **Simples convencional:** DAS total em destaque, alíquota efetiva e, numa faixa branca sobre o cartão
+    cinza, a CBS dentro do DAS — em tom apagado porque é parte do DAS, não soma a ele.
+  - **Regime híbrido:** DAS sem CBS, CBS por fora (com "crédito de R$ X vai para o mês seguinte" quando
+    credora), **IBS por fora só quando informado** (`monthly.ibs`), total em faixa branca e alíquota efetiva.
+  - **Composição dos tributos do mês** no pé de cada cartão, alinhada entre os dois (`margin-top:auto`):
+    barra empilhada (DAS `--fill`, CBS `--brand`, IBS `--line-3`) e legenda com marcador quadrado
+    (`.cg-q`, o mesmo da pizza), percentual e valor. **Cada barra é o total do próprio regime** — quem
+    compara o tamanho dos dois é a faixa da decisão. No convencional a CBS dá 15,33% do DAS: é a parcela.
+  - Embaixo de cada composição, a **carga tributária do mês** (todas as despesas tributárias; no híbrido,
+    trocando o DAS pelo par DAS sem CBS + CBS).
+  - Depois dos cartões: faixa com a decisão (verde quando o híbrido ganha), quanto a alíquota efetiva sobe
+    ou cai em pontos percentuais, o ponto de equilíbrio e, sem IBS informado, a nota "*O IBS ainda não é
+    calculado: os dois cenários comparam só o DAS e a CBS*".
+  - **O modelo trazia "IBS dentro do DAS"**, que ficou de fora: a partilha do Simples no painel não separa
+    IBS (pendência 2), e inventar esse número seria pior que não mostrá-lo.
+  - **Celular:** abaixo de 800px os cartões empilham; abaixo de 640px a legenda vira uma fatia por linha —
+    em três colunas o "R$" quebrava longe do número. Conferido a 360px reais num iframe, porque o Chrome
+    sem janela no Windows não desce de 484px de largura (o teste "celular 400px" mede, na prática, 467px)
 - **De onde vem o crédito da CBS:** a barra "Crédito de CBS" é empilhada por origem — compras, despesas,
   outras linhas e saldo do mês anterior — com a legenda em reais e % embaixo
 - **Ponto de equilíbrio** (`textoEquilibrio()`, no quadro Convencional × Híbrido, fim da aba Resultado):
