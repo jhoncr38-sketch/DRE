@@ -89,7 +89,7 @@ Essa tabela vale para o **Excel/PDF** (fonte Arial).
 O **dashboard** segue os tokens do handoff `design_handoff_painel_dre/`: texto `#14161A`,
 reforma/CBS `#B3122B` (o vermelho só aparece em valores da reforma e no foco), fundo
 `#E3E2DD`, IBM Plex Sans na interface e IBM Plex Mono em todos os números. Cantos retos,
-sem sombras. Só tema claro.
+sem sombras. Tema claro por padrão e **modo noturno** opcional (ver "Modo noturno" abaixo).
 
 **Fundo e cartões em três níveis** (16/09/2026): página `#E3E2DD`, cartão branco e, dentro dele, cartão
 em `--surface-2` com faixas brancas (hoje no quadro Convencional × Híbrido). O fundo era `#EFEEEA` e, sem
@@ -168,6 +168,23 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   operacionais e Simples no ano (o lucro operacional bruto fica só na DRE)
 - **Abas:** Resultado · Resumo do cliente (mês) · Anual; setas do teclado navegam. A aba Resultado vai da
   DRE à apuração: Simples Nacional do mês → DRE → Estoque e compras → memória de cálculo da CBS
+- **Modo noturno** (16/09/2026), em Opções → "Modo noturno" (marca *ligado*):
+  - **Só os tokens trocam** (`html[data-tema="escuro"]`): fundo `#111214`, cartão `#1B1C1F`, cartão interno
+    `#232529`, texto `#ECEDEF`. `color-scheme:dark` deixa as listas de seleção e a rolagem nativas escuras.
+  - **`--fill` e `--brand` são recalculadas em `refresh()`**: são as cores personalizáveis, chegam como estilo
+    inline e estilo inline vence qualquer regra do CSS. No escuro o vermelho da reforma clareia 30% (vira texto
+    em fundo escuro) e um `--fill` escuro vira `#E4E5E8` — senão aba ativa, Salvar e faixa da decisão sumiriam.
+  - **`--sobre-fill`** substituiu o `#fff` cravado no texto sobre `--fill`, escolhido pela luminância da cor
+    (`luz()`). De quebra conserta o claro: cor personalizada clara (amarelo) ganhava texto branco ilegível.
+  - A **logo** ganha uma placa branca no escuro (ela é escura). A faixa verde do híbrido fixa texto branco.
+  - **Preferência de quem olha, não dado da empresa:** fica no navegador (`localStorage` `dre.tema`), não no
+    estado salvo. Um script no `<head>` aplica o tema antes de desenhar, para a página não piscar clara.
+  - **Imprimir sai sempre no claro** (`beforeprint`/`afterprint`) e volta ao escuro depois.
+  - Cores dos gráficos seguem os tokens. Em "Produtos e serviços", "Alíquota cheia" continua no tom mais
+    próximo do fundo nos dois temas, de propósito (a cor marca a exceção): contraste 1,42 no claro, 1,47 no escuro.
+  - Testes (seção 13): ligar pelo menu, tokens e cores recalculadas, cor clara personalizada, impressão no
+    claro e volta, desligar esquece; 13b abre já escuro quando lembrado. O perfil do Chrome de teste guarda o
+    `localStorage` entre execuções: os testes limpam `dre.tema` no fim, senão contaminariam as suítes seguintes.
 - **Movimento** (16/09/2026), para a navegação não parecer seca:
   - **Botões e abas** mudam de cor em 150ms ao passar o mouse e **afundam 1px** enquanto pressionados; aba
     não selecionada clareia no hover (antes não tinha efeito nenhum).
@@ -191,8 +208,14 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     atrás dela. No celular as abas encurtam como as principais ("Resumo") e, até 480px, o nome sai e as
     três dividem a largura — antes disso a aba Anual ficava escondida numa rolagem lateral invisível.
     Na apresentação as abas continuam, o Salvar não.
-  - **`prefers-reduced-motion`** desliga tudo: quem pediu ao sistema menos movimento não recebe efeito. No
-    Windows é "Mostrar animações no Windows" — se estiver desligado, o painel fica sem os efeitos.
+  - **`prefers-reduced-motion`** desliga tudo (`animation:none; transition:none`): quem pediu ao sistema menos
+    movimento não recebe efeito. No Windows é "Mostrar animações no Windows" — desligado, o painel fica sem os
+    efeitos. A primeira versão encurtava tudo para 1ms, o que dava transição de 1ms a *toda* propriedade de *todo*
+    elemento, inclusive a cor ao trocar de tema. Sem movimento, a barra de carregamento fica cheia e parada.
+  - **Nota para quem testa:** com `--virtual-time-budget` o Chrome sem janela adianta os timers sem desenhar
+    quadros, então um bloco que acabou de entrar aparece apagado (animação parada no início). Não acontece para
+    o usuário: medido em tempo real (página segurada por uma imagem lenta), a seção termina em opacidade 1 em
+    menos de um segundo. Capturas de tela usam `--force-prefers-reduced-motion`.
   - Testes (seção 11): redesenhar sem mudança não anima nada; adicionar despesa anima só a linha nova;
     remover não anima o resto; abrir o menu anima só o menu; troca de mês deixa topo e barra parados.
     Seção 12: a barra compacta fica escondida no topo, aparece ao rolar com a aba certa, troca de aba e

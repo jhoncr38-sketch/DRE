@@ -18,9 +18,24 @@
     --canvas:#E3E2DD; --surface:#FFFFFF; --surface-2:#F8F7F4; --rail:#DAD8D2;
     --line:#E7E5E0; --line-2:#DAD8D2; --line-3:#C7C5BF; --on-fill:#C9CCD2;
     --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
+    /* texto sobre --fill (recalculado em refresh() pela luz da cor) e tons que antes estavam cravados no CSS */
+    --sobre-fill:#FFFFFF; --hover-rail:rgba(255,255,255,.6); --hover-linha:#FAF9F7; --alt:#F2F1ED; --veu:rgba(20,22,26,.45);
     --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
     --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
+  /* Modo noturno: só os tokens trocam. --fill e --brand ficam de fora de propósito: são as cores personalizáveis,
+     chegam como estilo inline e estilo inline vence qualquer regra daqui — refresh() recalcula as duas */
+  html[data-tema="escuro"]{
+    color-scheme:dark;
+    --ink:#ECEDEF; --ink-2:#D5D7DB; --ink-3:#B5B8BE;
+    --muted:#9B9FA6; --muted-2:#878B92; --muted-3:#6F737A; --disabled:#595D64;
+    --canvas:#111214; --surface:#1B1C1F; --surface-2:#232529; --rail:#2B2D32;
+    --line:#2C2E33; --line-2:#373A40; --line-3:#4B4F56;
+    --ok:#2A8C5C;
+    --hover-rail:rgba(255,255,255,.08); --hover-linha:#25272B; --alt:#232529; --veu:rgba(0,0,0,.62);
+  }
+  html[data-tema="escuro"] .logo{background:#fff; padding:3px}          /* a logo é escura: ganha uma placa clara */
+  html[data-tema="escuro"] .btn.prim:hover{filter:brightness(.9)}       /* no escuro o botão é claro: clarear some */
   *{box-sizing:border-box}
   html,body{margin:0}
   body{background:var(--canvas); color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased}
@@ -47,8 +62,8 @@
   .nav{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; max-width:100%}
   .rail{display:flex; gap:6px; background:var(--rail); padding:4px; border-radius:2px; max-width:100%; overflow-x:auto; scrollbar-width:none}
   .tab{padding:7px 14px; font:500 13px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap}
-  .tab[aria-selected="true"]{background:var(--fill); color:#fff}
-  .tab:not([aria-selected="true"]):hover{background:rgba(255,255,255,.6); color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--fill); color:var(--sobre-fill)}
+  .tab:not([aria-selected="true"]):hover{background:var(--hover-rail); color:var(--ink)}
   .rail-sep{flex:0 0 1px; background:var(--line-3); margin:4px 1px}
   .btn{padding:10px 13px; font:500 12px/1 var(--sans); background:var(--surface); color:var(--ink); border:1px solid var(--line-2); border-radius:2px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px}
   .btn:hover{border-color:var(--line-3); background:var(--surface-2)}
@@ -63,7 +78,7 @@
   .menu{position:absolute; right:0; top:calc(100% + 6px); z-index:30; background:var(--surface); box-shadow:0 0 0 1px var(--line-2); min-width:240px; padding:6px 0; display:flex; flex-direction:column}
   .menu button{display:flex; justify-content:space-between; align-items:baseline; gap:12px; width:100%; text-align:left; padding:9px 14px; border:0; background:transparent; font-size:13px; cursor:pointer}
   .menu button:hover{background:var(--surface-2)}
-  .menu button.armed{background:var(--fill); color:#fff}
+  .menu button.armed{background:var(--fill); color:var(--sobre-fill)}
   .menu .chk{font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted-2)}
   .menu .sep{height:1px; background:var(--line); margin:6px 0}
 
@@ -108,7 +123,7 @@
   .dl.gross .l, .dl.gross .v, .dl.gross .p{color:var(--brand)}
   .dl.gross .l{font-size:15px; font-weight:600}
   .dl.gross .v{font-size:16px; font-weight:600}
-  .dl.res{background:var(--fill); color:#fff; margin:8px -16px 0; padding:14px 16px; border:0; align-items:center}
+  .dl.res{background:var(--fill); color:var(--sobre-fill); margin:8px -16px 0; padding:14px 16px; border:0; align-items:center}
   .dl.res .l{font-size:15px; font-weight:600}
   .dl.res .v{font-size:19px; font-weight:600}
   .dl.res .p{color:var(--muted-3); font-size:13px}
@@ -246,7 +261,7 @@
   .cmp-parte b{display:block; font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink); white-space:nowrap}
   .cmp-parte .m{display:block; color:var(--muted-2); white-space:nowrap}   /* "R$" nunca fica numa linha e o número na outra */
   .cmp-carga{display:block; margin-top:10px; font-size:11px; color:var(--muted-2)}
-  .cmp-res.hibrido{background:var(--ok)}
+  .cmp-res.hibrido{background:var(--ok); color:#fff}
   .cmp-eq{margin:12px 0 0; font-size:12px; color:var(--ink-3); line-height:1.5}
 
   /* Receita por tipo (detalhamento da receita) e Simples Nacional do mês */
@@ -306,7 +321,7 @@
   .seg-conf.dif{color:var(--brand)}
 
   /* Banco de dados: barra de salvamento, login e janelas */
-  .btn.prim{background:var(--fill); border-color:var(--fill); color:#fff}
+  .btn.prim{background:var(--fill); border-color:var(--fill); color:var(--sobre-fill)}
   .btn.prim:hover{border-color:var(--fill); filter:brightness(1.25)}
   .btn:disabled{opacity:.55; cursor:default; filter:none}
   .barra{display:flex; align-items:flex-end; gap:12px 22px; flex-wrap:wrap; background:var(--surface); padding:12px 16px; box-shadow:0 0 0 1px var(--line-2)}
@@ -331,7 +346,7 @@
   .login .field .in.txt, .modal-caixa .field .in.txt{font-size:14px; border-bottom-color:var(--line-3)}
   .login-erro, .modal-erro{margin:0; min-height:1.2em; font-size:12px; color:var(--ink-3)}
   .login .btn.prim{justify-content:center; padding:12px}
-  .modal-fundo{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px; background:rgba(20,22,26,.45)}
+  .modal-fundo{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--veu)}
   .modal-caixa{width:min(440px,100%); background:var(--surface); padding:24px 26px; display:flex; flex-direction:column; gap:14px; box-shadow:0 0 0 1px var(--line-2)}
   .modal-caixa .sub{margin:0}
   .modal-campos{display:flex; flex-direction:column; gap:12px}
@@ -354,7 +369,7 @@
   .cad-h-txt p{margin:0; font-size:13px; color:var(--muted); line-height:1.5}
   .cli-blocos > .cadeia:first-child{margin-top:0; padding-top:0; border-top:0}   /* primeiro bloco da aba: sem risco solto no topo */
   .cad-ctl{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
-  .cad-alt{display:flex; gap:6px; background:#F2F1ED; padding:4px; border-radius:2px}
+  .cad-alt{display:flex; gap:6px; background:var(--alt); padding:4px; border-radius:2px}
   .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--muted); cursor:pointer}
   .cad-aba[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--line-2)}
   .cad-aba .m{opacity:.6}
@@ -388,10 +403,10 @@
   .cad-mais:hover{text-decoration:underline}
   /* tabela: os campos parecem texto e só mostram o traço ao passar o mouse ou editar */
   .cad-row{display:grid; grid-template-columns:200px minmax(0,1fr) 170px 130px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
-  .cad-row:not(.gh):hover{background:#FAF9F7}
+  .cad-row:not(.gh):hover{background:var(--hover-linha)}
   /* produtos e serviços: as duas alíquotas saem calculadas, por isso são texto e não campo */
   .gprod{display:grid; grid-template-columns:minmax(0,1.25fr) 118px 124px 118px 146px 96px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:880px}
-  .gprod:not(.gh):hover{background:#FAF9F7}
+  .gprod:not(.gh):hover{background:var(--hover-linha)}
   .gprod.gh{padding:0 0 7px; border-bottom-color:var(--ink)}
   .gprod.gh > span{text-align:left}
   .gprod.gh > span:nth-child(6){text-align:right}
@@ -443,7 +458,7 @@
   .obs p{margin:0 0 8px}
 
   footer.foot{display:flex; justify-content:space-between; gap:8px 16px; flex-wrap:wrap; font-family:var(--mono); font-size:11px; color:var(--muted-2); padding-top:4px}
-  .toast{position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--fill); color:#fff; padding:10px 16px; border-radius:2px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; max-width:calc(100% - 32px)}
+  .toast{position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--fill); color:var(--sobre-fill); padding:10px 16px; border-radius:2px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; max-width:calc(100% - 32px)}
   .toast.show{opacity:1; transform:translate(-50%,0)}
 
   /* Movimento. Só recebe .entra o que não estava na tela antes do render() — ver animarNovos().
@@ -476,8 +491,8 @@
   .fixo-id:hover b{text-decoration:underline}
   .fixo-abas{display:flex; gap:4px; margin-left:auto; padding:3px; background:var(--rail); border-radius:2px; overflow-x:auto; scrollbar-width:none}
   .tabf{padding:6px 11px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap; transition:background-color .15s ease, color .15s ease}
-  .tabf:hover{background:rgba(255,255,255,.6); color:var(--ink)}
-  .tabf[aria-current="page"]{background:var(--fill); color:#fff}
+  .tabf:hover{background:var(--hover-rail); color:var(--ink)}
+  .tabf[aria-current="page"]{background:var(--fill); color:var(--sobre-fill)}
   .fixo-acao{display:flex; align-items:center; gap:12px}
   .fixo-acao .bstatus{margin-left:0}
   .fixo-acao .btn{padding:7px 13px}
@@ -494,7 +509,9 @@
   }
   /* quem pediu ao sistema menos movimento não recebe nenhum destes efeitos */
   @media (prefers-reduced-motion: reduce){
-    *, *::before, *::after{animation-duration:1ms !important; animation-delay:0s !important; animation-iteration-count:1 !important; transition-duration:1ms !important}
+    /* nada de "1ms": isso dava transição de 1ms a toda propriedade de todo elemento, inclusive a cor ao trocar de tema */
+    *, *::before, *::after{animation:none !important; transition:none !important}
+    .progresso::before{left:0; width:100%}                         /* sem movimento, a barra de carregamento fica cheia e parada */
   }
 
   @media (max-width:900px){ .reforma{grid-template-columns:minmax(0,1fr)} }
@@ -559,6 +576,8 @@
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
   }
 </style>
+<script>/* modo noturno lembrado no navegador: aplicado aqui, antes de desenhar, para a página não piscar clara */
+try { if(JSON.parse(localStorage.getItem('dre.tema')) === 'escuro') document.documentElement.dataset.tema = 'escuro'; } catch(e){}</script>
 </head>
 <body>
 <div class="page"><div class="wrap" id="app"></div></div>
@@ -759,6 +778,14 @@ function competencia(lbl){
 }
 function hex(h){ h = String(h || '').replace('#', ''); if(h.length === 3) h = h.split('').map(c => c + c).join('');
   const n = parseInt(h, 16); return h.length !== 6 || isNaN(n) ? null : [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+// luminância relativa (WCAG), de 0 (preto) a 1 (branco): decide texto claro ou escuro sobre uma cor
+function luz(c){
+  const p = hex(c); if(!p) return 0;
+  const [r, g, b] = p.map(x => { x /= 255; return x <= .03928 ? x / 12.92 : Math.pow((x + .055) / 1.055, 2.4); });
+  return .2126 * r + .7152 * g + .0722 * b;
+}
+const temaEscuro = () => document.documentElement.dataset.tema === 'escuro';
+function aplicarTema(t){ if(t === 'escuro') document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema; }
 function mix(a, b, t){ const pa = hex(a), pb = hex(b); if(!pa || !pb) return a;
   return '#' + pa.map((x, i) => Math.round(x + (pb[i] - x) * t).toString(16).padStart(2, '0')).join(''); }
 
@@ -1352,6 +1379,7 @@ function rMenu(){
     ${it('editar', 'Editar valores', ui.editando ? 'ligado' : '')}
     ${it('personalizar', 'Personalizar', ui.personalizar ? 'aberto' : '')}
     ${it('present', 'Modo apresentação')}
+    ${it('tema', 'Modo noturno', temaEscuro() ? 'ligado' : '')}
     ${it('print', 'Imprimir / PDF')}
     <div class="sep" role="separator"></div>
     ${banco.ativo ? '' : it('salvar', 'Salvar (compartilhar no link)')}
@@ -1911,9 +1939,16 @@ function render(){
 }
 function refresh(){
   const root = document.documentElement.style;
-  const brand = hex(S.brand) ? S.brand : '#B3122B', fill = hex(S.fill) ? S.fill : '#14161A';
+  let brand = hex(S.brand) ? S.brand : '#B3122B', fill = hex(S.fill) ? S.fill : '#14161A';
+  const escuro = temaEscuro();
+  if(escuro){
+    brand = mix(brand, '#ffffff', .3);             // o vermelho da reforma vira texto em fundo escuro: precisa clarear
+    if(luz(fill) < .4) fill = '#E4E5E8';           // preenchimento escuro some no fundo escuro: a aba ativa e a faixa viram claras
+  }
   root.setProperty('--fill', fill); root.setProperty('--brand', brand);
-  root.setProperty('--brand-dark', mix(brand, '#000000', .3)); root.setProperty('--brand-wash', mix(brand, '#ffffff', .95));
+  root.setProperty('--sobre-fill', luz(fill) > .5 ? '#14161A' : '#FFFFFF');   // vale também para cor clara escolhida no claro
+  root.setProperty('--brand-dark', escuro ? mix(brand, '#ffffff', .15) : mix(brand, '#000000', .3));
+  root.setProperty('--brand-wash', escuro ? mix(brand, '#1B1C1F', .86) : mix(brand, '#ffffff', .95));
   const {O, W, C, V, H} = saidas();
   app.querySelectorAll('[data-h]').forEach(el => { const v = H[el.dataset.h]; if(v !== undefined && el._h !== v){ el._h = v; el.innerHTML = v; } });
   app.querySelectorAll('[data-o]').forEach(el => { const v = O[el.dataset.o]; if(v !== undefined && el.textContent !== v) el.textContent = v; });
@@ -2605,6 +2640,9 @@ app.addEventListener('click', e => {
       toast(ui.editando ? 'Edição ligada — clique nos valores da DRE' : 'Edição desligada'); break;
     case 'personalizar': ui.personalizar = !ui.personalizar; ui.menu = false; render(); break;
     case 'present': ui.present = !ui.present; ui.menu = false; render(); break;
+    // preferência de quem está olhando, não dado da empresa: fica no navegador, não no estado salvo
+    case 'tema': aplicarTema(temaEscuro() ? 'claro' : 'escuro'); guarda.gravar('dre.tema', temaEscuro() ? 'escuro' : null);
+      ui.menu = false; render(); focar('[data-act="menu"]'); break;
     case 'print': ui.menu = false; render(); setTimeout(() => window.print(), 50); break;
     case 'salvar': ui.menu = false; render(); salvar(); break;
     case 'salvar-banco': salvarBanco(); break;
@@ -2693,6 +2731,10 @@ app.addEventListener('submit', async e => {
     render();
   }
 });
+// papel é claro: imprimir no modo noturno gastaria tinta e sairia ilegível. Volta ao escuro depois
+let temaAntesDeImprimir = false;
+addEventListener('beforeprint', () => { if(temaEscuro()){ temaAntesDeImprimir = true; aplicarTema('claro'); refresh(); } });
+addEventListener('afterprint', () => { if(temaAntesDeImprimir){ temaAntesDeImprimir = false; aplicarTema('escuro'); refresh(); } });
 window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- início ---------- */
