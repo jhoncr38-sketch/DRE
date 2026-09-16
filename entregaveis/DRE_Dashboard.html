@@ -367,6 +367,10 @@
   .modal-cx input{margin:3px 0 0; flex:0 0 auto; accent-color:var(--brand)}
   .modal-cx small{display:block; font-size:11px; color:var(--muted-2); margin-top:1px; line-height:1.4}
   .modal-acoes{display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; margin-top:4px}
+  /* imprimir: o que cada botão põe no papel */
+  .imp-opcoes{display:flex; flex-direction:column; gap:10px; padding:12px 14px; background:var(--surface-2)}
+  .imp-opcoes p{margin:0; font-size:12px; color:var(--muted); line-height:1.5}
+  .imp-opcoes b{display:block; font-size:13px; font-weight:600; color:var(--ink)}
   .present .barra{display:none}
   @media print{ .barra, #modal{display:none !important} }
 
@@ -578,14 +582,56 @@
     .logo{height:38px}
     .nav{justify-content:flex-start}
   }
+  /* Impressão e PDF: folha A4. O rodapé de cada página (empresa, período, "Página x de y") muda com a empresa, então
+     as caixas de margem são montadas no beforeprint, em #estilo-folha — ver prepararFolha() */
+  @page{size:A4; margin:14mm 12mm 16mm}
+  .so-papel{display:none}                                          /* texto que só faz sentido impresso */
   @media print{
     body{background:#fff}
     .page{padding:0}
-    .nav, .panel, .toast, .row-ctl, .add, .card-h .btn, .progresso, .fixo{display:none !important}
+    /* botão, link e instrução de uso não servem no papel */
+    .so-tela, .nav, .panel, .toast, .progresso, .fixo, .row-ctl, .btn, .lk, .add, .cad-mais, .cad-x, .cad-alt,
+    .ano-acoes, .cad-vazio p, .anx:has(option[value=""]:checked){display:none !important}
+    footer.foot{display:none}                                     /* o escritório vai no rodapé de toda página */
+    .so-papel{display:revert}
     .entra{animation:none}
-    .hero, .card, .memo, .chart, .cli{break-inside:avoid}
-    .in{border-bottom-color:transparent !important}
     *{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+    /* campo e seletor viram texto: sem traço, sem seta, sem texto de exemplo */
+    .in, .sel{border-bottom-color:transparent !important}
+    .sel-wrap::after{display:none}
+    .sel{padding-right:0}                                          /* a folga era da seta, que não sai no papel */
+    .in::placeholder{color:transparent}
+    .scroll-x{overflow:visible}
+    .cbscol.dir small{min-height:0}
+    /* no papel branco o cartão branco não aparece: o recuo dele cai para 16px, o bastante para as faixas coloridas
+       (lucro bruto, resultado, CBS a pagar) avançarem sobre ele — o que passa da área útil da folha o Chrome corta.
+       Os blocos viram fluxo comum porque é no fluxo comum que o Chrome respeita "não quebrar aqui" */
+    .wrap, .reforma{display:block}
+    #app > *, .side{margin-top:18px}
+    #app > .top{margin-top:0; padding:0 16px 12px; border-bottom:1px solid var(--line-3)}
+    .card, .memo, .chart, .cli{padding:0 16px}
+    .hero-row{padding:12px 16px}
+    .card-h{margin-bottom:14px}
+    /* memória fechada é curta: fica ao lado do gráfico, como na tela larga, e o quadro dos regimes cabe na mesma folha */
+    .reforma:has(.memo.fechada){display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:0; align-items:start}
+    .reforma:has(.memo.fechada) .side{margin-top:0}
+    /* campo de texto não quebra linha: no papel o nome vai num texto comum (ver nomesNoPapel) */
+    .in-papel{min-width:0; font-size:13px; color:var(--ink); overflow-wrap:anywhere}
+    .imp-info{margin-top:3px; font-family:var(--mono); font-size:11px; color:var(--muted)}
+    .cmp2{grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px}   /* os dois regimes lado a lado, como na tela larga */
+    .cmp-card{padding:14px 14px 12px}
+    /* tabelas no tamanho da folha, sem a coluna do botão de remover */
+    .g5{grid-template-columns:minmax(0,1fr) 96px 130px 96px 90px}
+    .grec{grid-template-columns:minmax(0,1fr) 110px 140px 130px 100px}
+    .gprod{min-width:0; grid-template-columns:minmax(0,1fr) 70px 90px 90px 120px 80px}
+    .cad-row{grid-template-columns:150px minmax(0,1fr) 170px 100px}
+    .gprod.gh > span:last-child, .cad-row.gh > span:last-child{display:none}
+    .gprod.gh{font-size:10px}                                      /* como o cabeçalho da cadeia: no tamanho da linha, quebrava */
+    /* quebra de página: o cartão grande pode quebrar (antes pulava inteiro e deixava meia folha em branco);
+       linha, gráfico e o quadro dos regimes não; título fica com o que vem embaixo dele */
+    .hero, .sn, .chart, .memo.fechada, .reforma:has(.memo.fechada), .comparativo, .cmp-card, .dl, .li, .gr, .cr, .sum, .total, .bar, .cbar, .prem, .flag, .det-foot,
+    .gano, .cad-row, .gprod, .cad-grafico, .cad-alerta, .cad-vazio, .two > div, .obs p, .cmp-eq{break-inside:avoid}
+    h2, h3, h4, .card-h, .cad-h, .grp, .det-cap, .gh, .dl:has(+ .det){break-after:avoid}
   }
 </style>
 <script>/* modo noturno lembrado no navegador: aplicado aqui, antes de desenhar, para a página não piscar clara */
@@ -1381,7 +1427,7 @@ function rTopo(){
     : `<div class="menu-wrap"><button class="btn" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">Opções <span aria-hidden="true">▾</span></button>${ui.menu ? rMenu() : ''}</div>`;
   return `<header class="top">
     <div class="ident"><img class="logo" data-src="logo" alt="Logo do escritório">
-      <div><div class="co" data-o="co"></div><div class="ctx" data-o="ctx"></div></div></div>
+      <div><div class="co" data-o="co"></div><div class="ctx" data-o="ctx"></div><div class="imp-info so-papel" id="imp-info"></div></div></div>
     <nav class="nav"><div class="rail" role="tablist" aria-label="Seções do painel">${botoes}</div>${ctl}</nav>
   </header>`;
 }
@@ -1392,7 +1438,7 @@ function rMenu(){
     ${it('personalizar', 'Personalizar', ui.personalizar ? 'aberto' : '')}
     ${it('present', 'Modo apresentação')}
     ${it('tema', 'Modo noturno', temaEscuro() ? 'ligado' : '')}
-    ${it('print', 'Imprimir / PDF')}
+    ${it('print', 'Imprimir / PDF…')}
     <div class="sep" role="separator"></div>
     ${banco.ativo ? '' : it('salvar', 'Salvar (compartilhar no link)')}
     ${it('baixar', 'Baixar HTML')}
@@ -1451,7 +1497,7 @@ function lista(base, arr, k){
   const campo = (r, i) => inp(`${base}.${i}.1`, 'brl', r[0] || rotulo, 'val');
   const valor = (r, i) => i !== iSimples ? campo(r, i)
     : `<span class="dasauto" data-v="m.dasAuto"><span class="m" data-o="${k}.${i}.v"></span>` +
-      `<small class="m">calculado · <button class="lk" type="button" data-act="das-digitar">digitar</button></small></span>` +
+      `<small class="m">calculado<span class="so-tela"> · <button class="lk" type="button" data-act="das-digitar">digitar</button></span></small></span>` +
       `<span data-v="m.dasMan">${campo(r, i)}</span>`;
   return `<div class="det">` + arr.map((r, i) => `<div class="li">
     <span class="nmcol"><span class="nmwrap">${inp(`${base}.${i}.0`, 'txt', `Nome — ${rotulo} ${i + 1}`, 'txt')}
@@ -1551,7 +1597,7 @@ function rComparativo(){
       <div class="cmp-leg">${parte(pre, 'das', rotDas, 'c-ink')}${parte(pre, 'cbs', rotCbs, 'c-brand')}` +
       (rotIbs ? `<div data-v="k.temIbs">${parte(pre, 'ibs', rotIbs, 'c-line')}</div>` : '') + `</div>
       <small class="cmp-carga" data-o="${carga}" data-v="k.temCarga"></small></div>`;
-  return `<section class="card" aria-label="Convencional × Híbrido">
+  return `<section class="card comparativo" aria-label="Convencional × Híbrido">
     <div class="card-h"><div><h2>Convencional × Híbrido</h2><p class="sub">Compare os dois cenários e veja qual sai mais barato neste mês.</p></div></div>
     <div class="cmp2">
       <article class="cmp-card"><h3>Simples convencional</h3><p class="cmp-nota">CBS dentro do DAS</p>
@@ -1646,12 +1692,13 @@ function rReforma(){
       <div class="sum"><span>Débito total</span><span data-o="m.debitoTotal"></span></div>
       <div class="sum"><span>Crédito total</span><span data-o="m.creditoTotal"></span></div>
     </div>`;
-  const memo = `<div class="memo">
+  const memo = `<div class="memo${aberta ? '' : ' fechada'}">
     <div class="card-h"><div><h2>Memória de cálculo — CBS</h2>
-      <p class="sub">${aberta ? 'Base × alíquota. Ajuste os campos e tudo recalcula.' : 'Mostrando só os totais. Abra a memória para ver e ajustar linha a linha.'}</p></div>
+      <p class="sub">${aberta ? 'Base × alíquota.<span class="so-tela"> Ajuste os campos e tudo recalcula.</span>'
+        : '<span class="so-tela">Mostrando só os totais. Abra a memória para ver e ajustar linha a linha.</span><span class="so-papel">Débito e crédito do mês.</span>'}</p></div>
       <button class="btn" data-act="memoria" aria-expanded="${aberta}">${aberta ? 'Ocultar memória' : 'Ver memória'}</button></div>
     ${!aberta ? resumo : `<div class="prem">
-      <div class="prem-t"><span class="cap">Premissas</span><span>Alterar aqui vale para <span data-o="m.linhas"></span> e para débitos e créditos.</span></div>
+      <div class="prem-t"><span class="cap">Premissas</span><span class="so-tela">Alterar aqui vale para <span data-o="m.linhas"></span> e para débitos e créditos.</span></div>
       <div class="prem-f">
         <label><span>Alíquota geral</span>${inp('monthly.reforma.aliqGeral', 'pct', 'Alíquota geral', 'main', 'data-premissa="geral"')}</label>
         <label><span>Alíquota das compras</span>${inp('monthly.reforma.aliqCompras', 'pct', 'Alíquota das compras', 'main', 'data-premissa="compras"')}</label>
@@ -2788,7 +2835,7 @@ app.addEventListener('click', e => {
     // preferência de quem está olhando, não dado da empresa: fica no navegador, não no estado salvo
     case 'tema': aplicarTema(temaEscuro() ? 'claro' : 'escuro'); guarda.gravar('dre.tema', temaEscuro() ? 'escuro' : null);
       ui.menu = false; render(); focar('[data-act="menu"]'); break;
-    case 'print': ui.menu = false; render(); setTimeout(() => window.print(), 50); break;
+    case 'print': imprimir(); break;
     case 'salvar': ui.menu = false; render(); salvar(); break;
     case 'salvar-banco': salvarBanco(); break;
     case 'rbt12': comErro(atualizarRbt12); break;
@@ -2880,10 +2927,74 @@ app.addEventListener('submit', async e => {
     render();
   }
 });
+// Imprimir / PDF: pergunta quanto sai no papel e abre (ou fecha) as seções só durante a impressão — a tela volta
+// como estava. Ctrl+P imprime a tela do jeito que está, com a mesma folha e o mesmo rodapé
+const IMPRESSAO = {
+  resultado: ['Resultado', 'DRE, Simples, estoque, CBS e o quadro dos dois regimes, sem abrir as linhas.',
+    'Com as linhas de receita e despesas, as compras, a posição de estoque e a memória de cálculo da CBS.'],
+  anual: ['Anual', 'DRE do exercício com os totais e a leitura do ano.', 'Com as linhas de custos e despesas do exercício.'],
+  cliente: ['Resumo do cliente', 'Os gráficos da cadeia de crédito e dos produtos.', 'Com as tabelas de cadastro de fornecedores (ou clientes) e de produtos.'],
+};
+async function imprimir(){
+  ui.menu = false; ui.armado = false; render();
+  const [aba, totais, completo] = IMPRESSAO[ui.tab];
+  const aberto = ui.tab === 'cliente' ? ui.cadastro.cadeia || ui.cadastro.produtos
+    : ui.detalhe || (ui.tab === 'resultado' && (ui.memoria || ui.estoque));
+  const {botao} = await modal({titulo: 'Imprimir ou salvar em PDF', texto: `Aba ${aba}, em folha A4. O que deve sair no papel?`,
+    html: `<div class="imp-opcoes"><p><b>Só os totais</b>${esc(totais)}</p><p><b>Com o detalhamento</b>${esc(completo)}</p></div>`,
+    botoes: [['cancelar', 'Cancelar'], ['totais', 'Só os totais', aberto ? '' : 'prim'], ['completo', 'Com o detalhamento', aberto ? 'prim' : '']],
+    padrao: aberto ? 'completo' : 'totais'});
+  if(botao !== 'totais' && botao !== 'completo') return;
+  const antes = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, cadastro: {...ui.cadastro}}, tudo = botao === 'completo';
+  if(ui.tab === 'cliente') ui.cadastro = {cadeia: tudo, produtos: tudo};
+  else { ui.detalhe = tudo; if(ui.tab === 'resultado'){ ui.memoria = tudo; ui.estoque = tudo; } }
+  render();
+  addEventListener('afterprint', () => { Object.assign(ui, antes); render(); }, {once: true});
+  setTimeout(() => window.print(), 50);
+}
+// a folha: rodapé em toda página, data de emissão no cabeçalho e o título, que o Chrome usa como nome do PDF
+function prepararFolha(){
+  const rotulo = (ui.tab === 'cliente' ? 'Resumo do cliente' : 'DRE') + ' · ' + (ui.tab === 'anual' ? S.anoLabel : S.mesLabel);
+  const periodo = ui.tab === 'anual' ? String(S.anoLabel || '').toLowerCase() : competencia(S.mesLabel).replace('/', '-');
+  const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
+  const info = document.getElementById('imp-info');
+  if(info) info.textContent = [emp && emp.cnpj ? 'CNPJ ' + fmtCnpj(emp.cnpj) : '', 'valores em reais',
+    'emitido em ' + dataHora(Date.now()).replace(', ', ' às ')].filter(Boolean).join(' · ');
+  const aspas = s => '"' + String(s || '').replace(/\s+/g, ' ').replace(/[\\"]/g, '\\$&') + '"';
+  const caixa = 'font-family:"IBM Plex Mono",monospace; font-size:8pt; color:#8A8D94';
+  let st = document.getElementById('estilo-folha');
+  if(!st){ st = document.createElement('style'); st.id = 'estilo-folha'; document.head.appendChild(st); }
+  // da 2ª página em diante, empresa e período no alto; embaixo, o escritório (o rodapé da tela) e a página.
+  // As caixas vazias não são enfeite: cada borda com caixa definida cala a data, o título e o endereço que o Chrome
+  // imprime quando "Cabeçalhos e rodapés" está ligado no diálogo
+  st.textContent = `@page{@top-left{content:${aspas([S.co, rotulo].filter(Boolean).join(' · '))}; ${caixa}} @top-right{content:""}
+    @bottom-left{content:${aspas(S.footer)}; ${caixa}}
+    @bottom-right{content:"Página " counter(page) " de " counter(pages); ${caixa}}}
+  @page:first{@top-left{content:""}}`;
+  tituloAntesDeImprimir = document.title;
+  document.title = [S.co, (ui.tab === 'cliente' ? 'Resumo do cliente ' : 'DRE ') + periodo].filter(Boolean).join(' — ').replace(/[\\/:*?"<>|]/g, '-');
+}
+// campo de texto não quebra linha e corta o nome comprido ("Manutenção, dedetização, equ"): durante a impressão
+// cada nome ganha uma cópia em texto comum, que o CSS mostra no lugar do campo
+function nomesNoPapel(sim){
+  app.querySelectorAll('.in-papel').forEach(s => s.remove());
+  app.querySelectorAll('input.in.txt').forEach(el => {
+    el.classList.toggle('so-tela', sim);
+    if(sim){ const s = document.createElement('span'); s.className = 'in-papel so-papel'; s.textContent = el.value; el.after(s); }
+  });
+}
 // papel é claro: imprimir no modo noturno gastaria tinta e sairia ilegível. Volta ao escuro depois
-let temaAntesDeImprimir = false;
-addEventListener('beforeprint', () => { if(temaEscuro()){ temaAntesDeImprimir = true; aplicarTema('claro'); refresh(); } });
-addEventListener('afterprint', () => { if(temaAntesDeImprimir){ temaAntesDeImprimir = false; aplicarTema('escuro'); refresh(); } });
+let temaAntesDeImprimir = false, tituloAntesDeImprimir = '';
+addEventListener('beforeprint', () => {
+  if(temaEscuro()){ temaAntesDeImprimir = true; aplicarTema('claro'); refresh(); }
+  prepararFolha();                                   // depois do refresh(), que escreveria o título da tela por cima
+  nomesNoPapel(true);
+});
+addEventListener('afterprint', () => {
+  nomesNoPapel(false);
+  if(temaAntesDeImprimir){ temaAntesDeImprimir = false; aplicarTema('escuro'); refresh(); }
+  if(tituloAntesDeImprimir){ document.title = tituloAntesDeImprimir; tituloAntesDeImprimir = ''; }
+});
 window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e.returnValue = ''; } });
 
 /* ---------- início ---------- */

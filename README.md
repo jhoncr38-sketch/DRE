@@ -169,6 +169,36 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   operacionais e Simples no ano (o lucro operacional bruto fica só na DRE)
 - **Abas:** Resultado · Resumo do cliente (mês) · Anual; setas do teclado navegam. A aba Resultado vai da
   DRE à apuração: Simples Nacional do mês → DRE → Estoque e compras → memória de cálculo da CBS
+- **Impressão e PDF** (16/09/2026), em Opções → "Imprimir / PDF…":
+  - **A janela pergunta o que sai no papel:** "Só os totais" ou "Com o detalhamento" (linhas de receita e
+    despesas, compras, estoque e memória da CBS; na aba do cliente, as tabelas de cadastro; na Anual, as linhas
+    do exercício). O padrão acompanha a tela. As seções abrem ou fecham **só durante a impressão** — um
+    `afterprint` devolve a tela como estava. Ctrl+P imprime a tela do jeito que está, com a mesma folha.
+  - **Folha A4** (`@page`, margens 14/12/16 mm). Antes saía em Carta e sem margem definida.
+  - **Rodapé em toda página** — escritório à esquerda, "Página x de y" à direita — e, da 2ª página em diante,
+    empresa e período no alto. São caixas de margem do `@page` (Chrome 131+), montadas em `prepararFolha()`
+    no `beforeprint`, porque o texto muda com a empresa. As caixas vazias não são enfeite: cada borda com caixa
+    definida cala a data, o título e o endereço que o Chrome põe quando "Cabeçalhos e rodapés" está ligado.
+    O rodapé da tela (`footer.foot`) sai do papel: sozinho no fim, chegava a ocupar uma folha inteira.
+  - **Cabeçalho:** CNPJ (com banco), "valores em reais" e data e hora de emissão.
+  - **Nome do PDF:** o título da página vira "Empresa — DRE dez-2025" durante a impressão (o Chrome usa o
+    título como nome do arquivo); caracteres proibidos em nome de arquivo viram hífen ("S/A" → "S-A").
+  - **Quebra de página:** cartão grande pode quebrar (com `break-inside:avoid` inteiro ele pulava para a folha
+    seguinte e deixava meia folha em branco); linha, gráfico, memória fechada e o quadro dos regimes não
+    quebram; título fica com o que vem embaixo. Os blocos viram fluxo comum (`display:block`) porque é nele
+    que o Chrome respeita essas regras. Resultado com totais: de 4 folhas para 2; com tudo aberto, de 7 para 4.
+  - **Largura:** no papel o cartão perde o recuo (fica 16px, o bastante para as faixas coloridas avançarem —
+    o que passa da área útil o Chrome corta, e o texto encostava na borda da faixa). Tabelas ganham colunas
+    próprias para caber em A4 (produtos tinha `min-width:880px` e cortava), sem a coluna do botão de remover.
+    Memória fechada fica ao lado do gráfico e os dois regimes lado a lado, como na tela larga.
+  - **Nada de tela no papel:** botões, links, "+ adicionar", alternador fornecedores/clientes, setas e traços de
+    campo, texto de exemplo e instruções ("Abra a memória para ver…") somem. Texto só de tela leva `.so-tela`;
+    texto só do papel, `.so-papel`.
+  - **Nome comprido não corta:** campo de texto não quebra linha ("Manutenção, dedetização, equ").
+    `nomesNoPapel()` põe uma cópia em texto comum ao lado de cada campo durante a impressão e tira depois.
+  - Testes (seção 14 do painel; CNPJ na seção 3 do banco): janela e padrão, abre e devolve a tela, cancelar,
+    caixas de margem, título do PDF, emissão, cópias dos nomes. A aparência foi conferida gerando o PDF no
+    Chrome headless (`--print-to-pdf`) e olhando página a página.
 - **Modo noturno** (16/09/2026), em Opções → "Modo noturno" (marca *ligado*):
   - **Só os tokens trocam** (`html[data-tema="escuro"]`): fundo `#111214`, cartão `#1B1C1F`, cartão interno
     `#232529`, texto `#ECEDEF`. `color-scheme:dark` deixa as listas de seleção e a rolagem nativas escuras.
@@ -700,6 +730,9 @@ Formato sugerido: painel no topo — verde (ok), amarelo (conferir), vermelho (n
 ---
 
 ## Ideias maiores discutidas
+
+> O backlog completo — painel de empresas, comparação com o Lucro Presumido, funções de análise e de segurança,
+> e a tentativa desfeita da busca NBS × cClassTrib — está em `docs/ideias-guardadas.md` (16/09/2026).
 
 - **Cadastro de clientes com modelo por ramo** — cada ramo traz suas categorias e
   alíquotas padrão; guarda plano de contas e histórico por cliente.
