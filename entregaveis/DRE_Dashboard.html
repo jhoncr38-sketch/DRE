@@ -532,6 +532,36 @@
   .fixo-acao .bstatus{margin-left:0}
   .fixo-acao .btn{padding:7px 13px}
   .present .fixo-acao{display:none}                                /* apresentação não salva, como a barra de seleção */
+
+  /* Comparação com o último mês salvo, ao lado do rótulo (receita, resultado, DAS) */
+  .var{margin-left:8px; font-family:var(--mono); font-size:11px; font-weight:400; letter-spacing:0; color:var(--muted); white-space:nowrap}
+  .dl.res .var{color:inherit; opacity:.72}
+  .hero-row .var{display:inline-block}
+
+  /* Modo apresentação */
+  /* capa: as três mensagens do mês em letra grande, antes da faixa de indicadores */
+  .capa{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px}
+  .capa-msg{display:flex; flex-direction:column; gap:6px; min-width:0; background:var(--surface); padding:22px 24px 20px; border-top:3px solid var(--fill)}
+  .capa-rot{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+  .capa-v{font-size:28px; font-weight:600; letter-spacing:-.02em; line-height:1.15; color:var(--ink); overflow-wrap:anywhere}
+  .capa-sub{font-size:13px; color:var(--ink-3); line-height:1.45; white-space:pre-line}
+  .capa-msg.neg .capa-v{color:var(--brand)}
+  .capa-msg.hib{border-top-color:var(--ok)}
+  .capa-msg.alerta{border-top-color:var(--brand)}
+  .capa-msg.alerta .capa-v{color:var(--brand)}
+  @media (max-width:800px){ .capa{grid-template-columns:minmax(0,1fr)} }
+  /* letra 15% maior para TV e projetor: o conteúdo inteiro cresce e a largura máxima encolhe na mesma proporção */
+  @media screen and (min-width:900px){
+    body.present .page{zoom:1.15}
+    body.present .wrap, body.present .fixo-in{max-width:calc(1140px / 1.15)}
+  }
+  /* projetor clareia as cores: cinzas de rótulo e de linha ficam mais escuros */
+  html:not([data-tema="escuro"]) body.present{--muted:#55585E; --muted-2:#65686F; --muted-3:#85888F; --line:#D8D6D0; --line-2:#C8C6C0}
+  html[data-tema="escuro"] body.present{--muted:#B3B7BD; --muted-2:#A3A7AE; --muted-3:#83878E; --line:#3A3D43; --line-2:#474A51}
+  /* menos texto de apoio: subtítulos que explicam a tela, notas de método e as premissas do Presumido */
+  .present .card-h .sub, .present .chart .sub, .present .nota, .present .lp-prem{display:none}
+  .present .dasauto .so-tela{display:none}                        /* "digitar" altera o mês: não existe na apresentação */
+  .present .sel{border-bottom-color:transparent !important}      /* seletor vira texto, como os campos */
   @media (max-width:640px){
     .fixo-in{padding:6px 16px; gap:8px}
     .fixo-id span, .fixo-acao .bstatus{display:none}
@@ -651,7 +681,7 @@
     .gprod.gh{font-size:10px}                                      /* como o cabeçalho da cadeia: no tamanho da linha, quebrava */
     /* quebra de página: o cartão grande pode quebrar (antes pulava inteiro e deixava meia folha em branco);
        linha, gráfico e o quadro dos regimes não; título fica com o que vem embaixo dele */
-    .hero, .sn, .chart, .memo.fechada, .reforma:has(.memo.fechada), .comparativo, .cmp-card, .dl, .li, .gr, .cr, .sum, .total, .bar, .prem, .flag, .det-foot,
+    .capa, .hero, .sn, .chart, .memo.fechada, .reforma:has(.memo.fechada), .comparativo, .cmp-card, .dl, .li, .gr, .cr, .sum, .total, .bar, .prem, .flag, .det-foot,
     .gano, .gpres, .cad-row, .gprod, .cad-grafico, .cad-alerta, .cad-vazio, .obs p, .cmp-eq{break-inside:avoid}
     h2, h3, h4, .card-h, .cad-h, .grp, .det-cap, .gh, .dl:has(+ .det){break-after:avoid}
   }
@@ -1369,6 +1399,46 @@ function saidas(){
   // R$ 0,00 e o híbrido, só a diferença — dois números que não se comparam. Melhor não mostrar.
   V['k.temCarga'] = cm.trib > 0.004;
 
+  // comparação com o último mês salvo antes deste (só com banco): receita e DAS em %, resultado em reais —
+  // resultado pode ser negativo ou zero, e variação percentual sobre isso não quer dizer nada
+  const ant = banco.ativo && banco.anterior && banco.anterior.resumo ? banco.anterior : null;
+  const contra = ant ? ` vs ${mesCurto(ant.periodo)}` : '';
+  const variacao = (atual, antes, emReais) => {
+    if(!ant) return '';
+    const d = atual - antes;
+    if(emReais ? Math.abs(d) < 0.005 : antes > 0.004 && Math.abs(d / antes) < 0.0005) return 'sem variação' + contra;
+    if(!emReais && !(antes > 0.004)) return '';
+    return (d > 0 ? '▲ ' : '▼ ') + (emReais ? brl(Math.abs(d)) : dec(Math.abs(d / antes * 100), 1, 1) + '%') + contra;
+  };
+  O['v.receita'] = variacao(cm.R, ant ? +ant.resumo.receita || 0 : 0);
+  O['v.das'] = variacao(cm.dasBase, ant ? +ant.resumo.das || 0 : 0);
+  O['v.resultado'] = variacao(cm.resultado, ant ? +ant.resumo.resultado || 0 : 0, true);
+  ['receita', 'das', 'resultado'].forEach(k => { V['v.tem.' + k] = !!O['v.' + k]; });
+
+  // capa do modo apresentação: resultado, regime e o ponto de atenção do mês, nesta ordem de prioridade
+  O['capa.res.rot'] = cm.resultado < -0.004 ? 'Prejuízo do mês' : 'Resultado do mês';
+  O['capa.res.v'] = brl(cm.resultado);
+  O['capa.res.sub'] = `margem de ${P(cm.resultado, cm.R)}` + (O['v.resultado'] ? `\n${O['v.resultado']}` : '');   // variação em linha própria
+  V['capa.res.neg'] = cm.resultado < -0.004;
+  const temDas = cm.dasBase > 0.004;
+  O['capa.reg.rot'] = 'Regime na reforma';
+  O['capa.reg.v'] = !temDas ? 'Sem DAS no mês' : Math.abs(cm.delta) < 0.005 ? 'Empate' : cm.delta > 0 ? 'Convencional' : 'Híbrido';
+  O['capa.reg.sub'] = !temDas ? 'sem DAS não há regime a comparar'
+    : Math.abs(cm.delta) < 0.005 ? 'os dois regimes custam o mesmo no mês'
+    : `${brl(Math.abs(cm.delta))} mais barato no mês que o ${cm.delta > 0 ? 'híbrido' : 'convencional'}`;
+  V['capa.reg.hib'] = temDas && cm.delta < -0.004;
+  const rbt = +m.rbt12 || 0;
+  const atencao = sg && sg.excluida ? ['Acima do limite do Simples', `receita dos 12 meses de ${brl(rbt)}, acima de ${brl(LIMITE_SN)}`]
+    : rbt > SUBLIMITE ? ['Acima do sublimite', `receita dos 12 meses de ${brl(rbt)}: ICMS e ISS saem do DAS`]
+    : V['r.naoConfere'] ? ['DAS não confere', `diferença de ${brl(Math.abs(difDas))} com o calculado pela receita`]
+    : cm.semDeclarado && temDas ? ['DAS calculado', 'o DAS do PGDAS não foi lançado: confira antes de pagar']
+    : cm.saldoCredor > 0.004 ? [`CBS com crédito de ${brl(cm.saldoCredor)}`, 'o crédito passa o débito e vai para o mês seguinte']
+    : null;
+  O['capa.al.rot'] = atencao ? 'Ponto de atenção' : 'Receita do mês';
+  O['capa.al.v'] = atencao ? atencao[0] : brl(cm.R);
+  O['capa.al.sub'] = atencao ? atencao[1] : (O['v.receita'] || `DAS de ${brl(cm.dasBase)} · efetiva de ${P2(cm.dasBase, cm.R)}`);
+  V['capa.al.alerta'] = !!atencao;
+
   // ano
   Object.assign(O, {
     'a.receita': brl(ca.R), 'a.receitaP': pct(ca.R ? 100 : 0),
@@ -1480,9 +1550,12 @@ function rTopo(){
   const botoes = abas.map(([id, lbl]) => (id === 'anual' ? '<span class="rail-sep" aria-hidden="true"></span>' : '') +
     `<button class="tab" role="tab" id="tab-${id}" aria-selected="${ui.tab === id}" aria-controls="painel"` +
     ` tabindex="${ui.tab === id ? 0 : -1}" data-act="tab" data-id="${id}">${lbl}</button>`).join('');
-  let ctl = '';
+  // apresentação: tela cheia ao lado da saída (no link do cliente, só ela). O rótulo acompanha o Esc do navegador
+  const telaCheia = document.fullscreenEnabled
+    ? `<button class="btn" data-act="tela-cheia">${document.fullscreenElement ? 'Sair da tela cheia' : 'Tela cheia'}</button>` : '';
+  let ctl = ui.present ? telaCheia : '';
   if(!ui.client) ctl = ui.present
-    ? `<button class="btn" data-act="present">Sair da apresentação</button>`
+    ? telaCheia + `<button class="btn" data-act="present">Sair da apresentação</button>`
     : `<div class="menu-wrap"><button class="btn" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">Opções <span aria-hidden="true">▾</span></button>${ui.menu ? rMenu() : ''}</div>`;
   return `<header class="top">
     <div class="ident"><img class="logo" data-src="logo" alt="Logo do escritório">
@@ -1530,12 +1603,21 @@ function rPersonalizar(){
       </div></div>
     </div></section>`;
 }
+// variação contra o último mês salvo, ao lado do rótulo; some sem banco ou sem mês anterior
+const varMes = k => `<small class="var" data-v="v.tem.${k}" data-o="v.${k}"></small>`;
+// Modo apresentação: a reunião começa pela conclusão — resultado, regime e ponto de atenção em letra grande
+function rCapa(){
+  if(!ui.present || ui.tab !== 'resultado') return '';
+  const msg = (id, cls) => `<article class="capa-msg" data-cls="${cls}"><span class="capa-rot" data-o="capa.${id}.rot"></span>` +
+    `<strong class="capa-v" data-o="capa.${id}.v"></strong><span class="capa-sub" data-o="capa.${id}.sub"></span></article>`;
+  return `<section class="capa" aria-label="O mês em três mensagens">${msg('res', 'neg:capa.res.neg')}${msg('reg', 'hib:capa.reg.hib')}${msg('al', 'alerta:capa.al.alerta')}</section>`;
+}
 function rHeroi(){
   const linhaH = (lbl, kv, kp, cls, suf, attrs) => `<div class="hero-row ${cls || ''}" ${attrs || ''}><span class="lbl">${lbl}${suf || ''}</span>` +
     `<span class="val">${o(kv)}${kp ? ' ' + o(kp, 'pct-s') : ''}</span></div>`;
   const lado = ui.tab === 'anual'
     ? linhaH('Despesas operacionais', 'a.despesas', 'a.despesasP') + linhaH('Simples Nacional', 'a.simples', 'a.simplesP')
-    : linhaH('Simples Nacional', 'm.simples', 'm.simplesP') +
+    : linhaH('Simples Nacional', 'm.simples', 'm.simplesP', '', varMes('das')) +
       linhaH(o('m.cbsRotulo'), 'm.cbsRes', '', 'cbs', ' <span class="suf">(reforma)</span>', 'data-cls="credito:m.temCredor"');
   // sem bloco herói: o resultado líquido já fecha a DRE e está nos cartões do resumo
   return `<section class="hero" aria-label="Indicadores"><div class="hero-side">${lado}</div></section>`;
@@ -1672,13 +1754,13 @@ function rComparativo(){
     <div class="flag" data-v="k.semDas" data-o="k.semDas"></div>
     <p class="cmp-eq" data-v="k.temVariacao" data-o="k.variacao"></p>
     <p class="cmp-eq" data-v="k.temEquilibrio" data-o="k.equilibrio"></p>
-    <p class="cmp-eq" data-v="k.semIbs">O IBS ainda não é calculado: os dois cenários comparam só o DAS e a CBS.</p>
+    <p class="cmp-eq nota" data-v="k.semIbs">O IBS ainda não é calculado: os dois cenários comparam só o DAS e a CBS.</p>
   </section>`;
 }
 function rResultado(){
   const m = S.monthly;
   let h = `<div class="card-h"><div><h2>Demonstração de resultado</h2><p class="sub">Valores do mês e participação sobre a receita.</p></div>${btnDetalhe()}</div>`;
-  h += linha('rec', 'Receita declarada <span class="tag-src">PGDAS</span>', 'm.receita', 'm.receitaP');
+  h += linha('rec', 'Receita declarada <span class="tag-src">PGDAS</span>' + varMes('receita'), 'm.receita', 'm.receitaP');
   if(ui.detalhe) h += detReceita();
   if(m.custos.length === 1) h += linha('', '( − ) ' + esc(m.custos[0][0]), 'm.cu.0.v', 'm.cu.0.p', 'monthly.custos.0.1');
   else { h += linha('tot', '( − ) Custos', 'm.custos', 'm.custosP'); if(ui.detalhe) h += lista('monthly.custos', m.custos, 'm.cu'); }
@@ -1688,7 +1770,7 @@ function rResultado(){
   if(m.vendas.length){ h += linha('tot', '( − ) Despesas com vendas', 'm.vendas', 'm.vendasP'); if(ui.detalhe) h += lista('monthly.vendas', m.vendas, 'm.ve'); }
   h += linha('tot', '( − ) Despesas tributárias', 'm.trib', 'm.tribP');
   if(ui.detalhe) h += lista('monthly.tributarias', m.tributarias, 'm.tr');
-  h += linha('res', '( = ) Resultado líquido', 'm.resultado', 'm.margem');
+  h += linha('res', '( = ) Resultado líquido' + varMes('resultado'), 'm.resultado', 'm.margem');
   return rSimplesMes() + painel('card', 'resultado', h) + rEstoque() + rReforma() + rComparativo();
 }
 // Compras do mês: mesma tabela das despesas gerais — regra de crédito, alíquota e crédito de CBS por linha
@@ -1998,10 +2080,10 @@ function rPresumido(){
       ${linhaT('Carga do Simples (melhor cenário)', 'cargaSN', 'sub')}
       ${linhaT('Presumido − melhor do Simples', 'dif', 'dif')}
     </div>
-    <p class="cmp-eq">Adicional do IRPJ: 10% sobre a base que passa de R$ 20 mil por mês do trimestre (R$ 60 mil no trimestre completo). CBS por fora: débito menos crédito, a mesma do regime híbrido.</p>`;
+    <p class="cmp-eq nota">Adicional do IRPJ: 10% sobre a base que passa de R$ 20 mil por mês do trimestre (R$ 60 mil no trimestre completo). CBS por fora: débito menos crédito, a mesma do regime híbrido.</p>`;
   return cartao(premissas + cartoes + trimestres + `
-    <p class="cmp-eq" data-v="lp.temLc224">LC 224/2025: a presunção sobe 10% sobre a receita acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre, com ajuste nos seguintes). A regra está em disputa na Justiça (ADI 7920 no STF).</p>
-    <p class="cmp-eq">Fica de fora: IBS (quase zero até 2028, cresce de 2029 a 2033), retenções, ISS fixo de sociedade de profissionais e distribuição de lucros. A troca vale para o ano inteiro: a saída do Simples por opção é comunicada até o fim de janeiro.</p>`, true);
+    <p class="cmp-eq nota" data-v="lp.temLc224">LC 224/2025: a presunção sobe 10% sobre a receita acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre, com ajuste nos seguintes). A regra está em disputa na Justiça (ADI 7920 no STF).</p>
+    <p class="cmp-eq nota">Fica de fora: IBS (quase zero até 2028, cresce de 2029 a 2033), retenções, ISS fixo de sociedade de profissionais e distribuição de lucros. A troca vale para o ano inteiro: a saída do Simples por opção é comunicada até o fim de janeiro.</p>`, true);
 }
 
 function rLogin(){
@@ -2107,7 +2189,7 @@ function render(){
   }
   const antes = chavesNaTela();
   const telas = {resultado: rResultado, cliente: rCliente, anual: rAnual};
-  app.innerHTML = rFixo() + rTopo() + rBarra() + rPersonalizar() + rHeroi() + telas[ui.tab]() +
+  app.innerHTML = rFixo() + rTopo() + rBarra() + rPersonalizar() + rCapa() + rHeroi() + telas[ui.tab]() +
     `<footer class="foot"><span data-o="footer"></span><span data-o="comp"></span></footer>`;
   refresh();
   animarNovos(antes);
@@ -2249,6 +2331,7 @@ const banco = {
   meses: [],               // competências salvas da empresa aberta, da mais recente para a mais antiga
   empresaId: null, periodo: null,
   heranca: null,           // o que o mês novo trouxe do anterior: {saldoDe, rbt12Meses} — só para a etiqueta na tela
+  anterior: null,          // {periodo, resumo} do último mês salvo antes deste: a comparação ▲▼ da receita, resultado e DAS
   ano: null,               // {ano, linhas, carregando}: as competências do exercício, para a aba Anual
   semResumo: false,        // banco ainda sem a migração do resumo: salva sem p_resumo e não tenta de novo
   base: null,              // "atualizado_em" de quando o mês foi aberto: detecta se outra pessoa salvou depois
@@ -2642,6 +2725,10 @@ async function abrirMes(empresaId, periodo, op){
   (r.parceiros || []).forEach(p => cadeia[p[0] === 'cliente' ? 'clientes' : 'fornecedores'].push([p[1] || '', p[2] || '', p[3] || '', p[4] || '']));
   const novo = !r.competencia;
   banco.heranca = null; banco.ano = null;          // o quadro do ano é refeito ao entrar na aba Anual
+  // o último mês salvo antes deste (pode não ser o mês de calendário anterior: a tela diz qual é).
+  // Salvo antes da migração do resumo, vem com os dados e é recalculado aqui
+  const ant = r.anterior;
+  banco.anterior = ant ? {periodo: ant.periodo, resumo: ant.resumo || (ant.dados ? resumoDe(prontoParaCalculo(ant.dados)) : null)} : null;
   if(!novo){
     S = mesclar(defaults(), migrar(r.competencia.dados)); S.cadeia = cadeia; normalizarLinhas(S.monthly.reforma);
     banco.base = r.competencia.atualizado_em;
@@ -3041,7 +3128,22 @@ app.addEventListener('click', e => {
     case 'editar': ui.editando = !ui.editando; ui.menu = false; render();
       toast(ui.editando ? 'Edição ligada — clique nos valores da DRE' : 'Edição desligada'); break;
     case 'personalizar': ui.personalizar = !ui.personalizar; ui.menu = false; render(); break;
-    case 'present': ui.present = !ui.present; ui.menu = false; render(); break;
+    case 'present':
+      ui.present = !ui.present; ui.menu = false;
+      // a apresentação começa com a maquinaria recolhida (os botões "Ver" continuam); ao sair, a tela volta como estava
+      if(ui.present){
+        ui.antesDeApresentar = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, presumido: ui.presumido};
+        Object.assign(ui, {detalhe: false, memoria: false, estoque: false, presumido: false});
+      } else {
+        if(ui.antesDeApresentar) Object.assign(ui, ui.antesDeApresentar);
+        ui.antesDeApresentar = null;
+        if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      }
+      render(); break;
+    case 'tela-cheia':
+      if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else document.documentElement.requestFullscreen().catch(() => toast('O navegador não deixou abrir em tela cheia.'));
+      break;
     // preferência de quem está olhando, não dado da empresa: fica no navegador, não no estado salvo
     case 'tema': aplicarTema(temaEscuro() ? 'claro' : 'escuro'); guarda.gravar('dre.tema', temaEscuro() ? 'escuro' : null);
       ui.menu = false; render(); focar('[data-act="menu"]'); break;
@@ -3094,7 +3196,7 @@ app.addEventListener('click', e => {
     } break;
     case 'li-rm': getPath(b.dataset.lista).splice(i, 1); render(); break;
     case 'das-digitar': {                            // passa o DAS calculado para o campo, para conferir ou ajustar
-      const l = linhaSimples(S.monthly.tributarias); if(!l) break;
+      const l = linhaSimples(S.monthly.tributarias); if(!l || ui.present) break;   // apresentação não altera valores
       l[1] = calcMes().dasBase; render();
       const n = app.querySelector(`input[data-b="monthly.tributarias.${S.monthly.tributarias.indexOf(l)}.1"]`);
       if(n){ n.focus(); n.select(); }
@@ -3211,6 +3313,11 @@ addEventListener('afterprint', () => {
   if(tituloAntesDeImprimir){ document.title = tituloAntesDeImprimir; tituloAntesDeImprimir = ''; }
 });
 window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e.returnValue = ''; } });
+// tela cheia pelo botão ou saindo pelo Esc: só o rótulo do botão muda, sem redesenhar a tela
+document.addEventListener('fullscreenchange', () => {
+  const b = app.querySelector('[data-act="tela-cheia"]');
+  if(b) b.textContent = document.fullscreenElement ? 'Sair da tela cheia' : 'Tela cheia';
+});
 
 /* ---------- início ---------- */
 let S = defaults();

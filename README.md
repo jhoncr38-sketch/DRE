@@ -466,7 +466,27 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **Limpar tudo:** dois cliques; zera valores e mantém categorias, alíquotas, premissas, identidade
   **e o cadastro da empresa** — cadeia de crédito e produtos ficam, porque são estrutura e custam caro
   para refazer (CNPJ, NCM, NBS). Para começar do zero existe "+ Nova empresa", que nasce sem os dois
-- **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura
+- **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura. Desde
+  16/09/2026, feito para a reunião com o cliente:
+  - **Capa** (`rCapa`, só na aba Resultado): três cartões em letra grande — resultado do mês (vermelho e
+    "Prejuízo do mês" quando negativo, com a variação), regime na reforma (qual sai mais barato e quanto) e o
+    ponto de atenção pela prioridade: acima do limite do Simples → acima do sublimite → DAS não confere → DAS não
+    lançado → CBS com crédito; sem nenhum, a receita do mês.
+  - **Tela cheia** ao lado de "Sair da apresentação" (no link do cliente, só ela); o rótulo acompanha o Esc pelo
+    `fullscreenchange`, sem redesenhar. Sair da apresentação sai da tela cheia.
+  - **Letra 15% maior** em tela a partir de 900px: `zoom:1.15` na `.page` com a largura máxima dividida por 1,15
+    (inclusive a barra fixa), para não criar rolagem lateral. **Contraste de projetor:** `--muted*` e `--line*`
+    mais escuros em `body.present`, nos dois temas.
+  - **Menos texto:** somem subtítulos de cartão (`.card-h .sub`), notas de método (`.nota`: IBS não calculado,
+    rodapés do Presumido) e as premissas do Presumido; frases de conclusão (variação, equilíbrio) ficam.
+  - **Maquinaria recolhida:** detalhamento, memória da CBS, estoque e trimestres do Presumido fecham ao entrar
+    (os botões "Ver" continuam) e voltam como estavam ao sair (`ui.antesDeApresentar`).
+  - **"digitar" do DAS calculado** não existe na apresentação e a ação recusa se chamada: alterava o mês.
+- **Comparação com o mês anterior** (16/09/2026): ▲/▼ ao lado da receita e do resultado na DRE e do Simples na
+  faixa de indicadores — receita e DAS em %, resultado em reais (percentual sobre resultado negativo não diz nada).
+  Compara com o **último mês salvo** antes deste (`anterior` do `carregar_painel`, que já vinha para a herança) e
+  diz qual ("vs mar/2024"); mês salvo sem resumo é recalculado pelos dados. Some no primeiro mês e no modo local.
+  Testes: seção 16 do painel (capa, prioridade da atenção, recolher e voltar, zoom, "digitar") e 3h do banco.
 - **Salvar no banco** (com Supabase configurado): barra abaixo do cabeçalho com Empresa, Competência,
   situação ("Salvo às 10:32" / "Alterações não salvas") e botão **Salvar** (ou Ctrl+S). Ver a seção
   "Banco de dados". Sem Supabase, a barra avisa "Modo local" e o menu mantém o `window.storage`
