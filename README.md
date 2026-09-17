@@ -641,6 +641,21 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
   "Preencher o exercício com estes meses" (pede confirmação: substitui o que estiver digitado).
   "Para onde foi a receita" e "Em linguagem simples" (barras e frase do exercício digitado) saíram a pedido
   do usuário em 16/09/2026.
+  - **CBS do ano = débito menos crédito dos meses** (17/09/2026). Antes somava a CBS paga em cada mês: mês com
+    mais crédito que débito entrava como zero, e o crédito que o usuário não transportou **de propósito** (é
+    análise dele, mês a mês) sumia da conta do ano. Agora `resumoDe` grava `debito`, `credito` (só o do mês, sem
+    o transportado) e `saldoAnterior`; `totaisAno` faz Σdébito − Σcrédito. O transportado não entra de novo:
+    transportar ou não muda o mês em que se paga, nunca o ano. Sobrando crédito, a CBS do ano é zero e o saldo
+    aparece. A leitura "no acumulado do ano…" e o Presumido usam a mesma conta.
+  - **Meses salvos antes disso** não têm débito e crédito no resumo: `carregarAno` recalcula pelo estado salvo,
+    buscando só `v`, `anexo`, `mesLabel` e `monthly` (a logo personalizada fica no estado e pode ser grande).
+    Ao salvar o mês de novo, o resumo se completa.
+  - **Duas colunas, "CBS a pagar" e "CBS crédito"**, cada valor numa só e traço na outra; o total do ano cai numa
+    delas. Testado e recusado: "− R$" (parecia prejuízo) e "crédito R$ X" em verde (palavra no meio do número e
+    cor destoando do texto). Prejuízo no Resultado sai "− R$ 37.581,55", sem cor.
+  - **Clique para conferir** (`ui.cbsAno`): "▸ Débito e crédito da CBS, mês a mês" abre débito, crédito do mês,
+    a pagar, crédito, crédito transportado e pago no mês, com a nota da conta do ano — e, se o pago mês a mês
+    for diferente, quanto seria e por quê.
 - **Aba Anual → "Sair do Simples? Lucro Presumido"** (16/09/2026): estimativa de quanto a empresa pagaria no
   Presumido com os meses salvos do ano, pelas regras de 2027. Só lê — não muda nada no banco.
   - **À vista:** atividade, e dois cartões (modelo Convencional × Híbrido) com **imposto no ano e carga
@@ -659,8 +674,10 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
     vem do anexo (I e II comércio; III a V serviços). Guardado em `S.presumido`, que passa de um mês para o outro.
   - **ISS ou ICMS** conforme a atividade (transporte e "outra": os dois). ICMS é carga sobre a receita,
     informada; zerado, aparece o aviso — no Simples ele está dentro do DAS.
-  - **CBS por fora** = a do resumo de cada mês (débito − crédito, a mesma do híbrido). IBS fica de fora (quase zero
-    até 2028). **Simples** = `das` e `naTransicao` dos resumos; no **Anexo IV** o INSS patronal entra dos dois lados.
+  - **CBS por fora** = débito − crédito dos meses, como na tabela do ano (sem o transportado): por trimestre e, no
+    ano, zerada quando sobra crédito — a linha "Crédito de CBS" só aparece nesse caso. "▸ CBS por fora" abre débito
+    e crédito de cada trimestre (`ui.cbsLP`); o cartão mostra "débito de R$ X − crédito de R$ Y". IBS fica de fora
+    (quase zero até 2028). **Simples** = `das` e `naTransicao` dos resumos; no **Anexo IV** o INSS patronal entra dos dois lados.
   - **Folha:** só as despesas de cada mês salvo (`select=periodo,ga:dados->monthly->ga`, uma consulta ao abrir o
     ano), linhas com folha, salário, funcionário, ordenado ou pró-labore no nome; a nota diz quais entraram.
     Encargos padrão 27,8% (20% + RAT + terceiros); **pró-labore a 20%** (sem RAT nem terceiros, campo próprio
