@@ -322,6 +322,17 @@
   .flag.lp-aviso{margin:-8px 0 18px; color:var(--brand); background:var(--brand-wash)}
   .presumido .cmp2{margin-top:0}
   .presumido .cmp-row small{font-weight:400}                     /* a nota da carga não herda o negrito da faixa */
+  /* INSS na tabela por trimestre: a linha abre a base de cálculo */
+  .lk-linha{display:inline-flex; align-items:baseline; gap:6px; padding:0; border:0; background:none; font:inherit; color:inherit; cursor:pointer; text-align:left}
+  .lk-linha:hover{color:var(--brand)}
+  .lk-linha .seta{display:inline-block; width:12px; font-size:12px; color:var(--ink-3)}
+  .lk-linha:hover .seta{color:var(--brand)}
+  .gpres.base{background:var(--surface-2); font-size:12px}
+  .gpres.base > span, .gpres.base > span:first-child{color:var(--ink-3)}
+  .gpres.base > span:first-child{padding-left:16px}
+  .gpres.base.item > span:first-child{padding-left:30px; color:var(--muted)}
+  .gpres.base small{font-family:var(--mono); font-size:11px; color:var(--muted-2)}
+  .gpres-nota{margin:0; padding:6px 16px 10px; font-size:11px; line-height:1.5; color:var(--muted-2); background:var(--surface-2)}
   .lp-tri{margin-top:20px}
   .seg .gr .sel{font-size:12px}
   .cbscol{display:flex; flex-direction:column; gap:1px; min-width:0}
@@ -652,6 +663,7 @@
     .in, .sel{border-bottom-color:transparent !important}
     .sel-wrap::after{display:none}
     .sel{padding-right:0}                                          /* a folga era da seta, que não sai no papel */
+    .lk-linha .seta{display:none}
     .in::placeholder{color:transparent}
     .scroll-x{overflow:visible}
     .cbscol.dir small{min-height:0}
@@ -719,7 +731,7 @@ function defaults(){ return {
   // simulação do Lucro Presumido (aba Anual). Dado da empresa como o anexo: passa de um mês para o outro.
   // atividade '' = pela do anexo (ver ATIVIDADES); irpjOutra/csllOutra só valem na atividade "outra";
   // ICMS é a carga sobre a receita, informada; encargos = 20% patronal + RAT + terceiros
-  presumido: {atividade: '', irpjOutra: 0.32, csllOutra: 0.32, iss: 0.05, icms: 0, encargos: 0.278},
+  presumido: {atividade: '', irpjOutra: 0.32, csllOutra: 0.32, iss: 0.05, icms: 0, encargos: 0.278, encargosProlabore: 0.20},
   annual: {
     receita: 1187289.06,
     custos: [["Custo de medicamentos, produtos e outros",696475.30],["Produtos vencidos",3160.96]],
@@ -1507,9 +1519,28 @@ function saidas(){
       O['lp.decisao'] = Math.abs(dif) < 0.005 ? 'Presumido e Simples empatam no ano'
         : dif > 0 ? `O Simples ${qual} sai mais barato que o Presumido no ano` : `O Lucro Presumido sairia mais barato que o Simples ${qual} no ano`;
       O['lp.dif'] = brl(Math.abs(dif));
-      O['lp.folhaNota'] = lp.nomes.length
-        ? `Folha pelas linhas de despesa ${lp.nomes.join(', ')}: ${brl(t.folha)} nos meses salvos.`
-        : 'Nenhuma linha de folha nas despesas (procura folha, salário, funcionário e pró-labore): o INSS patronal ficou zerado.';
+      // INSS: base à vista no cartão; aberta na tabela, cada despesa por trimestre com a sua alíquota
+      const lf = lp.linhas || [], nomes = cat => lf.filter(l => l.cat === cat).map(l => l.nome);
+      O['lp.folhaNota'] = !lf.length
+        ? 'Nenhuma linha de folha nas despesas (procura folha, salário, funcionário e pró-labore): o INSS patronal ficou zerado.'
+        : [nomes('folha').length ? `Folha pelas linhas de despesa ${nomes('folha').join(', ')}: ${brl(t.folha)} nos meses salvos.` : '',
+           nomes('prolabore').length ? `Pró-labore pela linha ${nomes('prolabore').join(', ')}: ${brl(t.prolabore)}.` : ''].filter(Boolean).join(' ');
+      const partesInss = [t.folha > 0.004 ? `folha de ${brl(t.folha)} × ${FMT.pct(prem.encargos)}` : '',
+        t.prolabore > 0.004 ? `pró-labore de ${brl(t.prolabore)} × ${FMT.pct(prem.encargosPro)}` : ''].filter(Boolean);
+      O['lp.inssInfo'] = partesInss.length ? 'base: ' + partesInss.join(' + ') : 'sem folha nas despesas';
+      lf.forEach((l, j) => {
+        const somas = [0, 0, 0, 0, 0];
+        ano.linhas.forEach(x => {
+          if(!x.resumo) return;                        // mesmos meses que entram na conta
+          const v = l.valores[x.periodo] || 0;
+          somas[Math.floor((+x.periodo.slice(5, 7) - 1) / 3)] += v; somas[4] += v;
+        });
+        somas.forEach((v, i) => { O[`lp.lf.${j}.${i}`] = cols[i].n && v > 0.004 ? brl(v) : '—'; });
+        O[`lp.lf.${j}.aliq`] = '× ' + FMT.pct(l.cat === 'prolabore' ? prem.encargosPro : prem.encargos);
+      });
+      O['lp.inssNota'] = `Folha × ${FMT.pct(prem.encargos)} (20% patronal + RAT + terceiros)` +
+        (t.prolabore > 0.004 ? `; pró-labore × ${FMT.pct(prem.encargosPro)} (20% patronal, sem RAT nem terceiros)` : '') +
+        '. Entram as despesas com folha, salário, funcionário, ordenado ou pró-labore no nome. O FGTS fica de fora: é igual nos dois regimes.';
     }
   }
   // cadeia de crédito: contadores do alternador, estado de cada linha e a visão aberta
@@ -2046,6 +2077,7 @@ function rPresumido(){
         ${at.id === 'outra' ? campo('presumido.irpjOutra', 'Presunção do IRPJ') + campo('presumido.csllOutra', 'Presunção da CSLL') : ''}
         ${at.iss ? campo('presumido.iss', 'ISS do município') : ''}${at.icms ? campo('presumido.icms', 'ICMS sobre a receita') : ''}
         ${campo('presumido.encargos', 'Encargos da folha')}
+        ${(p.linhas || []).some(l => l.cat === 'prolabore') ? campo('presumido.encargosProlabore', 'Encargos do pró-labore') : ''}
       </div>
       <p class="lp-folha" data-o="lp.folhaNota"></p>
     </div>
@@ -2055,7 +2087,7 @@ function rPresumido(){
       <article class="cmp-card"><h3>Lucro Presumido</h3><p class="cmp-nota" data-o="lp.notaLP"></p>
         ${linha('Imposto no ano', 'lp.total.4', 'dest')}${linha('Carga tributária', 'lp.cargaLP.4', 'tot', 'lp.cargaLPInfo')}
         ${linha('IRPJ com adicional', 'lp.irpjTot')}${linha('CSLL', 'lp.csll.4')}${linha('CBS por fora', 'lp.cbs.4')}
-        ${at.iss ? linha('ISS', 'lp.iss.4') : ''}${at.icms ? linha('ICMS', 'lp.icms.4') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.4')}
+        ${at.iss ? linha('ISS', 'lp.iss.4') : ''}${at.icms ? linha('ICMS', 'lp.icms.4') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.4', '', 'lp.inssInfo')}
       </article>
       <article class="cmp-card"><h3>Simples Nacional</h3><p class="cmp-nota" data-o="lp.notaSN"></p>
         ${linha('Imposto no ano', 'lp.simples', 'dest')}${linha('Carga tributária', 'lp.cargaSN.4', 'tot', 'lp.cargaSNInfo')}
@@ -2067,6 +2099,14 @@ function rPresumido(){
   const cols = ['1º tri', '2º tri', '3º tri', '4º tri', 'Ano'];
   const linhaT = (rot, k, cls, attrs) => `<div class="gpres${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}</span>` +
     cols.map((_, i) => `<span data-o="lp.${k}.${i}"></span>`).join('') + `</div>`;
+  // INSS: clicar na linha abre a base de cálculo — o total e cada despesa que o nome puxou, com a alíquota de cada uma
+  const inssAberto = ui.inssBase;
+  const linhaInss = `<div class="gpres clica"><span><button class="lk-linha" type="button" data-act="lp-inss" aria-expanded="${inssAberto}">` +
+    `<span class="seta" aria-hidden="true">${inssAberto ? '▾' : '▸'}</span>INSS patronal sobre a folha</button></span>` +
+    cols.map((_, i) => `<span data-o="lp.inss.${i}"></span>`).join('') + `</div>`;
+  const baseInss = !inssAberto ? '' : linhaT('Base de cálculo', 'baseInss', 'base') +
+    (p.linhas || []).map((l, j) => linhaT(`${esc(l.nome)} <small data-o="lp.lf.${j}.aliq"></small>`, `lf.${j}`, 'base item')).join('') +
+    `<p class="gpres-nota" data-o="lp.inssNota"></p>`;
   const trimestres = !aberto ? '' : `<div class="scroll-x lp-tri">
       <div class="gpres gh"><span></span>${cols.map((c, i) => `<span>${c}<small data-o="lp.meses.${i}"></small></span>`).join('')}</div>
       ${linhaT('Receita', 'rec', 'rec')}
@@ -2074,7 +2114,7 @@ function rPresumido(){
       ${linhaT('Acréscimo da LC 224 na base do IRPJ', 'acrescimo', 'sub', ' data-v="lp.temLc224"')}
       ${linhaT('IRPJ — 15% da base', 'irpj')}${linhaT('Adicional do IRPJ', 'adicional')}${linhaT('CSLL — 9% da base', 'csll')}
       ${linhaT('CBS por fora', 'cbs')}${at.iss ? linhaT('ISS', 'iss') : ''}${at.icms ? linhaT('ICMS', 'icms') : ''}
-      ${linhaT('INSS patronal sobre a folha', 'inss')}
+      ${linhaInss}${baseInss}
       ${linhaT('Lucro Presumido', 'total', 'tot')}${linhaT('Carga tributária', 'cargaLP', 'sub')}
       ${linhaT('Simples convencional', 'conv', 'cmp')}${linhaT('Simples híbrido', 'hibr', 'cmp')}
       ${linhaT('Carga do Simples (melhor cenário)', 'cargaSN', 'sub')}
@@ -2565,8 +2605,12 @@ const ATIVIDADES = [
   ['combustivel', 'Revenda de combustíveis', .016, .12, false, true],
   ['outra', 'Outra atividade — informar os percentuais', null, null, true, true],
 ];
-const LP_CAMPOS = ['n', 'rec', 'cbs', 'folha', 'das', 'hib', 'acrescimo', 'baseIrpj', 'baseCsll', 'irpj', 'adicional', 'csll', 'iss', 'icms', 'inss', 'total', 'conv', 'hibr'];
+const LP_CAMPOS = ['n', 'rec', 'cbs', 'folha', 'prolabore', 'baseInss', 'das', 'hib', 'acrescimo', 'baseIrpj', 'baseCsll',
+  'irpj', 'adicional', 'csll', 'iss', 'icms', 'inss', 'total', 'conv', 'hibr'];
 const RE_FOLHA = /folha|sal[aá]rio|funcion[aá]rio|ordenado|pr[oó][\s-]*labore/i;
+const RE_PROLABORE = /pr[oó][\s-]*labore/i;
+// pró-labore paga 20% patronal, sem RAT nem terceiros; linha que mistura ("Folha e pró-labore") fica com a alíquota da folha
+const categoriaFolha = nome => !RE_FOLHA.test(nome) ? '' : RE_PROLABORE.test(nome) && !/folha|sal[aá]rio|funcion[aá]rio|ordenado/i.test(nome) ? 'prolabore' : 'folha';
 // atividade da empresa: a escolhida ou, sem escolha, a do anexo do Simples (I e II vendem mercadoria; III a V, serviço)
 function atividadeLP(){
   const pr = S.presumido || {}, id = ATIVIDADES.some(x => x[0] === pr.atividade) ? pr.atividade
@@ -2577,7 +2621,8 @@ function atividadeLP(){
 }
 function premissasLP(){
   const pr = S.presumido || {}, at = atividadeLP();
-  return {irpj: at.irpj, csll: at.csll, iss: at.iss ? +pr.iss || 0 : 0, icms: at.icms ? +pr.icms || 0 : 0, encargos: +pr.encargos || 0};
+  return {irpj: at.irpj, csll: at.csll, iss: at.iss ? +pr.iss || 0 : 0, icms: at.icms ? +pr.icms || 0 : 0, encargos: +pr.encargos || 0,
+    encargosPro: pr.encargosProlabore == null ? 0.20 : +pr.encargosProlabore || 0};
 }
 function calcPresumido(linhas, folhas, prem, anexo){
   const q = [0, 1, 2, 3].map(() => Object.fromEntries(LP_CAMPOS.map(k => [k, 0])));
@@ -2585,7 +2630,9 @@ function calcPresumido(linhas, folhas, prem, anexo){
     const r = x.resumo; if(!r) return;
     const t = q[Math.floor((+x.periodo.slice(5, 7) - 1) / 3)];
     t.n++; t.rec += +r.receita || 0; t.cbs += +r.cbs || 0; t.das += +r.das || 0; t.hib += +r.naTransicao || 0;
-    t.folha += +folhas[x.periodo] || 0;
+    const f = folhas[x.periodo];                     // número sozinho = só folha (forma antiga, usada nos testes)
+    t.folha += typeof f === 'object' && f ? +f.folha || 0 : +f || 0;
+    t.prolabore += typeof f === 'object' && f ? +f.prolabore || 0 : 0;
   });
   let acumulada = 0, excedenteAntes = 0;
   q.forEach((t, i) => {
@@ -2601,7 +2648,8 @@ function calcPresumido(linhas, folhas, prem, anexo){
     t.csll = t.baseCsll * LP.csll;
     t.iss = t.rec * prem.iss;
     t.icms = t.rec * prem.icms;
-    t.inss = t.folha * prem.encargos;
+    t.baseInss = t.folha + t.prolabore;
+    t.inss = t.folha * prem.encargos + t.prolabore * (prem.encargosPro == null ? prem.encargos : prem.encargosPro);
     t.total = t.irpj + t.adicional + t.csll + t.cbs + t.iss + t.icms + t.inss;
     // no Anexo IV a contribuição patronal já é paga fora do DAS: entra dos dois lados e não decide nada
     const fora = anexo === 'IV' ? t.inss : 0;
@@ -2614,16 +2662,23 @@ function calcPresumido(linhas, folhas, prem, anexo){
 async function carregarFolhas(a){
   const periodos = a.linhas.map(x => x.periodo);
   const lista = await sb(`competencias?select=periodo,ga:dados->monthly->ga&empresa_id=eq.${banco.empresaId}&periodo=in.(${periodos.join(',')})`) || [];
-  const folhas = {}, nomes = new Set();
+  // folhas[periodo] = {folha, prolabore}; linhas = cada despesa que entrou, com o valor de cada mês — é o que a
+  // base de cálculo do INSS mostra aberta, para conferir o que o nome da linha puxou (ou deixou de puxar)
+  const folhas = {}, porNome = new Map();
   lista.forEach(c => {
-    folhas[c.periodo] = (Array.isArray(c.ga) ? c.ga : []).reduce((s, r) => {
-      if(!RE_FOLHA.test(String(r[0] || ''))) return s;
-      if((+r[1] || 0) > 0) nomes.add(String(r[0]).trim());       // linha zerada não entra na nota
-      return s + (+r[1] || 0);
-    }, 0);
+    const f = folhas[c.periodo] = {folha: 0, prolabore: 0};
+    (Array.isArray(c.ga) ? c.ga : []).forEach(r => {
+      const nome = String(r[0] || '').trim(), cat = categoriaFolha(nome), v = +r[1] || 0;
+      if(!cat) return;
+      f[cat] += v;
+      if(!porNome.has(nome)) porNome.set(nome, {nome, cat, valores: {}});
+      const l = porNome.get(nome); l.valores[c.periodo] = (l.valores[c.periodo] || 0) + v;
+    });
   });
   if(banco.ano !== a) return;                        // trocou de empresa ou de ano enquanto buscava
-  banco.presumido = {de: a, folhas, nomes: [...nomes], carregando: false};
+  // linha zerada o ano todo não entra na conta nem na nota
+  const linhas = [...porNome.values()].filter(l => Object.values(l.valores).some(v => v > 0.004));
+  banco.presumido = {de: a, folhas, linhas, nomes: linhas.map(l => l.nome), carregando: false};
   render();
 }
 function garantirPresumido(){
@@ -3119,6 +3174,7 @@ app.addEventListener('click', e => {
     case 'topo': scrollTo({top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); break;
     case 'ano-atualizar': garantirAno(true); break;
     case 'presumido': ui.presumido = !ui.presumido; render(); focar('[data-act="presumido"]'); break;
+    case 'lp-inss': ui.inssBase = !ui.inssBase; render(); focar('[data-act="lp-inss"]'); break;
     case 'ano-preencher': comErro(preencherAno); break;
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;
     case 'detalhe': ui.detalhe = !ui.detalhe; render(); focar('[data-act="detalhe"]'); break;
@@ -3322,7 +3378,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();

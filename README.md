@@ -663,7 +663,11 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
     até 2028). **Simples** = `das` e `naTransicao` dos resumos; no **Anexo IV** o INSS patronal entra dos dois lados.
   - **Folha:** só as despesas de cada mês salvo (`select=periodo,ga:dados->monthly->ga`, uma consulta ao abrir o
     ano), linhas com folha, salário, funcionário, ordenado ou pró-labore no nome; a nota diz quais entraram.
-    Encargos padrão 27,8% (20% + RAT + terceiros).
+    Encargos padrão 27,8% (20% + RAT + terceiros); **pró-labore a 20%** (sem RAT nem terceiros, campo próprio
+    quando a empresa tem pró-labore). Linha que mistura ("Folha e pró-labore") fica com a alíquota da folha.
+  - **Base do INSS** (16/09/2026): no cartão, "base: folha de R$ X × 27,80% + pró-labore de R$ Y × 20,00%";
+    na tabela por trimestre a linha do INSS abre (`ui.inssBase`) a base de cálculo, cada despesa que o nome puxou
+    com a sua alíquota e a nota (o FGTS fica de fora: é igual nos dois regimes).
   - Celular: a tabela trimestral mostra só a coluna do ano. Impressão "com o detalhamento" abre os trimestres.
   - Testes: seção 15 do painel (conta pura: LC 224 com ajuste, Anexo IV, comércio 8/12 com ICMS, atividade
     pelo anexo) e 3g do banco (trimestres, adicional, cartões, atividade pelo seletor, comércio com ICMS).
