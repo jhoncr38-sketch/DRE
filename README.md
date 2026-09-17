@@ -619,6 +619,34 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
   barato no acumulado, faixa do Simples, melhor e pior mês), alerta de **sublimite (R$ 3,6 mi)** e de
   **exclusão (R$ 4,8 mi)** pelo ritmo do ano, aviso dos meses sem competência salva e o botão
   "Preencher o exercício com estes meses" (pede confirmação: substitui o que estiver digitado).
+  "Para onde foi a receita" e "Em linguagem simples" (barras e frase do exercício digitado) saíram a pedido
+  do usuário em 16/09/2026.
+- **Aba Anual → "Sair do Simples? Lucro Presumido"** (16/09/2026): estimativa de quanto a empresa pagaria no
+  Presumido com os meses salvos do ano, pelas regras de 2027. Só lê — não muda nada no banco.
+  - **À vista:** atividade, e dois cartões (modelo Convencional × Híbrido) com **imposto no ano e carga
+    tributária** — Presumido com a composição (IRPJ com adicional, CSLL, CBS por fora, ISS/ICMS, INSS patronal)
+    e Simples no melhor cenário, com convencional e híbrido separados — e a faixa da conclusão. "Ver por
+    trimestre" abre a apuração. A primeira versão só mostrava a diferença; o usuário quis ver imposto e carga.
+  - **Apuração trimestral** (`calcPresumido`): IRPJ 15% e CSLL 9% sobre receita × presunção; adicional de 10%
+    sobre a base do IRPJ acima de R$ 20 mil por mês salvo do trimestre. Mês a mês o adicional sai errado quando
+    a receita oscila (150/50/50 mil: 2.800 pelo mês, 2.000 pelo trimestre).
+  - **LC 224/2025:** presunção 10% maior sobre a receita acima de R$ 5 mi no ano, R$ 1,25 mi por trimestre
+    acumulado, com ajuste negativo nos seguintes; linha e nota só aparecem quando se aplica (regra em disputa,
+    ADI 7920).
+  - **Presunção por atividade** (`ATIVIDADES`, Lei 9.249/1995 arts. 15 e 20), IRPJ e CSLL separados: serviços
+    32/32, hospitalares 8/12, construção com material 8/12, só mão de obra 32/32, transporte de cargas 8/12,
+    passageiros 16/12, comércio e indústria 8/12, combustíveis 1,6/12 e "outra" (digita os dois). Sem escolha,
+    vem do anexo (I e II comércio; III a V serviços). Guardado em `S.presumido`, que passa de um mês para o outro.
+  - **ISS ou ICMS** conforme a atividade (transporte e "outra": os dois). ICMS é carga sobre a receita,
+    informada; zerado, aparece o aviso — no Simples ele está dentro do DAS.
+  - **CBS por fora** = a do resumo de cada mês (débito − crédito, a mesma do híbrido). IBS fica de fora (quase zero
+    até 2028). **Simples** = `das` e `naTransicao` dos resumos; no **Anexo IV** o INSS patronal entra dos dois lados.
+  - **Folha:** só as despesas de cada mês salvo (`select=periodo,ga:dados->monthly->ga`, uma consulta ao abrir o
+    ano), linhas com folha, salário, funcionário, ordenado ou pró-labore no nome; a nota diz quais entraram.
+    Encargos padrão 27,8% (20% + RAT + terceiros).
+  - Celular: a tabela trimestral mostra só a coluna do ano. Impressão "com o detalhamento" abre os trimestres.
+  - Testes: seção 15 do painel (conta pura: LC 224 com ajuste, Anexo IV, comércio 8/12 com ICMS, atividade
+    pelo anexo) e 3g do banco (trimestres, adicional, cartões, atividade pelo seletor, comércio com ICMS).
 
 ### Testes
 Não há Postgres nesta máquina: o SQL foi validado com o parser do Postgres 17 (libpg_query) e o

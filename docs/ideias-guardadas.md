@@ -76,6 +76,12 @@ diferença a favor do híbrido.
 
 ## 2. Comparar com o Lucro Presumido ("Sair do Simples?")
 
+> **Aplicado em 16/09/2026**, na aba Anual (ver README). Mudou do plano abaixo: fica na aba Anual e apura por
+> trimestre (o adicional do IRPJ e a LC 224 são trimestrais); presunção por atividade, IRPJ e CSLL separados;
+> comércio entra com o ICMS informado; imposto e carga dos dois regimes à vista. Ainda falta: IBS, empresa com
+> mais de uma atividade. Correção do texto abaixo: a margem de lucro não pesa entre Simples e Presumido — os dois
+> tributam pela receita.
+
 **Receio do usuário:** poluir o sistema. **Opinião:** vale, com duas condições.
 
 **Por que vale:** com a CBS/IBS, empresa de **serviço que vende para empresas**, com margem alta e pouca folha,

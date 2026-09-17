@@ -299,6 +299,30 @@
   .ano-acoes .lk{border:0; background:none; padding:0; font:inherit; font-size:12px; color:var(--ink-3); text-decoration:underline; cursor:pointer}
   .ano-acoes .lk:hover{color:var(--brand)}
   .present .ano-acoes{display:none}
+  /* Lucro Presumido: uma linha por tributo, uma coluna por trimestre e o ano */
+  .gpres{display:grid; grid-template-columns:minmax(150px,1.5fr) repeat(5, minmax(84px,1fr)); gap:0 12px; padding:7px 0; border-top:1px solid var(--line); font-size:13px; align-items:baseline; min-width:640px}
+  .gpres > span:not(:first-child){font-family:var(--mono); text-align:right; white-space:nowrap}
+  .gpres > span:first-child{color:var(--ink-2)}
+  .gpres.gh{border-top:0; padding-bottom:6px; font-size:11px; color:var(--muted)}
+  .gpres.gh > span:not(:first-child){font-family:var(--sans); font-weight:600; color:var(--ink-3)}
+  .gpres.gh small{display:block; font-weight:400; color:var(--muted-2); font-size:10px}
+  .gpres.rec{border-top-color:var(--ink); font-weight:600}
+  .gpres.rec > span:first-child{color:var(--ink)}
+  .gpres.sub, .gpres.sub > span:first-child{color:var(--muted-2); font-size:12px}
+  .gpres.tot{border-top:1px solid var(--line-3); font-weight:600}
+  .gpres.tot > span:first-child{color:var(--ink)}
+  .gpres.cmp > span{color:var(--ink-3)}
+  .gpres.dif{border-top:1px solid var(--ink); font-weight:600}
+  .gpres.dif > span:first-child{color:var(--ink)}
+  .presumido .prem-f label{min-width:96px}
+  .lp-ativ{display:flex; flex-direction:column; gap:6px; flex:1 1 320px; min-width:0}
+  .lp-ativ .seg-campo .sel-wrap{width:min(460px,100%)}
+  .lp-pres{font-size:12px; color:var(--muted)}
+  .lp-folha{flex:1 1 100%; margin:0; font-size:12px; color:var(--muted)}
+  .flag.lp-aviso{margin:-8px 0 18px; color:var(--brand); background:var(--brand-wash)}
+  .presumido .cmp2{margin-top:0}
+  .presumido .cmp-row small{font-weight:400}                     /* a nota da carga não herda o negrito da faixa */
+  .lp-tri{margin-top:20px}
   .seg .gr .sel{font-size:12px}
   .cbscol{display:flex; flex-direction:column; gap:1px; min-width:0}
   .cbscol small{font-size:11px; color:var(--muted-2); padding-left:2px}
@@ -464,11 +488,6 @@
   .kv{font-family:var(--mono); font-weight:600; letter-spacing:-.02em; white-space:nowrap; font-size:26px; font-size:min(26px, calc(100cqi / 7.8))}
   .kv.brand{color:var(--brand)}
   .kc .note{font-size:12px; color:var(--muted); line-height:1.45}
-  .two{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr)); gap:28px; margin-top:32px}
-  .two.a{margin-top:0}
-  .cbar{display:flex; flex-direction:column; gap:4px; margin-bottom:10px}
-  .cbar .bar-h > span:last-child{font-weight:400}
-  .cbar .track{height:8px}
   .obs{font-size:13px; color:var(--ink-3); line-height:1.65}
   .obs h4{line-height:1.45}
   .obs p{margin:0 0 8px}
@@ -574,6 +593,9 @@
     .cad-row > :nth-child(4){grid-area:cred}
     .cad-row > :nth-child(5){grid-area:x}
     .cad-row.gh{display:none}
+    /* Lucro Presumido: no celular fica só a coluna do ano — com cinco colunas a que importa sumia na rolagem */
+    .gpres{grid-template-columns:minmax(0,1fr) auto; min-width:0}
+    .gpres > :nth-child(n+2):nth-child(-n+5){display:none}
   }
   @media (max-width:560px){
     .page{padding:20px 16px 48px}
@@ -629,8 +651,8 @@
     .gprod.gh{font-size:10px}                                      /* como o cabeçalho da cadeia: no tamanho da linha, quebrava */
     /* quebra de página: o cartão grande pode quebrar (antes pulava inteiro e deixava meia folha em branco);
        linha, gráfico e o quadro dos regimes não; título fica com o que vem embaixo dele */
-    .hero, .sn, .chart, .memo.fechada, .reforma:has(.memo.fechada), .comparativo, .cmp-card, .dl, .li, .gr, .cr, .sum, .total, .bar, .cbar, .prem, .flag, .det-foot,
-    .gano, .cad-row, .gprod, .cad-grafico, .cad-alerta, .cad-vazio, .two > div, .obs p, .cmp-eq{break-inside:avoid}
+    .hero, .sn, .chart, .memo.fechada, .reforma:has(.memo.fechada), .comparativo, .cmp-card, .dl, .li, .gr, .cr, .sum, .total, .bar, .prem, .flag, .det-foot,
+    .gano, .gpres, .cad-row, .gprod, .cad-grafico, .cad-alerta, .cad-vazio, .obs p, .cmp-eq{break-inside:avoid}
     h2, h3, h4, .card-h, .cad-h, .grp, .det-cap, .gh, .dl:has(+ .det){break-after:avoid}
   }
 </style>
@@ -664,6 +686,10 @@ function defaults(){ return {
   // produtos e serviços: [nome, tipo de alíquota da CBS, 'produto' | 'servico', NCM, NBS, cClassTrib]
   // a alíquota é calculada; NCM vale para produto, NBS e cClassTrib para serviço
   produtos: [],
+  // simulação do Lucro Presumido (aba Anual). Dado da empresa como o anexo: passa de um mês para o outro.
+  // atividade '' = pela do anexo (ver ATIVIDADES); irpjOutra/csllOutra só valem na atividade "outra";
+  // ICMS é a carga sobre a receita, informada; encargos = 20% patronal + RAT + terceiros
+  presumido: {atividade: '', irpjOutra: 0.32, csllOutra: 0.32, iss: 0.05, icms: 0, encargos: 0.278},
   annual: {
     receita: 1187289.06,
     custos: [["Custo de medicamentos, produtos e outros",696475.30],["Produtos vencidos",3160.96]],
@@ -1357,12 +1383,6 @@ function saidas(){
   itens(a.custos, 'a.cu', ca.R); itens(a.ga, 'a.ga', ca.R); itens(a.vendas, 'a.ve', ca.R); itens(a.tributarias, 'a.tr', ca.R);
   V['a.temDiff'] = Math.abs(ca.diff) >= 0.01;
   O['a.flag'] = `O resultado informado (${brl(ca.resultado)}) difere da soma das linhas (${brl(ca.calculado)}) em ${brl(Math.abs(ca.diff))}. Valor informado mantido — verificar lançamentos.`;
-  // composição pela soma das linhas: fecha exatamente em 100% da receita
-  [['custos', ca.custos], ['ga', ca.ga + ca.vendas], ['trib', ca.trib], ['res', ca.calculado]]
-    .forEach(([k, v]) => { O['a.c.' + k] = P(v, ca.R); W['a.c.' + k] = parte(v, ca.R); });
-  const cem = v => 'R$ ' + dec(ca.R ? v / ca.R * 100 : 0, 2, 2);
-  O['a.leitura1'] = `De cada R$ 100,00 que entram pela venda, ${cem(ca.custos)} vão para a mercadoria, ${cem(ca.ga + ca.vendas)} para as despesas de funcionamento e ${cem(ca.trib)} para impostos e taxas. Sobram ${cem(ca.calculado)} de lucro — margem de ${P(ca.calculado, ca.R)}.`;
-  O['a.leitura2'] = `No exercício, a empresa vendeu ${brl(ca.R)} e comprou ${brl(a.compraMercadoria || 0)} em mercadoria.`;
   // aba Anual: o ano somado pelas competências salvas no banco
   const ano = banco.ano;
   if(ano && ano.linhas && ano.linhas.length){
@@ -1382,6 +1402,45 @@ function saidas(){
     const falta = mesesFaltando(ano.linhas, ano.ano);
     V['an.temFalta'] = falta.length > 0;
     O['an.falta'] = `Ainda sem competência salva em ${ano.ano}: ${falta.join(', ')}. O total soma apenas os meses salvos.`;
+    // Lucro Presumido: trimestres e ano contra o melhor dos dois cenários do Simples
+    const lp = banco.presumido;
+    if(lp && lp.de === ano && !lp.carregando && !lp.erro){
+      const pr = S.presumido || {}, anexo = anexoEmpresa(), at = atividadeLP(), prem = premissasLP();
+      const c = calcPresumido(ano.linhas, lp.folhas, prem, anexo);
+      const cols = c.q.concat([c.ano]);
+      const sinal = v => Math.abs(v) < 0.005 ? brl(0) : (v > 0 ? '+ ' : '− ') + brl(Math.abs(v));
+      cols.forEach((t, i) => {
+        const melhor = Math.min(t.conv, t.hibr);
+        LP_CAMPOS.forEach(k => { O[`lp.${k}.${i}`] = t.n ? brl(t[k]) : '—'; });
+        O[`lp.acrescimo.${i}`] = t.n ? sinal(t.acrescimo) : '—';
+        O[`lp.dif.${i}`] = t.n ? sinal(t.total - melhor) : '—';
+        O[`lp.cargaLP.${i}`] = t.n ? P2(t.total, t.rec) : '—';
+        O[`lp.cargaSN.${i}`] = t.n ? P2(melhor, t.rec) : '—';
+        O[`lp.meses.${i}`] = i === 4 ? `${t.n} ${t.n === 1 ? 'mês' : 'meses'}` : t.n === 3 ? '3 meses' : t.n ? `${t.n} de 3 meses` : 'sem meses';
+      });
+      const t = c.ano, melhor = Math.min(t.conv, t.hibr), dif = t.total - melhor, qual = t.hibr < t.conv ? 'híbrido' : 'convencional';
+      V['lp.temLc224'] = cols.some(x => Math.abs(x.acrescimo) > 0.004);
+      V['lp.anexoIV'] = anexo === 'IV';
+      V['lp.ganha'] = dif < -0.004;
+      V['lp.semIcms'] = at.icms && !(prem.icms > 0);
+      // os dois cartões: imposto do ano e carga tributária sobre a receita somada dos meses salvos
+      O['lp.presuncao'] = `Presunção de ${FMT.pct0(at.irpj)} da receita no IRPJ e ${FMT.pct0(at.csll)} na CSLL` +
+        (at.escolhida ? '.' : ` — atividade pelo anexo ${anexo || 'do Simples'}; troque se não for esta.`);
+      O['lp.notaLP'] = `${at.nome} · ${t.n} ${t.n === 1 ? 'mês salvo' : 'meses salvos'}`;
+      O['lp.cargaLPInfo'] = `sobre a receita de ${brl(t.rec)}`;
+      O['lp.irpjTot'] = brl(t.irpj + t.adicional);
+      O['lp.simples'] = brl(melhor);
+      O['lp.notaSN'] = `Melhor cenário: ${qual}`;
+      O['lp.cargaSNInfo'] = `sobre a receita de ${brl(t.rec)}`;
+      O['lp.cargaConv'] = `carga de ${P2(t.conv, t.rec)}`;
+      O['lp.cargaHibr'] = `carga de ${P2(t.hibr, t.rec)}`;
+      O['lp.decisao'] = Math.abs(dif) < 0.005 ? 'Presumido e Simples empatam no ano'
+        : dif > 0 ? `O Simples ${qual} sai mais barato que o Presumido no ano` : `O Lucro Presumido sairia mais barato que o Simples ${qual} no ano`;
+      O['lp.dif'] = brl(Math.abs(dif));
+      O['lp.folhaNota'] = lp.nomes.length
+        ? `Folha pelas linhas de despesa ${lp.nomes.join(', ')}: ${brl(t.folha)} nos meses salvos.`
+        : 'Nenhuma linha de folha nas despesas (procura folha, salário, funcionário e pró-labore): o INSS patronal ficou zerado.';
+    }
   }
   // cadeia de crédito: contadores do alternador, estado de cada linha e a visão aberta
   ['fornecedores', 'clientes'].forEach(g => {
@@ -1732,10 +1791,6 @@ function rReforma(){
   return `<section class="reforma" aria-label="Memória de cálculo da CBS">${memo}${lado}</section>`;
 }
 
-function barraComp(k, lbl, cor){
-  return `<div class="cbar"><div class="bar-h"><span>${lbl}</span><span data-o="${k}"></span></div>` +
-    `<div class="track" aria-hidden="true"><div class="fill ${cor}" data-w="${k}"></div></div></div>`;
-}
 // Os quatro cartões e o "O que observar" saíram a pedido do usuário: os mesmos números já estão na
 // faixa de indicadores do topo e no quadro Convencional × Híbrido, no fim da aba Resultado.
 function rCliente(){
@@ -1881,12 +1936,72 @@ function rAnual(){
   if(ui.detalhe) h += lista('annual.tributarias', a.tributarias, 'a.tr');
   h += linha('res', '( = ) Resultado líquido', 'a.resultado', 'a.margem', 'annual.resultadoInformado');
   h += `<div class="flag" data-v="a.temDiff" data-o="a.flag"></div>`;
-  return painel('card', 'anual', h) + `<section class="cli" aria-label="Leitura do exercício"><div class="two a">
-    <div><h4>Para onde foi a receita</h4>
-      ${barraComp('a.c.custos', 'Custos', 'c-ink')}${barraComp('a.c.ga', 'Despesas de funcionamento', 'c-ink3')}
-      ${barraComp('a.c.trib', 'Despesas tributárias', 'c-mut')}${barraComp('a.c.res', 'Resultado pela soma das linhas', 'c-brand')}</div>
-    <div class="obs"><h4>Em linguagem simples</h4><p data-o="a.leitura1"></p><p data-o="a.leitura2"></p></div>
-  </div></section>` + rAnoMeses();
+  // "Para onde foi a receita" e "Em linguagem simples" saíram a pedido do usuário (16/09/2026)
+  return painel('card', 'anual', h) + rAnoMeses() + rPresumido();
+}
+// Sair do Simples? Só lê os meses salvos. À vista: a atividade (que define a presunção), o imposto e a carga tributária
+// nos dois regimes e a conclusão, no modelo dos cartões Convencional × Híbrido. "Ver por trimestre" abre a apuração
+function rPresumido(){
+  const a = banco.ano;
+  if(!banco.ativo || !banco.empresaId || !a || a.carregando || a.semFuncao || !a.linhas.length) return '';
+  const aberto = ui.presumido, p = banco.presumido && banco.presumido.de === a ? banco.presumido : null;
+  const botao = `<button class="btn" data-act="presumido" aria-expanded="${aberto}">${aberto ? 'Ocultar trimestres' : 'Ver por trimestre'}</button>`;
+  const cartao = (corpo, comBotao) => `<section class="card presumido" aria-label="Lucro Presumido">
+    <div class="card-h"><div><h2>Sair do Simples? Lucro Presumido</h2>
+      <p class="sub">Quanto a empresa pagaria de imposto no Lucro Presumido com os meses salvos de ${a.ano}, pelas regras de 2027. Estimativa.</p></div>${comBotao ? botao : ''}</div>
+    ${corpo}</section>`;
+  if(!p || p.carregando) return cartao(`<p class="sub">Somando a folha dos meses salvos…</p>`);
+  if(p.erro) return cartao(`<div class="flag">Não foi possível buscar a folha dos meses salvos.</div><div class="ano-acoes"><button class="lk" type="button" data-act="ano-atualizar">tentar de novo</button></div>`);
+  const at = atividadeLP();
+  const opcoes = ATIVIDADES.map(([id, nome]) => `<option value="${id}"${id === at.id ? ' selected' : ''}>${esc(nome)}</option>`).join('');
+  const campo = (path, rot) => `<label><span>${rot}</span>${inp(path, 'pct', rot, 'main')}</label>`;
+  const premissas = `<div class="prem lp-prem">
+      <div class="lp-ativ">
+        <label class="seg-campo"><span>Atividade</span><span class="sel-wrap"><select class="sel" data-atividade aria-label="Atividade da empresa no Lucro Presumido">${opcoes}</select></span></label>
+        <span class="lp-pres" data-o="lp.presuncao"></span>
+      </div>
+      <div class="prem-f">
+        ${at.id === 'outra' ? campo('presumido.irpjOutra', 'Presunção do IRPJ') + campo('presumido.csllOutra', 'Presunção da CSLL') : ''}
+        ${at.iss ? campo('presumido.iss', 'ISS do município') : ''}${at.icms ? campo('presumido.icms', 'ICMS sobre a receita') : ''}
+        ${campo('presumido.encargos', 'Encargos da folha')}
+      </div>
+      <p class="lp-folha" data-o="lp.folhaNota"></p>
+    </div>
+    <div class="flag lp-aviso" data-v="lp.semIcms">Informe a carga de ICMS sobre a receita: no Simples ele já está dentro do DAS, e sem ele o Presumido sai barato demais.</div>`;
+  const linha = (rot, k, cls, info, attrs) => `<div class="cmp-row${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}${info ? `<small data-o="${info}"></small>` : ''}</span><span class="v" data-o="${k}"></span></div>`;
+  const cartoes = `<div class="cmp2">
+      <article class="cmp-card"><h3>Lucro Presumido</h3><p class="cmp-nota" data-o="lp.notaLP"></p>
+        ${linha('Imposto no ano', 'lp.total.4', 'dest')}${linha('Carga tributária', 'lp.cargaLP.4', 'tot', 'lp.cargaLPInfo')}
+        ${linha('IRPJ com adicional', 'lp.irpjTot')}${linha('CSLL', 'lp.csll.4')}${linha('CBS por fora', 'lp.cbs.4')}
+        ${at.iss ? linha('ISS', 'lp.iss.4') : ''}${at.icms ? linha('ICMS', 'lp.icms.4') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.4')}
+      </article>
+      <article class="cmp-card"><h3>Simples Nacional</h3><p class="cmp-nota" data-o="lp.notaSN"></p>
+        ${linha('Imposto no ano', 'lp.simples', 'dest')}${linha('Carga tributária', 'lp.cargaSN.4', 'tot', 'lp.cargaSNInfo')}
+        ${linha('Convencional — CBS dentro do DAS', 'lp.conv.4', '', 'lp.cargaConv')}${linha('Híbrido — CBS por fora', 'lp.hibr.4', '', 'lp.cargaHibr')}
+        ${linha('INSS patronal (Anexo IV, fora do DAS)', 'lp.inss.4', '', '', ' data-v="lp.anexoIV"')}
+      </article>
+    </div>
+    <div class="dl res cmp-res" data-cls="hibrido:lp.ganha"><span class="l" data-o="lp.decisao"></span><span class="v" data-o="lp.dif"></span></div>`;
+  const cols = ['1º tri', '2º tri', '3º tri', '4º tri', 'Ano'];
+  const linhaT = (rot, k, cls, attrs) => `<div class="gpres${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}</span>` +
+    cols.map((_, i) => `<span data-o="lp.${k}.${i}"></span>`).join('') + `</div>`;
+  const trimestres = !aberto ? '' : `<div class="scroll-x lp-tri">
+      <div class="gpres gh"><span></span>${cols.map((c, i) => `<span>${c}<small data-o="lp.meses.${i}"></small></span>`).join('')}</div>
+      ${linhaT('Receita', 'rec', 'rec')}
+      ${linhaT('Base do IRPJ', 'baseIrpj', 'sub')}${linhaT('Base da CSLL', 'baseCsll', 'sub')}
+      ${linhaT('Acréscimo da LC 224 na base do IRPJ', 'acrescimo', 'sub', ' data-v="lp.temLc224"')}
+      ${linhaT('IRPJ — 15% da base', 'irpj')}${linhaT('Adicional do IRPJ', 'adicional')}${linhaT('CSLL — 9% da base', 'csll')}
+      ${linhaT('CBS por fora', 'cbs')}${at.iss ? linhaT('ISS', 'iss') : ''}${at.icms ? linhaT('ICMS', 'icms') : ''}
+      ${linhaT('INSS patronal sobre a folha', 'inss')}
+      ${linhaT('Lucro Presumido', 'total', 'tot')}${linhaT('Carga tributária', 'cargaLP', 'sub')}
+      ${linhaT('Simples convencional', 'conv', 'cmp')}${linhaT('Simples híbrido', 'hibr', 'cmp')}
+      ${linhaT('Carga do Simples (melhor cenário)', 'cargaSN', 'sub')}
+      ${linhaT('Presumido − melhor do Simples', 'dif', 'dif')}
+    </div>
+    <p class="cmp-eq">Adicional do IRPJ: 10% sobre a base que passa de R$ 20 mil por mês do trimestre (R$ 60 mil no trimestre completo). CBS por fora: débito menos crédito, a mesma do regime híbrido.</p>`;
+  return cartao(premissas + cartoes + trimestres + `
+    <p class="cmp-eq" data-v="lp.temLc224">LC 224/2025: a presunção sobe 10% sobre a receita acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre, com ajuste nos seguintes). A regra está em disputa na Justiça (ADI 7920 no STF).</p>
+    <p class="cmp-eq">Fica de fora: IBS (quase zero até 2028, cresce de 2029 a 2033), retenções, ISS fixo de sociedade de profissionais e distribuição de lucros. A troca vale para o ano inteiro: a saída do Simples por opção é comunicada até o fim de janeiro.</p>`, true);
 }
 
 function rLogin(){
@@ -2345,11 +2460,103 @@ async function carregarAno(ano){
   }
   banco.ano = {ano, linhas: lista, carregando: false};
   render();
+  garantirPresumido();
+}
+
+/* ---------- Lucro Presumido: estimativa pelos meses salvos ---------- */
+// IRPJ 15% e CSLL 9% sobre receita × presunção, apurados por TRIMESTRE — no mês a mês o adicional sai errado
+// quando a receita oscila. Adicional do IRPJ: 10% sobre a base acima de R$ 20 mil por mês do trimestre.
+// LC 224/2025: presunção 10% maior sobre a receita acima de R$ 5 milhões no ano, aplicada R$ 1,25 milhão por
+// trimestre, acumulado, com ajuste nos seguintes (em disputa na Justiça, ADI 7920). Regras de 2027: PIS/Cofins
+// viram a CBS por fora — débito menos crédito, a mesma do híbrido. IBS quase zero até 2028: fica de fora.
+const LP = {irpj: .15, adicional: .10, limiteMes: 20000, csll: .09, limiteTri: 1250000, acrescimo: .10};
+// presunção por atividade (Lei 9.249/1995, arts. 15 e 20): [id, nome, IRPJ, CSLL, ISS?, ICMS?]
+const ATIVIDADES = [
+  ['servicos', 'Serviços em geral (consultoria, profissões, administração, locação)', .32, .32, true, false],
+  ['hospitalar', 'Serviços hospitalares e de auxílio diagnóstico', .08, .12, true, false],
+  ['obraMaterial', 'Construção por empreitada com todos os materiais', .08, .12, true, false],
+  ['obraMao', 'Construção só com mão de obra', .32, .32, true, false],
+  ['cargas', 'Transporte de cargas', .08, .12, true, true],
+  ['passageiros', 'Transporte de passageiros', .16, .12, true, true],
+  ['comercio', 'Comércio e indústria', .08, .12, false, true],
+  ['combustivel', 'Revenda de combustíveis', .016, .12, false, true],
+  ['outra', 'Outra atividade — informar os percentuais', null, null, true, true],
+];
+const LP_CAMPOS = ['n', 'rec', 'cbs', 'folha', 'das', 'hib', 'acrescimo', 'baseIrpj', 'baseCsll', 'irpj', 'adicional', 'csll', 'iss', 'icms', 'inss', 'total', 'conv', 'hibr'];
+const RE_FOLHA = /folha|sal[aá]rio|funcion[aá]rio|ordenado|pr[oó][\s-]*labore/i;
+// atividade da empresa: a escolhida ou, sem escolha, a do anexo do Simples (I e II vendem mercadoria; III a V, serviço)
+function atividadeLP(){
+  const pr = S.presumido || {}, id = ATIVIDADES.some(x => x[0] === pr.atividade) ? pr.atividade
+    : ['I', 'II'].includes(anexoEmpresa()) ? 'comercio' : 'servicos';
+  const [, nome, irpj, csll, iss, icms] = ATIVIDADES.find(x => x[0] === id);
+  return {id, nome, escolhida: id === pr.atividade, iss, icms,
+    irpj: irpj === null ? +pr.irpjOutra || 0 : irpj, csll: csll === null ? +pr.csllOutra || 0 : csll};
+}
+function premissasLP(){
+  const pr = S.presumido || {}, at = atividadeLP();
+  return {irpj: at.irpj, csll: at.csll, iss: at.iss ? +pr.iss || 0 : 0, icms: at.icms ? +pr.icms || 0 : 0, encargos: +pr.encargos || 0};
+}
+function calcPresumido(linhas, folhas, prem, anexo){
+  const q = [0, 1, 2, 3].map(() => Object.fromEntries(LP_CAMPOS.map(k => [k, 0])));
+  (linhas || []).forEach(x => {
+    const r = x.resumo; if(!r) return;
+    const t = q[Math.floor((+x.periodo.slice(5, 7) - 1) / 3)];
+    t.n++; t.rec += +r.receita || 0; t.cbs += +r.cbs || 0; t.das += +r.das || 0; t.hib += +r.naTransicao || 0;
+    t.folha += +folhas[x.periodo] || 0;
+  });
+  let acumulada = 0, excedenteAntes = 0;
+  q.forEach((t, i) => {
+    acumulada += t.rec;
+    const excedente = Math.max(0, acumulada - LP.limiteTri * (i + 1)), excTri = excedente - excedenteAntes;
+    excedenteAntes = excedente;
+    // o acréscimo da LC 224 vale para as duas presunções; negativo = ajuste de trimestre anterior
+    t.acrescimo = excTri * prem.irpj * LP.acrescimo;
+    t.baseIrpj = Math.max(0, t.rec * prem.irpj + t.acrescimo);
+    t.baseCsll = Math.max(0, t.rec * prem.csll + excTri * prem.csll * LP.acrescimo);
+    t.irpj = t.baseIrpj * LP.irpj;
+    t.adicional = Math.max(0, t.baseIrpj - LP.limiteMes * t.n) * LP.adicional;   // limite pelos meses salvos do trimestre
+    t.csll = t.baseCsll * LP.csll;
+    t.iss = t.rec * prem.iss;
+    t.icms = t.rec * prem.icms;
+    t.inss = t.folha * prem.encargos;
+    t.total = t.irpj + t.adicional + t.csll + t.cbs + t.iss + t.icms + t.inss;
+    // no Anexo IV a contribuição patronal já é paga fora do DAS: entra dos dois lados e não decide nada
+    const fora = anexo === 'IV' ? t.inss : 0;
+    t.conv = t.das + fora; t.hibr = t.hib + fora;
+  });
+  const ano = Object.fromEntries(LP_CAMPOS.map(k => [k, q.reduce((s, t) => s + t[k], 0)]));
+  return {q, ano};
+}
+// folha dos meses salvos: só as linhas de despesa de cada mês (dados->monthly->ga), não o estado inteiro
+async function carregarFolhas(a){
+  const periodos = a.linhas.map(x => x.periodo);
+  const lista = await sb(`competencias?select=periodo,ga:dados->monthly->ga&empresa_id=eq.${banco.empresaId}&periodo=in.(${periodos.join(',')})`) || [];
+  const folhas = {}, nomes = new Set();
+  lista.forEach(c => {
+    folhas[c.periodo] = (Array.isArray(c.ga) ? c.ga : []).reduce((s, r) => {
+      if(!RE_FOLHA.test(String(r[0] || ''))) return s;
+      if((+r[1] || 0) > 0) nomes.add(String(r[0]).trim());       // linha zerada não entra na nota
+      return s + (+r[1] || 0);
+    }, 0);
+  });
+  if(banco.ano !== a) return;                        // trocou de empresa ou de ano enquanto buscava
+  banco.presumido = {de: a, folhas, nomes: [...nomes], carregando: false};
+  render();
+}
+function garantirPresumido(){
+  const a = banco.ano;
+  if(!a || a.carregando || a.semFuncao || !a.linhas.length) return;
+  if(banco.presumido && banco.presumido.de === a) return;
+  banco.presumido = {de: a, folhas: {}, nomes: [], carregando: true};
+  comErro(async () => {
+    try { await carregarFolhas(a); }
+    catch(e){ if(banco.presumido && banco.presumido.de === a){ banco.presumido = {de: a, erro: true}; render(); } throw e; }
+  });
 }
 function garantirAno(recarregar){
   if(!banco.ativo || !banco.empresaId) return;
   const ano = anoCompetencia();
-  if(!recarregar && banco.ano && banco.ano.ano === ano) return;
+  if(!recarregar && banco.ano && banco.ano.ano === ano) return garantirPresumido();
   banco.ano = {ano, linhas: [], carregando: true};
   render();
   comErro(() => carregarAno(ano));
@@ -2793,6 +3000,8 @@ app.addEventListener('change', e => {
   if(t.matches('select[data-nat]')){ S.produtos[+t.dataset.i][2] = t.value; render(); return; }
   if(t.matches('select[data-regra]')){ aplicarRegra(+t.dataset.i, t.value, t.dataset.regra); return; }
   if(t.matches('select[data-sit]')){ S.monthly.reforma.debitos[+t.dataset.i][5] = t.value; refresh(); return; }
+  // atividade do Presumido troca os campos (ISS, ICMS, percentuais de "outra"): redesenha
+  if(t.matches('select[data-atividade]')){ S.presumido.atividade = t.value; render(); return; }
   if(t.matches('select[data-b]')){ setPath(t.dataset.b, t.value); refresh(); return; }
   if(!t.matches('input[data-b]') || t.type === 'color') return;
   if(t.dataset.f === 'txt' && t.dataset.b.startsWith('monthly.reforma') && !t.value.trim()) setPath(t.dataset.b, '(sem nome)');
@@ -2822,6 +3031,7 @@ app.addEventListener('click', e => {
     // rolagem suave é JavaScript: a regra de movimento reduzido do CSS não chega aqui, então pergunta de novo
     case 'topo': scrollTo({top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); break;
     case 'ano-atualizar': garantirAno(true); break;
+    case 'presumido': ui.presumido = !ui.presumido; render(); focar('[data-act="presumido"]'); break;
     case 'ano-preencher': comErro(preencherAno); break;
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;
     case 'detalhe': ui.detalhe = !ui.detalhe; render(); focar('[data-act="detalhe"]'); break;
@@ -2932,22 +3142,27 @@ app.addEventListener('submit', async e => {
 const IMPRESSAO = {
   resultado: ['Resultado', 'DRE, Simples, estoque, CBS e o quadro dos dois regimes, sem abrir as linhas.',
     'Com as linhas de receita e despesas, as compras, a posição de estoque e a memória de cálculo da CBS.'],
-  anual: ['Anual', 'DRE do exercício com os totais e a leitura do ano.', 'Com as linhas de custos e despesas do exercício.'],
+  anual: ['Anual', 'DRE do exercício com os totais e a leitura do ano.', 'Com as linhas de custos e despesas do exercício e o Lucro Presumido por trimestre.'],
   cliente: ['Resumo do cliente', 'Os gráficos da cadeia de crédito e dos produtos.', 'Com as tabelas de cadastro de fornecedores (ou clientes) e de produtos.'],
 };
 async function imprimir(){
   ui.menu = false; ui.armado = false; render();
   const [aba, totais, completo] = IMPRESSAO[ui.tab];
   const aberto = ui.tab === 'cliente' ? ui.cadastro.cadeia || ui.cadastro.produtos
-    : ui.detalhe || (ui.tab === 'resultado' && (ui.memoria || ui.estoque));
+    : ui.detalhe || (ui.tab === 'resultado' && (ui.memoria || ui.estoque)) || (ui.tab === 'anual' && ui.presumido);
   const {botao} = await modal({titulo: 'Imprimir ou salvar em PDF', texto: `Aba ${aba}, em folha A4. O que deve sair no papel?`,
     html: `<div class="imp-opcoes"><p><b>Só os totais</b>${esc(totais)}</p><p><b>Com o detalhamento</b>${esc(completo)}</p></div>`,
     botoes: [['cancelar', 'Cancelar'], ['totais', 'Só os totais', aberto ? '' : 'prim'], ['completo', 'Com o detalhamento', aberto ? 'prim' : '']],
     padrao: aberto ? 'completo' : 'totais'});
   if(botao !== 'totais' && botao !== 'completo') return;
-  const antes = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, cadastro: {...ui.cadastro}}, tudo = botao === 'completo';
+  const antes = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, presumido: ui.presumido, cadastro: {...ui.cadastro}};
+  const tudo = botao === 'completo';
   if(ui.tab === 'cliente') ui.cadastro = {cadeia: tudo, produtos: tudo};
-  else { ui.detalhe = tudo; if(ui.tab === 'resultado'){ ui.memoria = tudo; ui.estoque = tudo; } }
+  else {
+    ui.detalhe = tudo;
+    if(ui.tab === 'resultado'){ ui.memoria = tudo; ui.estoque = tudo; }
+    if(ui.tab === 'anual') ui.presumido = tudo;
+  }
   render();
   addEventListener('afterprint', () => { Object.assign(ui, antes); render(); }, {once: true});
   setTimeout(() => window.print(), 50);
@@ -3000,7 +3215,7 @@ window.addEventListener('beforeunload', e => { if(sujo()){ e.preventDefault(); e
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
