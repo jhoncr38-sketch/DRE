@@ -382,12 +382,18 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   - **Regime híbrido:** DAS sem CBS, CBS por fora (com "crédito de R$ X vai para o mês seguinte" quando
     credora), **IBS por fora só quando informado** (`monthly.ibs`), total em faixa branca e alíquota efetiva.
   - **Composição dos tributos do mês** no pé de cada cartão, alinhada entre os dois (`margin-top:auto`):
-    barra empilhada (DAS `--fill`, CBS `--brand`, IBS `--line-3`) e legenda com marcador quadrado
+    barra empilhada (DAS em cinza `--muted-2`, CBS `--brand`, IBS `--line-3`) e legenda com marcador quadrado
     (`.cg-q`, o mesmo da pizza), percentual e valor. **Cada barra é o total do próprio regime** — quem
-    compara o tamanho dos dois é a faixa da decisão. No convencional a CBS dá 15,33% do DAS: é a parcela.
+    compara os dois é o destaque do cartão vencedor. No convencional a CBS dá 15,33% do DAS: é a parcela.
+    O DAS era preto (17/09/2026): pesava mais que a parte vermelha, que é a CBS, o que se compara ali.
   - Embaixo de cada composição, a **carga tributária do mês** (todas as despesas tributárias; no híbrido,
     trocando o DAS pelo par DAS sem CBS + CBS).
-  - Depois dos cartões: faixa com a decisão (verde quando o híbrido ganha), quanto a alíquota efetiva sobe
+  - **Quem sai mais barato** (17/09/2026): o cartão vencedor fica branco, com filete verde no topo, etiqueta
+    "MAIS BARATO NO MÊS" com troféu (SVG `TROFEU`, não emoji) em verde suave e a diferença em reais embaixo do
+    valor; empate não destaca nenhum. Substituiu a faixa preta embaixo dos cartões. Testados e recusados: faixa
+    clara com filete (comparada na tela), etiqueta preta e contorno escuro no cartão. O mesmo vale no quadro
+    do Lucro Presumido.
+  - Depois dos cartões: quanto a alíquota efetiva sobe
     ou cai em pontos percentuais, o ponto de equilíbrio e, sem IBS informado, a nota "*O IBS ainda não é
     calculado: os dois cenários comparam só o DAS e a CBS*".
   - **O modelo trazia "IBS dentro do DAS"**, que ficou de fora: a partilha do Simples no painel não separa
@@ -395,8 +401,19 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   - **Celular:** abaixo de 800px os cartões empilham; abaixo de 640px a legenda vira uma fatia por linha —
     em três colunas o "R$" quebrava longe do número. Conferido a 360px reais num iframe, porque o Chrome
     sem janela no Windows não desce de 484px de largura (o teste "celular 400px" mede, na prática, 467px)
-- **De onde vem o crédito da CBS:** a barra "Crédito de CBS" é empilhada por origem — compras, despesas,
-  outras linhas e saldo do mês anterior — com a legenda em reais e % embaixo
+- **Memória de cálculo da CBS num cartão só** (17/09/2026): o gráfico "Débito, crédito e saldo" ao lado saiu —
+  repetia os três números. Fechada, a memória mostra débito e crédito com a barra na própria linha (`.sum-bar`):
+  débito em grafite, crédito em tons de verde (é a favor da empresa), grafite e verde separados pela claridade
+  e não só pela cor. **De onde vem o crédito:** a barra do crédito é empilhada por origem — compras, despesas,
+  outras linhas e saldo do mês anterior — com a legenda em reais e % embaixo. **CBS a pagar** sem o bloco
+  vermelho: fundo claro, filete e valor em vermelho, como a linha do topo; com sobra de crédito, verde. Aberta,
+  a memória ocupa a largura toda.
+- **Fechamento da DRE** (17/09/2026): "Resultado líquido" com traço duplo em cima e fundo bege claro, a convenção
+  do total final em demonstrativo impresso, no lugar do bloco preto (a faixa com filete à esquerda foi comparada
+  na tela e perdeu). O "Lucro operacional bruto" ficou sem o fundo rosa: chamava mais atenção que o resultado.
+- **Cores:** preto para estrutura e totais; vermelho da marca para a CBS; verde só para o que é a favor da
+  empresa (crédito, vencedor), sempre suave e com texto ou ícone junto; no máximo uma cor de destaque por bloco.
+  Vermelho e verde não fazem par de "ruim × bom" lado a lado.
 - **Ponto de equilíbrio** (`textoEquilibrio()`, no quadro Convencional × Híbrido, fim da aba Resultado):
   quanto falta para o híbrido empatar com o convencional, ou quanta folga ele tem, dito **no gasto** que
   produz o crédito: "*faltam no mês R$ 16.917,42 em compras (9%) ou R$ 19.032,10 em despesas com direito

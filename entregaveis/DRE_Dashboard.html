@@ -122,14 +122,17 @@
   .dl.tot{padding:14px 0 11px}
   .dl.tot .l{font-size:15px; font-weight:600}
   .dl.tot .v{font-size:16px; font-weight:600}
-  .dl.gross{background:var(--brand-wash); margin:0 -12px; padding:12px}
+  /* lucro bruto só em texto vermelho: com fundo rosa ele chamava mais atenção que o próprio resultado */
+  .dl.gross{padding:12px 0}
   .dl.gross .l, .dl.gross .v, .dl.gross .p{color:var(--brand)}
   .dl.gross .l{font-size:15px; font-weight:600}
   .dl.gross .v{font-size:16px; font-weight:600}
-  .dl.res{background:var(--fill); color:var(--sobre-fill); margin:8px -16px 0; padding:14px 16px; border:0; align-items:center}
-  .dl.res .l{font-size:15px; font-weight:600}
-  .dl.res .v{font-size:19px; font-weight:600}
-  .dl.res .p{color:var(--muted-3); font-size:13px}
+  /* fechamento da DRE (17/09/2026): traço duplo em cima e fundo bege claro, a convenção do total final em demonstrativo
+     impresso. Substituiu o bloco preto; a faixa com filete escuro à esquerda foi comparada na tela e perdeu */
+  .dl.res{background:var(--surface-2); color:var(--ink); margin:10px -16px 0; padding:14px 16px; border-top:4px double var(--ink); align-items:center}
+  .dl.res .l{font-size:16px; font-weight:600}
+  .dl.res .v{font-size:20px; font-weight:600}
+  .dl.res .p{color:var(--muted-2); font-size:13px}
   .det{background:var(--surface-2); padding:6px 14px 10px; margin-bottom:4px}
   .scroll-x{overflow-x:auto}
   /* nome curto não precisa de meia tela: o item tem teto e a folga vai para as colunas de números */
@@ -168,7 +171,7 @@
   .present .in{pointer-events:none; border-bottom-color:transparent !important}
 
   /* Reforma · CBS */
-  .reforma{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:16px; align-items:start}
+  .reforma{display:block}
   .memo{background:var(--surface); padding:26px 28px; min-width:0}
   .prem{background:var(--surface-2); padding:14px 16px; margin:18px 0 22px; display:flex; align-items:flex-end; gap:14px 28px; flex-wrap:wrap}
   .prem-t{display:flex; flex-direction:column; gap:3px; flex:1 1 200px; min-width:0}
@@ -214,14 +217,29 @@
   .sum.deb{padding-bottom:18px}
   .sum.credor{padding-top:0; font-size:13px}
   .sum.credor span{font-weight:400 !important; color:var(--ink-3)}
-  .total{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; margin:8px -16px -6px; background:var(--brand); color:#fff}
+  /* CBS a pagar: fundo claro, filete e valor em vermelho — a mesma linha "CBS a pagar" do topo da página. Com sobra
+     de crédito, verde suave. Substituiu o bloco vermelho em 17/09/2026 */
+  .total{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px 14px 13px; margin:10px -16px 0;
+    background:var(--surface-2); color:var(--ink); border-left:3px solid var(--brand)}
   .total > span:first-child{font-size:15px; font-weight:600}
-  .total > span:last-child{font-family:var(--mono); font-size:19px; font-weight:600; white-space:nowrap}
-  .total.credito{background:var(--ok)}
-  .total .suf{margin-left:8px; font-size:12px; font-weight:400; color:rgba(255,255,255,.8)}
-  .side{display:flex; flex-direction:column; gap:16px; min-width:0}
-  .chart{background:var(--surface); padding:24px 26px}
-  .chart .sub{margin:0 0 18px; font-size:12px}
+  .total > span:last-child{font-family:var(--mono); font-size:19px; font-weight:600; white-space:nowrap; color:var(--brand)}
+  .total.credito{border-left-color:color-mix(in srgb, var(--ok) 80%, var(--surface))}
+  .total.credito > span:last-child{color:var(--ok)}
+  .total .suf{margin-left:8px; font-size:12px; font-weight:400; color:var(--muted)}
+  /* débito e crédito com a barra na mesma linha: rótulo, barra, valor; a origem do crédito embaixo da barra */
+  .sum-bar{display:grid; grid-template-columns:minmax(120px,.8fr) minmax(0,2fr) auto; align-items:center; gap:4px 18px;
+    padding:11px 0; border-bottom:1px solid var(--line); font-size:14px}
+  .sb-l{font-weight:600}
+  .sb-track{display:flex; height:8px; background:var(--canvas)}
+  .sb-v{font-family:var(--mono); font-weight:600; white-space:nowrap; text-align:right; min-width:110px}
+  .sb-leg{grid-column:2 / 4; font-size:11px; color:var(--muted-2)}
+  /* débito em grafite (neutro, de partida); crédito em tons de verde, porque é a favor da empresa — as partes na ordem da
+     legenda. Grafite e verde se separam pela claridade, não só pela cor; vermelho fica para a CBS a pagar, na linha de baixo */
+  .c-deb{background:var(--ink-3)}
+  .cr-compras{background:color-mix(in srgb, var(--ok) 70%, var(--surface))}
+  .cr-despesas{background:var(--ok)}
+  .cr-outras{background:color-mix(in srgb, var(--ok) 45%, var(--surface))}
+  .cr-saldo{background:color-mix(in srgb, var(--ok) 25%, var(--surface))}
   .bar{display:flex; flex-direction:column; gap:5px; margin-bottom:14px}
   .bar-h{display:flex; justify-content:space-between; gap:12px; font-size:12px}
   .bar-h > span:first-child{color:var(--ink-3)}
@@ -258,14 +276,27 @@
   .cmp-comp h4{margin:0 0 8px; padding-top:14px; border-top:1px solid var(--line-2); font-size:12px; font-weight:500; color:var(--ink-3)}
   .cmp-bar2{display:flex; height:10px; background:var(--canvas)}
   .cmp-bar2 > span{display:block; height:100%; width:0}
+  /* o DAS em cinza, não em preto: a barra fica leve e o olho vai para o vermelho, que é a CBS — o que se compara ali */
+  .c-das{background:var(--muted-2)}
   .cmp-leg{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px 12px; margin-top:10px}
   .cmp-parte{display:flex; align-items:flex-start; gap:7px; min-width:0; font-size:11px; color:var(--muted)}
   .cmp-parte .cg-q{margin-top:3px}
   .cmp-parte b{display:block; font-family:var(--mono); font-size:12px; font-weight:600; color:var(--ink); white-space:nowrap}
   .cmp-parte .m{display:block; color:var(--muted-2); white-space:nowrap}   /* "R$" nunca fica numa linha e o número na outra */
   .cmp-carga{display:block; margin-top:10px; font-size:11px; color:var(--muted-2)}
-  .cmp-res.hibrido{background:var(--ok); color:#fff}
   .cmp-eq{margin:12px 0 0; font-size:12px; color:var(--ink-3); line-height:1.5}
+  /* quem sai mais barato: o cartão vencedor fica branco, com filete verde suave no topo (o padrão dos cartões da capa),
+     etiqueta com troféu e a diferença embaixo do valor. A barra preta embaixo dos cartões saiu em 17/09/2026 (pesava
+     mais que os cartões); a faixa clara no lugar dela e o contorno escuro no cartão foram testados e recusados.
+     Filete por sombra interna, não por borda: não empurra o conteúdo e as linhas dos dois cartões seguem alinhadas */
+  .cmp-tag, .cmp-ganho{display:none}
+  .cmp-card.ganha{background:var(--surface); border-top-color:color-mix(in srgb, var(--ok) 80%, var(--surface));
+    box-shadow:inset 0 2px 0 color-mix(in srgb, var(--ok) 80%, var(--surface))}   /* borda de cima + sombra: 3px verdes rentes à borda */
+  .cmp-card.ganha .cmp-tag{display:inline-flex; align-items:center; gap:6px; align-self:flex-start; margin:0 0 10px; padding:5px 9px 5px 7px;
+    font:500 10px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--ok); background:color-mix(in srgb, var(--ok) 13%, var(--surface))}
+  .cmp-tag .trofeu{width:13px; height:13px; flex:none}
+  .cmp-card.ganha .cmp-ganho{display:block; margin:-2px 0 6px; font-size:12px; color:var(--ink-3)}
+  html[data-tema="escuro"] .cmp-card.ganha .cmp-tag{color:#7BD3A3; background:color-mix(in srgb, var(--ok) 26%, var(--surface))}
 
   /* Receita por tipo (detalhamento da receita) e Simples Nacional do mês */
   .grec{display:grid; grid-template-columns:minmax(0,1fr) 124px 170px 156px 100px; gap:10px; align-items:center}
@@ -551,7 +582,6 @@
 
   /* Comparação com o último mês salvo, ao lado do rótulo (receita, resultado, DAS) */
   .var{margin-left:8px; font-family:var(--mono); font-size:11px; font-weight:400; letter-spacing:0; color:var(--muted); white-space:nowrap}
-  .dl.res .var{color:inherit; opacity:.72}
   .hero-row .var{display:inline-block}
 
   /* Modo apresentação */
@@ -575,7 +605,7 @@
   html:not([data-tema="escuro"]) body.present{--muted:#55585E; --muted-2:#65686F; --muted-3:#85888F; --line:#D8D6D0; --line-2:#C8C6C0}
   html[data-tema="escuro"] body.present{--muted:#B3B7BD; --muted-2:#A3A7AE; --muted-3:#83878E; --line:#3A3D43; --line-2:#474A51}
   /* menos texto de apoio: subtítulos que explicam a tela, notas de método e as premissas do Presumido */
-  .present .card-h .sub, .present .chart .sub, .present .nota, .present .lp-prem{display:none}
+  .present .card-h .sub, .present .nota, .present .lp-prem{display:none}
   .present .dasauto .so-tela{display:none}                        /* "digitar" altera o mês: não existe na apresentação */
   .present .sel{border-bottom-color:transparent !important}      /* seletor vira texto, como os campos */
   @media (max-width:640px){
@@ -595,16 +625,17 @@
     .progresso::before{left:0; width:100%}                         /* sem movimento, a barra de carregamento fica cheia e parada */
   }
 
-  @media (max-width:900px){ .reforma{grid-template-columns:minmax(0,1fr)} }
   @media (max-width:800px){ .cmp2{grid-template-columns:minmax(0,1fr)} }   /* um cartão embaixo do outro */
   @media (max-width:640px){
     .card{padding:22px 18px 18px}
-    .memo, .chart{padding:22px 18px}
+    .memo{padding:22px 18px}
     .cli{padding:26px 20px 24px}
     .panel{padding:20px 18px}
-    .dl.gross{margin:0 -8px; padding:12px 8px}
     .dl.res{margin:8px -10px 0; padding:14px 10px}
-    .total{margin:8px -10px -6px; padding:14px 10px}
+    .total{margin:10px -10px 0; padding:14px 10px 14px 7px}
+    .sum-bar{grid-template-columns:minmax(0,1fr) auto}
+    .sb-track{grid-column:1 / -1; grid-row:2}
+    .sb-leg{grid-column:1 / -1}
     /* grades viram duas linhas: nome em cima, números embaixo */
     /* despesas: nome e regra em cima; valor, alíquota e crédito embaixo */
     .g5{grid-template-columns:minmax(0,1fr) 52px minmax(0,1fr); grid-template-areas:"nome regra regra" "valor aliq cred"; gap:4px 8px}
@@ -676,14 +707,11 @@
        (lucro bruto, resultado, CBS a pagar) avançarem sobre ele — o que passa da área útil da folha o Chrome corta.
        Os blocos viram fluxo comum porque é no fluxo comum que o Chrome respeita "não quebrar aqui" */
     .wrap, .reforma{display:block}
-    #app > *, .side{margin-top:18px}
+    #app > *{margin-top:18px}
     #app > .top{margin-top:0; padding:0 16px 12px; border-bottom:1px solid var(--line-3)}
-    .card, .memo, .chart, .cli{padding:0 16px}
+    .card, .memo, .cli{padding:0 16px}
     .hero-row{padding:12px 16px}
     .card-h{margin-bottom:14px}
-    /* memória fechada é curta: fica ao lado do gráfico, como na tela larga, e o quadro dos regimes cabe na mesma folha */
-    .reforma:has(.memo.fechada){display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:0; align-items:start}
-    .reforma:has(.memo.fechada) .side{margin-top:0}
     /* campo de texto não quebra linha: no papel o nome vai num texto comum (ver nomesNoPapel) */
     .in-papel{min-width:0; font-size:13px; color:var(--ink); overflow-wrap:anywhere}
     .imp-info{margin-top:3px; font-family:var(--mono); font-size:11px; color:var(--muted)}
@@ -698,7 +726,7 @@
     .gprod.gh{font-size:10px}                                      /* como o cabeçalho da cadeia: no tamanho da linha, quebrava */
     /* quebra de página: o cartão grande pode quebrar (antes pulava inteiro e deixava meia folha em branco);
        linha, gráfico e o quadro dos regimes não; título fica com o que vem embaixo dele */
-    .capa, .hero, .sn, .chart, .memo.fechada, .reforma:has(.memo.fechada), .comparativo, .cmp-card, .dl, .li, .gr, .cr, .sum, .total, .bar, .prem, .flag, .det-foot,
+    .capa, .hero, .sn, .memo.fechada, .sum-bar, .comparativo, .cmp-card, .dl, .li, .gr, .cr, .sum, .total, .bar, .prem, .flag, .det-foot,
     .gano, .gpres, .cad-row, .gprod, .cad-grafico, .cad-alerta, .cad-vazio, .obs p, .cmp-eq{break-inside:avoid}
     h2, h3, h4, .card-h, .cad-h, .grp, .det-cap, .gh, .dl:has(+ .det){break-after:avoid}
   }
@@ -1386,9 +1414,6 @@ function saidas(){
     'k.dasHib': brl(cm.simplesSemCbs), 'k.cbsHib': brl(cm.cbsPagar), 'k.ibsHib': brl(cm.ibs), 'k.totHib': brl(cm.naTransicao),
     // o rótulo já diz "por fora": a nota embaixo só aparece quando há o que contar
     'k.cbsHibInfo': credor ? `crédito de ${brl(cm.saldoCredor)} vai para o mês seguinte` : '',
-    'k.decisao': Math.abs(cm.delta) < 0.005 ? 'Os dois regimes empatam no mês'
-      : cm.delta > 0 ? 'O convencional sai mais barato no mês' : 'O híbrido sai mais barato no mês',
-    'k.dif': brl(Math.abs(cm.delta)),
     'k.equilibrio': textoEquilibrio(cm),
     // zero no quadro não explica nada: diga o que falta para o DAS existir
     'k.semDas': !ANEXOS[S.anexo]
@@ -1417,7 +1442,13 @@ function saidas(){
   compor('k.hib', cm.naTransicao, [['das', cm.simplesSemCbs], ['cbs', cm.cbsPagar], ['ibs', cm.ibs]]);
   V['k.temIbs'] = cm.ibs > 0.004;
   V['k.semIbs'] = !V['k.temIbs'] && cm.dasBase > 0.004;
-  V['k.hibrido'] = cm.delta < -0.004;
+  // quem ganha, para o destaque no cartão: sem DAS não há comparação, e empate não destaca nenhum
+  const comparaDas = cm.dasBase > 0.004;
+  V['k.convGanha'] = comparaDas && cm.delta > 0.004;
+  V['k.hibGanha'] = comparaDas && cm.delta < -0.004;
+  V['k.empate'] = comparaDas && Math.abs(cm.delta) <= 0.004;
+  O['k.ganhoConv'] = `${brl(Math.abs(cm.delta))} a menos que o híbrido`;
+  O['k.ganhoHib'] = `${brl(Math.abs(cm.delta))} a menos que o convencional`;
   V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
   V['k.semDas'] = cm.dasBase <= 0.004;
   // "Tributos do mês" soma as despesas tributárias da DRE. Sem nenhuma lançada, o convencional daria
@@ -1531,6 +1562,10 @@ function saidas(){
       V['lp.temCredCbs'] = c.q.some(x => x.n && x.cbs < -0.004) || c.ano.credorCbs > 0.004;
       V['lp.anexoIV'] = anexo === 'IV';
       V['lp.ganha'] = dif < -0.004;
+      V['lp.snGanha'] = dif > 0.004;
+      V['lp.empate'] = Math.abs(dif) <= 0.004;
+      O['lp.ganhoLP'] = `${brl(Math.abs(dif))} a menos que o Simples ${t.hibr < t.conv ? 'híbrido' : 'convencional'}`;
+      O['lp.ganhoSN'] = `${brl(Math.abs(dif))} a menos que o Presumido`;
       V['lp.semIcms'] = at.icms && !(prem.icms > 0);
       // os dois cartões: imposto do ano e carga tributária sobre a receita somada dos meses salvos
       O['lp.presuncao'] = `Presunção de ${FMT.pct0(at.irpj)} da receita no IRPJ e ${FMT.pct0(at.csll)} na CSLL` +
@@ -1543,9 +1578,6 @@ function saidas(){
       O['lp.cargaSNInfo'] = `sobre a receita de ${brl(t.rec)}`;
       O['lp.cargaConv'] = `carga de ${P2(t.conv, t.rec)}`;
       O['lp.cargaHibr'] = `carga de ${P2(t.hibr, t.rec)}`;
-      O['lp.decisao'] = Math.abs(dif) < 0.005 ? 'Presumido e Simples empatam no ano'
-        : dif > 0 ? `O Simples ${qual} sai mais barato que o Presumido no ano` : `O Lucro Presumido sairia mais barato que o Simples ${qual} no ano`;
-      O['lp.dif'] = brl(Math.abs(dif));
       // CBS: débito menos crédito do ano no cartão; aberta na tabela, débito e crédito de cada trimestre
       O['lp.cbsInfo'] = `débito de ${brl(t.debCbs)} − crédito de ${brl(t.credCbs)}` + (t.credorCbs > 0.004 ? ` · sobra crédito de ${brl(t.credorCbs)}` : '');
       O['lp.cbsNota'] = 'Débito menos crédito de cada mês, sem o crédito transportado: transportar ou não muda só o mês em que se paga. ' +
@@ -1787,6 +1819,10 @@ function rApuracaoSimples(){
     <div class="sn-l"><span>DAS sem a CBS<small>o que sobraria no Simples</small></span><span class="v" data-o="r.dasSemCbs"></span></div>
     <div class="sn-l sn-fim"><span data-o="r.decisao"></span><span class="v"><span data-o="r.totalHib"></span><small data-o="r.contraHoje"></small></span></div>`;
 }
+// troféu da etiqueta "Mais barato": taça, alças, haste e base, na cor do texto da etiqueta
+const TROFEU = '<svg class="trofeu" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h8V6a4 4 0 0 1-8 0z" fill="currentColor"/>' +
+  '<path d="M4 3H2.2v1.3A2.6 2.6 0 0 0 4.4 6.9M12 3h1.8v1.3a2.6 2.6 0 0 1-2.2 2.6" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+  '<rect x="7.2" y="9.6" width="1.6" height="2.8" fill="currentColor"/><rect x="4.5" y="12.2" width="7" height="2.2" rx=".6" fill="currentColor"/></svg>';
 // fecha a aba: o Simples de hoje (CBS dentro do DAS) contra o regime híbrido (DAS sem a CBS + CBS por fora),
 // um cartão por regime, com os números e a composição dos tributos do mês
 function rComparativo(){
@@ -1796,24 +1832,24 @@ function rComparativo(){
     `<span>${rot}<b data-o="${pre}.${id}.p"></b><span class="m" data-o="${pre}.${id}.v"></span></span></div>`;
   // o IBS só entra onde existe número para ele: dentro do DAS o painel não o separa, e por fora é o informado
   const comp = (pre, rotDas, rotCbs, rotIbs, carga) => `<div class="cmp-comp"><h4>Composição dos tributos do mês</h4>
-      <div class="cmp-bar2" aria-hidden="true"><span class="c-ink" data-w="${pre}.das"></span><span class="c-brand" data-w="${pre}.cbs"></span>` +
+      <div class="cmp-bar2" aria-hidden="true"><span class="c-das" data-w="${pre}.das"></span><span class="c-brand" data-w="${pre}.cbs"></span>` +
       (rotIbs ? `<span class="c-line" data-w="${pre}.ibs"></span>` : '') + `</div>
-      <div class="cmp-leg">${parte(pre, 'das', rotDas, 'c-ink')}${parte(pre, 'cbs', rotCbs, 'c-brand')}` +
+      <div class="cmp-leg">${parte(pre, 'das', rotDas, 'c-das')}${parte(pre, 'cbs', rotCbs, 'c-brand')}` +
       (rotIbs ? `<div data-v="k.temIbs">${parte(pre, 'ibs', rotIbs, 'c-line')}</div>` : '') + `</div>
       <small class="cmp-carga" data-o="${carga}" data-v="k.temCarga"></small></div>`;
   return `<section class="card comparativo" aria-label="Convencional × Híbrido">
     <div class="card-h"><div><h2>Convencional × Híbrido</h2><p class="sub">Compare os dois cenários e veja qual sai mais barato neste mês.</p></div></div>
     <div class="cmp2">
-      <article class="cmp-card"><h3>Simples convencional</h3><p class="cmp-nota">CBS dentro do DAS</p>
-        ${linha('DAS total', 'k.dasConv', 'dest')}${linha('Alíquota efetiva', 'k.efetConv')}${linha('CBS dentro do DAS', 'k.cbsConv', 'sub')}
+      <article class="cmp-card" data-cls="ganha:k.convGanha"><span class="cmp-tag">${TROFEU}Mais barato no mês</span><h3>Simples convencional</h3><p class="cmp-nota">CBS dentro do DAS</p>
+        ${linha('DAS total', 'k.dasConv', 'dest')}<p class="cmp-ganho" data-o="k.ganhoConv"></p>${linha('Alíquota efetiva', 'k.efetConv')}${linha('CBS dentro do DAS', 'k.cbsConv', 'sub')}
         ${comp('k.conv', 'DAS base', 'CBS', '', 'k.cargaConv')}</article>
-      <article class="cmp-card"><h3>Regime híbrido</h3><p class="cmp-nota">DAS sem a CBS e CBS por fora</p>
+      <article class="cmp-card" data-cls="ganha:k.hibGanha"><span class="cmp-tag">${TROFEU}Mais barato no mês</span><h3>Regime híbrido</h3><p class="cmp-nota">DAS sem a CBS e CBS por fora</p>
         ${linha('DAS sem CBS', 'k.dasHib')}${linha('CBS por fora', 'k.cbsHib', '', 'k.cbsHibInfo')}
         <div data-v="k.temIbs">${linha('IBS por fora', 'k.ibsHib')}</div>
-        ${linha('Total', 'k.totHib', 'tot')}${linha('Alíquota efetiva', 'k.efetHib')}
+        ${linha('Total', 'k.totHib', 'tot')}<p class="cmp-ganho" data-o="k.ganhoHib"></p>${linha('Alíquota efetiva', 'k.efetHib')}
         ${comp('k.hib', 'DAS sem CBS', 'CBS por fora', 'IBS por fora', 'k.cargaHib')}</article>
     </div>
-    <div class="dl res cmp-res" data-cls="hibrido:k.hibrido"><span class="l" data-o="k.decisao"></span><span class="v" data-o="k.dif"></span></div>
+    <p class="cmp-eq" data-v="k.empate">Os dois regimes empatam no mês.</p>
     <div class="flag" data-v="k.semDas" data-o="k.semDas"></div>
     <p class="cmp-eq" data-v="k.temVariacao" data-o="k.variacao"></p>
     <p class="cmp-eq" data-v="k.temEquilibrio" data-o="k.equilibrio"></p>
@@ -1885,21 +1921,21 @@ function linhasCbs(g){
     <span class="cr-v" data-o="m.${k}.${i}.val"></span></div>`;
   }).join('');
 }
-function barra(k, lbl, cor, attrs){
-  return `<div class="bar"><div class="bar-h"><span>${lbl}</span><span data-o="b.${k}"></span></div>` +
-    `<div class="track" aria-hidden="true"><div class="fill ${cor}" data-w="b.${k}" ${attrs || ''}></div></div></div>`;
-}
 function rReforma(){
   const aberta = ui.memoria;
-  // memória fechada: só os totais e a CBS a pagar; aberta: premissas e linha a linha
+  // memória fechada: débito e crédito, cada um com a sua barra, e a CBS; aberta: premissas e linha a linha.
+  // O gráfico "Débito, crédito e saldo" ao lado saiu em 17/09/2026: repetia os mesmos três números num segundo cartão
   const resumo = `<div class="resumo-cbs">
-      <div class="sum"><span>Débito total</span><span data-o="m.debitoTotal"></span></div>
-      <div class="sum"><span>Crédito total</span><span data-o="m.creditoTotal"></span></div>
+      <div class="sum-bar"><span class="sb-l">Débito total</span>
+        <span class="sb-track" aria-hidden="true"><span class="fill c-deb" data-w="b.deb"></span></span><span class="sb-v" data-o="m.debitoTotal"></span></div>
+      <div class="sum-bar"><span class="sb-l">Crédito total</span>
+        <span class="sb-track" aria-hidden="true"><span class="fill cr-compras" data-w="cr.compras"></span><span class="fill cr-despesas" data-w="cr.despesas"></span><span class="fill cr-outras" data-w="cr.outras"></span><span class="fill cr-saldo" data-w="cr.saldo"></span></span>
+        <span class="sb-v" data-o="m.creditoTotal"></span><span class="sb-leg" data-v="cr.temLegenda" data-o="cr.legenda"></span></div>
     </div>`;
   const memo = `<div class="memo${aberta ? '' : ' fechada'}">
     <div class="card-h"><div><h2>Memória de cálculo — CBS</h2>
       <p class="sub">${aberta ? 'Base × alíquota.<span class="so-tela"> Ajuste os campos e tudo recalcula.</span>'
-        : '<span class="so-tela">Mostrando só os totais. Abra a memória para ver e ajustar linha a linha.</span><span class="so-papel">Débito e crédito do mês.</span>'}</p></div>
+        : 'Débito e crédito do mês.'}</p></div>
       <button class="btn" data-act="memoria" aria-expanded="${aberta}">${aberta ? 'Ocultar memória' : 'Ver memória'}</button></div>
     ${!aberta ? resumo : `<div class="prem">
       <div class="prem-t"><span class="cap">Premissas</span><span class="so-tela">Alterar aqui vale para <span data-o="m.linhas"></span> e para débitos e créditos.</span></div>
@@ -1923,17 +1959,8 @@ function rReforma(){
     </div></div>`}
     <div class="total" data-cls="credito:m.temCredor"><span><span data-o="m.cbsRotulo"></span><span class="suf" data-v="m.temCredor">vai para o mês seguinte</span></span><span data-o="m.cbsRes"></span></div>
   </div>`;
-  const lado = `<div class="side">
-    <div class="chart"><h3>Débito, crédito e saldo</h3><p class="sub">Composição do CBS do mês.</p>
-      ${barra('deb', 'Débito de CBS', 'c-ink')}
-      <div class="bar"><div class="bar-h"><span>Crédito de CBS</span><span data-o="b.cred"></span></div>
-        <div class="track empilhada" aria-hidden="true"><span class="fill c-mut" data-w="cr.compras"></span><span class="fill c-ink3" data-w="cr.despesas"></span><span class="fill c-ink" data-w="cr.outras"></span><span class="fill c-line" data-w="cr.saldo"></span></div>
-        <p class="cr-legenda" data-v="cr.temLegenda" data-o="cr.legenda"></p></div>
-      ${barra('cbs', o('m.cbsRotulo'), 'c-brand', 'data-cls="credito:m.temCredor"')}
-      </div>
-    </div>`;
   // fecha a aba Resultado: depois de receitas, despesas e resultado, a apuração da CBS
-  return `<section class="reforma" aria-label="Memória de cálculo da CBS">${memo}${lado}</section>`;
+  return `<section class="reforma" aria-label="Memória de cálculo da CBS">${memo}</section>`;
 }
 
 // Os quatro cartões e o "O que observar" saíram a pedido do usuário: os mesmos números já estão na
@@ -2129,18 +2156,18 @@ function rPresumido(){
     <div class="flag lp-aviso" data-v="lp.semIcms">Informe a carga de ICMS sobre a receita: no Simples ele já está dentro do DAS, e sem ele o Presumido sai barato demais.</div>`;
   const linha = (rot, k, cls, info, attrs) => `<div class="cmp-row${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}${info ? `<small data-o="${info}"></small>` : ''}</span><span class="v" data-o="${k}"></span></div>`;
   const cartoes = `<div class="cmp2">
-      <article class="cmp-card"><h3>Lucro Presumido</h3><p class="cmp-nota" data-o="lp.notaLP"></p>
-        ${linha('Imposto no ano', 'lp.total.4', 'dest')}${linha('Carga tributária', 'lp.cargaLP.4', 'tot', 'lp.cargaLPInfo')}
+      <article class="cmp-card" data-cls="ganha:lp.ganha"><span class="cmp-tag">${TROFEU}Mais barato no ano</span><h3>Lucro Presumido</h3><p class="cmp-nota" data-o="lp.notaLP"></p>
+        ${linha('Imposto no ano', 'lp.total.4', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoLP"></p>${linha('Carga tributária', 'lp.cargaLP.4', 'tot', 'lp.cargaLPInfo')}
         ${linha('IRPJ com adicional', 'lp.irpjTot')}${linha('CSLL', 'lp.csll.4')}${linha('CBS por fora', 'lp.cbs.4', '', 'lp.cbsInfo')}
         ${at.iss ? linha('ISS', 'lp.iss.4') : ''}${at.icms ? linha('ICMS', 'lp.icms.4') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.4', '', 'lp.inssInfo')}
       </article>
-      <article class="cmp-card"><h3>Simples Nacional</h3><p class="cmp-nota" data-o="lp.notaSN"></p>
-        ${linha('Imposto no ano', 'lp.simples', 'dest')}${linha('Carga tributária', 'lp.cargaSN.4', 'tot', 'lp.cargaSNInfo')}
+      <article class="cmp-card" data-cls="ganha:lp.snGanha"><span class="cmp-tag">${TROFEU}Mais barato no ano</span><h3>Simples Nacional</h3><p class="cmp-nota" data-o="lp.notaSN"></p>
+        ${linha('Imposto no ano', 'lp.simples', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoSN"></p>${linha('Carga tributária', 'lp.cargaSN.4', 'tot', 'lp.cargaSNInfo')}
         ${linha('Convencional — CBS dentro do DAS', 'lp.conv.4', '', 'lp.cargaConv')}${linha('Híbrido — CBS por fora', 'lp.hibr.4', '', 'lp.cargaHibr')}
         ${linha('INSS patronal (Anexo IV, fora do DAS)', 'lp.inss.4', '', '', ' data-v="lp.anexoIV"')}
       </article>
     </div>
-    <div class="dl res cmp-res" data-cls="hibrido:lp.ganha"><span class="l" data-o="lp.decisao"></span><span class="v" data-o="lp.dif"></span></div>`;
+    <p class="cmp-eq" data-v="lp.empate">Presumido e Simples empatam no ano.</p>`;
   const cols = ['1º tri', '2º tri', '3º tri', '4º tri', 'Ano'];
   const linhaT = (rot, k, cls, attrs) => `<div class="gpres${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}</span>` +
     cols.map((_, i) => `<span data-o="lp.${k}.${i}"></span>`).join('') + `</div>`;
