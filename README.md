@@ -662,10 +662,13 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
 - **Aba Anual → "O ano pelos meses salvos":** tabela mês a mês (receita, DAS, CBS por fora, resultado,
   margem) com totais, leitura do exercício (alíquota efetiva média, carga, qual regime sairia mais
   barato no acumulado, faixa do Simples, melhor e pior mês), alerta de **sublimite (R$ 3,6 mi)** e de
-  **exclusão (R$ 4,8 mi)** pelo ritmo do ano, aviso dos meses sem competência salva e o botão
-  "Preencher o exercício com estes meses" (pede confirmação: substitui o que estiver digitado).
-  "Para onde foi a receita" e "Em linguagem simples" (barras e frase do exercício digitado) saíram a pedido
-  do usuário em 16/09/2026.
+  **exclusão (R$ 4,8 mi)** pelo ritmo do ano e aviso dos meses sem competência salva.
+  - **A aba Anual é só isto e o Lucro Presumido** (17/09/2026). Saíram, a pedido do usuário: a "Demonstração de
+    resultado — exercício" (era **digitada**, nascia zerada com o mês novo e por isso aparecia em R$ 0,00), a faixa
+    de indicadores do topo da aba (que vinha dela) e o botão "Preencher o exercício com estes meses", que só servia
+    para abastecê-la — com eles saíram `calcAno`, `preencherAno` e as saídas `a.*`. Antes, em 16/09/2026, já tinham
+    saído "Para onde foi a receita" e "Em linguagem simples". `S.annual` continua no estado salvo (mês antigo tem
+    esses valores gravados), apenas não é mais mostrado. Sem banco, a aba explica que soma as competências salvas.
   - **CBS do ano = débito menos crédito dos meses** (17/09/2026). Antes somava a CBS paga em cada mês: mês com
     mais crédito que débito entrava como zero, e o crédito que o usuário não transportou **de propósito** (é
     análise dele, mês a mês) sumia da conta do ano. Agora `resumoDe` grava `debito`, `credito` (só o do mês, sem
@@ -710,7 +713,13 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
   - **Base do INSS** (16/09/2026): no cartão, "base: folha de R$ X × 27,80% + pró-labore de R$ Y × 20,00%";
     na tabela por trimestre a linha do INSS abre (`ui.inssBase`) a base de cálculo, cada despesa que o nome puxou
     com a sua alíquota e a nota (o FGTS fica de fora: é igual nos dois regimes).
-  - Celular: a tabela trimestral mostra só a coluna do ano. Impressão "com o detalhamento" abre os trimestres.
+  - **Trimestre ou mês** (17/09/2026): um alternador acima da tabela troca as colunas — 4 trimestres ou uma por
+    competência salva —, e o Ano fecha sempre. O número de colunas vai em `--cols` (a grade é dinâmica). IRPJ,
+    adicional, CSLL e as bases **são trimestrais na lei**: nas colunas de mês aparecem rateados pela receita do mês
+    dentro do trimestre (sem receita, divididos igualmente), e a tabela diz isso. Receita, CBS, ISS, ICMS, INSS e o
+    Simples são do próprio mês; o ano não muda em nenhuma das visões. No cartão, os valores do ano usam chaves
+    `lp.*.ano`, que não dependem do número de colunas.
+  - Celular: a tabela mostra só a coluna do ano. Impressão "com o detalhamento" abre a apuração.
   - Testes: seção 15 do painel (conta pura: LC 224 com ajuste, Anexo IV, comércio 8/12 com ICMS, atividade
     pelo anexo) e 3g do banco (trimestres, adicional, cartões, atividade pelo seletor, comércio com ICMS).
 

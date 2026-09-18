@@ -329,7 +329,8 @@
   .ano-acoes .lk:hover{color:var(--brand)}
   .present .ano-acoes{display:none}
   /* Lucro Presumido: uma linha por tributo, uma coluna por trimestre e o ano */
-  .gpres{display:grid; grid-template-columns:minmax(150px,1.5fr) repeat(5, minmax(84px,1fr)); gap:0 12px; padding:7px 0; border-top:1px solid var(--line); font-size:13px; align-items:baseline; min-width:640px}
+  /* o número de colunas muda com o período escolhido (4 trimestres ou um por mês salvo), por isso vem em --cols */
+  .gpres{display:grid; grid-template-columns:minmax(150px,1.5fr) repeat(var(--cols,5), minmax(84px,1fr)); gap:0 12px; padding:7px 0; border-top:1px solid var(--line); font-size:13px; align-items:baseline; min-width:640px}
   .gpres > span:not(:first-child){font-family:var(--mono); text-align:right; white-space:nowrap}
   .gpres > span:first-child{color:var(--ink-2)}
   .gpres.gh{border-top:0; padding-bottom:6px; font-size:11px; color:var(--muted)}
@@ -367,7 +368,8 @@
   .gano.gh.base{padding-top:8px}
   .gano.tot.base{border-top-color:var(--line-3)}
   .gpres-nota{margin:0; padding:6px 16px 10px; font-size:11px; line-height:1.5; color:var(--muted-2); background:var(--surface-2)}
-  .lp-tri{margin-top:20px}
+  .lp-alt{display:flex; justify-content:flex-end; margin-top:18px}
+  .lp-tri{margin-top:10px}
   .seg .gr .sel{font-size:12px}
   .cbscol{display:flex; flex-direction:column; gap:1px; min-width:0}
   .cbscol small{font-size:11px; color:var(--muted-2); padding-left:2px}
@@ -670,9 +672,9 @@
     .cad-row > :nth-child(4){grid-area:cred}
     .cad-row > :nth-child(5){grid-area:x}
     .cad-row.gh{display:none}
-    /* Lucro Presumido: no celular fica só a coluna do ano — com cinco colunas a que importa sumia na rolagem */
+    /* Lucro Presumido: no celular fica só a coluna do ano — com várias colunas a que importa sumia na rolagem */
     .gpres{grid-template-columns:minmax(0,1fr) auto; min-width:0}
-    .gpres > :nth-child(n+2):nth-child(-n+5){display:none}
+    .gpres > span:not(:first-child):not(:last-child){display:none}
   }
   @media (max-width:560px){
     .page{padding:20px 16px 48px}
@@ -1145,14 +1147,14 @@ function segregacao(){
     das: linhas.reduce((a, x) => a + x.das, 0), cbs: linhas.reduce((a, x) => a + x.cbs, 0)});
 }
 
-function calcAno(){
-  const a = S.annual, R = a.receita || 0;
-  const custos = soma(a.custos), ga = soma(a.ga), vendas = soma(a.vendas), trib = soma(a.tributarias);
-  const lucroBruto = R - custos, despesas = ga + vendas + trib, calculado = lucroBruto - despesas;
-  const resultado = a.resultadoInformado == null ? calculado : a.resultadoInformado;
-  const ls = linhaSimples(a.tributarias);
-  return {R, custos, ga, vendas, trib, lucroBruto, despesas, calculado, resultado,
-    diff: resultado - calculado, simples: ls ? (ls[1] || 0) : 0};
+function linhasComCredito(){ return alvoGeral || S.monthly.ga.map(r => (r[3] || 0) > 0); }
+function propagar(tipo){
+  const rf = S.monthly.reforma, v = tipo === 'compras' ? rf.aliqCompras : rf.aliqGeral;
+  // a alíquota das compras só vale para as linhas de compra que têm crédito
+  if(tipo === 'compras'){ S.monthly.compras.forEach(r => { if((r[2] || 0) > 0) r[3] = v; }); return; }
+  const alvo = linhasComCredito(); S.monthly.ga.forEach((r, i) => { if(alvo[i]) r[3] = v; });
+  // toda redução é um fator da geral, então mexer nela move todas as linhas, e não só as de alíquota cheia
+  rf.debitos.concat(rf.creditos).forEach(r => { r[2] = aliqTipo(r[3]); });
 }
 
 /* ---------- premissas: propagam para as linhas ---------- */
@@ -1281,7 +1283,7 @@ function textoEquilibrio(c){
 }
 /* ---------- saídas: todo texto calculado da tela, por chave ---------- */
 function saidas(){
-  const cm = calcMes(), ca = calcAno(), m = S.monthly, a = S.annual, rf = m.reforma;
+  const cm = calcMes(), m = S.monthly, rf = m.reforma;
   const O = {}, W = {}, C = {}, V = {}, H = {};                         // H: trechos de HTML sem campos (gráficos)
   const P = (v, R) => pct(R ? v / R * 100 : 0);
   const P2 = (v, R) => dec(R ? v / R * 100 : 0, 2, 2) + '%';          // faixa de indicadores: duas casas
@@ -1473,19 +1475,6 @@ function saidas(){
 
 
   // ano
-  Object.assign(O, {
-    'a.receita': brl(ca.R), 'a.receitaP': pct(ca.R ? 100 : 0),
-    'a.custos': brl(ca.custos), 'a.custosP': P(ca.custos, ca.R),
-    'a.lucroBruto': brl(ca.lucroBruto), 'a.lucroBrutoP': P(ca.lucroBruto, ca.R),
-    'a.gat': brl(ca.ga), 'a.gatP': P(ca.ga, ca.R), 'a.vendas': brl(ca.vendas), 'a.vendasP': P(ca.vendas, ca.R),
-    'a.trib': brl(ca.trib), 'a.tribP': P(ca.trib, ca.R),
-    'a.resultado': brl(ca.resultado), 'a.margem': P(ca.resultado, ca.R),
-    'a.despesas': brl(ca.despesas), 'a.despesasP': P2(ca.despesas, ca.R),
-    'a.simples': brl(ca.simples), 'a.simplesP': P2(ca.simples, ca.R)
-  });
-  itens(a.custos, 'a.cu', ca.R); itens(a.ga, 'a.ga', ca.R); itens(a.vendas, 'a.ve', ca.R); itens(a.tributarias, 'a.tr', ca.R);
-  V['a.temDiff'] = Math.abs(ca.diff) >= 0.01;
-  O['a.flag'] = `O resultado informado (${brl(ca.resultado)}) difere da soma das linhas (${brl(ca.calculado)}) em ${brl(Math.abs(ca.diff))}. Valor informado mantido — verificar lançamentos.`;
   // aba Anual: o ano somado pelas competências salvas no banco
   const ano = banco.ano;
   if(ano && ano.linhas && ano.linhas.length){
@@ -1520,11 +1509,12 @@ function saidas(){
     if(lp && lp.de === ano && !lp.carregando && !lp.erro){
       const pr = S.presumido || {}, anexo = anexoEmpresa(), at = atividadeLP(), prem = premissasLP();
       const c = calcPresumido(ano.linhas, lp.folhas, prem, anexo);
-      const cols = c.q.concat([c.ano]);
+      const cols = (ui.lpMes ? c.meses : c.q).concat([c.ano]);
       const sinal = v => Math.abs(v) < 0.005 ? brl(0) : (v > 0 ? '+ ' : '− ') + brl(Math.abs(v));
+      const ultima = cols.length - 1;
       cols.forEach((t, i) => {
-        const melhor = Math.min(t.conv, t.hibr);
-        LP_CAMPOS.forEach(k => { O[`lp.${k}.${i}`] = t.n ? brl(t[k]) : '—'; });
+        const melhor = Math.min(t.conv, t.hibr), alias = k => { if(i === ultima) O[`lp.${k}.ano`] = O[`lp.${k}.${i}`]; };
+        LP_CAMPOS.forEach(k => { O[`lp.${k}.${i}`] = t.n ? brl(t[k]) : '—'; alias(k); });
         O[`lp.acrescimo.${i}`] = t.n ? sinal(t.acrescimo) : '—';
         // CBS em duas linhas, como na tabela do ano: a pagar e crédito. No ano, o crédito é o que sobra depois do débito
         O[`lp.cbs.${i}`] = t.n ? cbsPagar(t.cbs) : '—';
@@ -1532,7 +1522,9 @@ function saidas(){
         O[`lp.dif.${i}`] = t.n ? sinal(t.total - melhor) : '—';
         O[`lp.cargaLP.${i}`] = t.n ? P2(t.total, t.rec) : '—';
         O[`lp.cargaSN.${i}`] = t.n ? P2(melhor, t.rec) : '—';
-        O[`lp.meses.${i}`] = i === 4 ? `${t.n} ${t.n === 1 ? 'mês' : 'meses'}` : t.n === 3 ? '3 meses' : t.n ? `${t.n} de 3 meses` : 'sem meses';
+        O[`lp.meses.${i}`] = i === ultima ? `${t.n} ${t.n === 1 ? 'mês' : 'meses'}`
+          : ui.lpMes ? '' : t.n === 3 ? '3 meses' : t.n ? `${t.n} de 3 meses` : 'sem meses';
+        ['acrescimo', 'dif', 'cargaLP', 'cargaSN', 'credCbsSobra', 'cbs'].forEach(alias);
       });
       const t = c.ano, melhor = Math.min(t.conv, t.hibr), dif = t.total - melhor, qual = t.hibr < t.conv ? 'híbrido' : 'convencional';
       V['lp.temLc224'] = cols.some(x => Math.abs(x.acrescimo) > 0.004);
@@ -1569,12 +1561,18 @@ function saidas(){
       const partesInss = [t.folha > 0.004 ? `folha de ${brl(t.folha)} × ${FMT.pct(prem.encargos)}` : '',
         t.prolabore > 0.004 ? `pró-labore de ${brl(t.prolabore)} × ${FMT.pct(prem.encargosPro)}` : ''].filter(Boolean);
       O['lp.inssInfo'] = partesInss.length ? 'base: ' + partesInss.join(' + ') : 'sem folha nas despesas';
+      // cada despesa da folha na coluna certa: por trimestre ou por mês, conforme a tabela está
+      const coluna = {};
+      cols.forEach((t, i) => { if(i === ultima) return;
+        if(ui.lpMes) coluna[t.periodo] = i; else ano.linhas.forEach(x => { if(Math.floor((+x.periodo.slice(5, 7) - 1) / 3) === i) coluna[x.periodo] = i; });
+      });
       lf.forEach((l, j) => {
-        const somas = [0, 0, 0, 0, 0];
+        const somas = cols.map(() => 0);
         ano.linhas.forEach(x => {
           if(!x.resumo) return;                        // mesmos meses que entram na conta
-          const v = l.valores[x.periodo] || 0;
-          somas[Math.floor((+x.periodo.slice(5, 7) - 1) / 3)] += v; somas[4] += v;
+          const v = l.valores[x.periodo] || 0, i = coluna[x.periodo];
+          if(i !== undefined) somas[i] += v;
+          somas[ultima] += v;
         });
         somas.forEach((v, i) => { O[`lp.lf.${j}.${i}`] = cols[i].n && v > 0.004 ? brl(v) : '—'; });
         O[`lp.lf.${j}.aliq`] = '× ' + FMT.pct(l.cat === 'prolabore' ? prem.encargosPro : prem.encargos);
@@ -1680,9 +1678,9 @@ const varMes = k => `<small class="var" data-v="v.tem.${k}" data-o="v.${k}"></sm
 function rHeroi(){
   const linhaH = (lbl, kv, kp, cls, suf, attrs) => `<div class="hero-row ${cls || ''}" ${attrs || ''}><span class="lbl">${lbl}${suf || ''}</span>` +
     `<span class="val">${o(kv)}${kp ? ' ' + o(kp, 'pct-s') : ''}</span></div>`;
-  const lado = ui.tab === 'anual'
-    ? linhaH('Despesas operacionais', 'a.despesas', 'a.despesasP') + linhaH('Simples Nacional', 'a.simples', 'a.simplesP')
-    : linhaH('Simples Nacional', 'm.simples', 'm.simplesP', '', varMes('das')) +
+  // aba Anual sem faixa: os números dela vinham da DRE do exercício, que saiu em 17/09/2026
+  if(ui.tab === 'anual') return '';
+  const lado = linhaH('Simples Nacional', 'm.simples', 'm.simplesP', '', varMes('das')) +
       linhaH(o('m.cbsRotulo'), 'm.cbsRes', '', 'cbs', ' <span class="suf">(reforma)</span>', 'data-cls="credito:m.temCredor"');
   // sem bloco herói: o resultado líquido já fecha a DRE e está nos cartões do resumo
   return `<section class="hero" aria-label="Indicadores"><div class="hero-side">${lado}</div></section>`;
@@ -2045,15 +2043,15 @@ function rAnoMeses(){
   const cab = ano => `<div class="card-h"><div><h2>O ano pelos meses salvos</h2>
     <p class="sub">Cada competência salva desta empresa${ano ? ' em ' + ano : ''}, somada direto do banco de dados.</p></div></div>`;
   const atualizar = `<button class="lk" type="button" data-act="ano-atualizar">atualizar</button>`;
-  if(!a || a.carregando) return `<section class="card ano" aria-label="O ano pelos meses salvos">${cab(a && a.ano)}<p class="sub">Somando as competências…</p></section>`;
-  if(a.semFuncao) return `<section class="card ano" aria-label="O ano pelos meses salvos">${cab(a.ano)}
+  if(!a || a.carregando) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a && a.ano)}<p class="sub">Somando as competências…</p></section>`;
+  if(a.semFuncao) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
     <div class="flag">Este banco de dados ainda não tem a função <code>resumos</code>. Rode
     <code>supabase/migrations/20260912120000_resumo_e_heranca.sql</code> no SQL Editor do Supabase
     para o painel somar os meses salvos e o mês novo herdar do anterior.</div>
     <div class="ano-acoes">${atualizar}</div></section>`;
-  if(!a.linhas.length) return `<section class="card ano" aria-label="O ano pelos meses salvos">${cab(a.ano)}
+  if(!a.linhas.length) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
     <p class="sub">Nenhuma competência salva em ${a.ano}.</p><div class="ano-acoes">${atualizar}</div></section>`;
-  return `<section class="card ano" aria-label="O ano pelos meses salvos">${cab(a.ano)}
+  return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
     <div class="scroll-x">
       <div class="gano gh"><span>Mês</span><span>Receita</span><span>DAS</span><span>CBS a pagar</span><span>CBS crédito</span><span>Resultado</span><span>Margem</span></div>
       ${a.linhas.map((x, i) => `<div class="gano"><span>${mesCurto(x.periodo)}</span>
@@ -2063,7 +2061,7 @@ function rAnoMeses(){
     </div>
     <div class="obs"><h4>Leitura do ano</h4><p data-o="an.leitura"></p><p data-o="an.leitura2" data-v="an.temLeitura2"></p><p data-o="an.limite" data-v="an.temLimite"></p></div>
     <div class="flag" data-v="an.temFalta" data-o="an.falta"></div>
-    <div class="ano-acoes"><button class="btn" data-act="ano-preencher">Preencher o exercício com estes meses</button>${atualizar}</div>
+    <div class="ano-acoes">${atualizar}</div>
   </section>`;
 }
 // CBS do ano, para conferir com um clique: débito e crédito de cada mês, o crédito transportado e o que foi pago no mês
@@ -2079,21 +2077,15 @@ function rCbsAno(a){
     `<p class="gpres-nota" data-o="an.cbsNota"></p>`;
 }
 function rAnual(){
-  const a = S.annual;
-  let h = `<div class="card-h"><div><h2>Demonstração de resultado — exercício</h2><p class="sub">Valores do exercício e participação sobre a receita.</p></div>${btnDetalhe()}</div>`;
-  h += linha('rec', 'Receita declarada <span class="tag-src">PGDAS</span>', 'a.receita', 'a.receitaP', 'annual.receita');
-  h += linha('tot', '( − ) Custos', 'a.custos', 'a.custosP');
-  if(ui.detalhe) h += lista('annual.custos', a.custos, 'a.cu');
-  h += linha('gross', '( = ) Lucro operacional bruto', 'a.lucroBruto', 'a.lucroBrutoP');
-  h += linha('tot', '( − ) Despesas gerais e administrativas', 'a.gat', 'a.gatP');
-  if(ui.detalhe) h += lista('annual.ga', a.ga, 'a.ga');
-  if(a.vendas.length){ h += linha('tot', '( − ) Despesas com vendas', 'a.vendas', 'a.vendasP'); if(ui.detalhe) h += lista('annual.vendas', a.vendas, 'a.ve'); }
-  h += linha('tot', '( − ) Despesas tributárias', 'a.trib', 'a.tribP');
-  if(ui.detalhe) h += lista('annual.tributarias', a.tributarias, 'a.tr');
-  h += linha('res', '( = ) Resultado líquido', 'a.resultado', 'a.margem', 'annual.resultadoInformado');
-  h += `<div class="flag" data-v="a.temDiff" data-o="a.flag"></div>`;
-  // "Para onde foi a receita" e "Em linguagem simples" saíram a pedido do usuário (16/09/2026)
-  return painel('card', 'anual', h) + rAnoMeses() + rPresumido();
+  // A DRE do exercício (digitada) saiu a pedido do usuário em 17/09/2026: ela não somava sozinha — era preenchida à
+  // mão ou pelo botão — e o que interessa já está em "O ano pelos meses salvos", que soma as competências do banco
+  const ano = rAnoMeses();
+  if(ano) return ano + rPresumido();
+  return `<section class="card" id="painel" role="tabpanel" aria-labelledby="tab-anual">
+    <div class="card-h"><div><h2>O ano pelos meses salvos</h2>
+      <p class="sub">Esta aba soma as competências salvas no banco de dados.</p></div></div>
+    <div class="flag">No modo local não há meses salvos para somar. Configure o Supabase (README → Banco de dados)
+    ou use a aba Resultado, que trabalha com o mês aberto.</div></section>`;
 }
 // Sair do Simples? Só lê os meses salvos. À vista: a atividade (que define a presunção), o imposto e a carga tributária
 // nos dois regimes e a conclusão, no modelo dos cartões Convencional × Híbrido. "Ver por trimestre" abre a apuração
@@ -2128,18 +2120,23 @@ function rPresumido(){
   const linha = (rot, k, cls, info, attrs) => `<div class="cmp-row${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}${info ? `<small data-o="${info}"></small>` : ''}</span><span class="v" data-o="${k}"></span></div>`;
   const cartoes = `<div class="cmp2">
       <article class="cmp-card" data-cls="ganha:lp.ganha"><span class="cmp-tag">${TROFEU}Mais barato no ano</span><h3>Lucro Presumido</h3><p class="cmp-nota" data-o="lp.notaLP"></p>
-        ${linha('Imposto no ano', 'lp.total.4', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoLP"></p>${linha('Carga tributária', 'lp.cargaLP.4', 'tot', 'lp.cargaLPInfo')}
-        ${linha('IRPJ com adicional', 'lp.irpjTot')}${linha('CSLL', 'lp.csll.4')}${linha('CBS por fora', 'lp.cbs.4', '', 'lp.cbsInfo')}
-        ${at.iss ? linha('ISS', 'lp.iss.4') : ''}${at.icms ? linha('ICMS', 'lp.icms.4') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.4', '', 'lp.inssInfo')}
+        ${linha('Imposto no ano', 'lp.total.ano', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoLP"></p>${linha('Carga tributária', 'lp.cargaLP.ano', 'tot', 'lp.cargaLPInfo')}
+        ${linha('IRPJ com adicional', 'lp.irpjTot')}${linha('CSLL', 'lp.csll.ano')}${linha('CBS por fora', 'lp.cbs.ano', '', 'lp.cbsInfo')}
+        ${at.iss ? linha('ISS', 'lp.iss.ano') : ''}${at.icms ? linha('ICMS', 'lp.icms.ano') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.ano', '', 'lp.inssInfo')}
       </article>
       <article class="cmp-card" data-cls="ganha:lp.snGanha"><span class="cmp-tag">${TROFEU}Mais barato no ano</span><h3>Simples Nacional</h3><p class="cmp-nota" data-o="lp.notaSN"></p>
-        ${linha('Imposto no ano', 'lp.simples', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoSN"></p>${linha('Carga tributária', 'lp.cargaSN.4', 'tot', 'lp.cargaSNInfo')}
-        ${linha('Convencional — CBS dentro do DAS', 'lp.conv.4', '', 'lp.cargaConv')}${linha('Híbrido — CBS por fora', 'lp.hibr.4', '', 'lp.cargaHibr')}
-        ${linha('INSS patronal (Anexo IV, fora do DAS)', 'lp.inss.4', '', '', ' data-v="lp.anexoIV"')}
+        ${linha('Imposto no ano', 'lp.simples', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoSN"></p>${linha('Carga tributária', 'lp.cargaSN.ano', 'tot', 'lp.cargaSNInfo')}
+        ${linha('Convencional — CBS dentro do DAS', 'lp.conv.ano', '', 'lp.cargaConv')}${linha('Híbrido — CBS por fora', 'lp.hibr.ano', '', 'lp.cargaHibr')}
+        ${linha('INSS patronal (Anexo IV, fora do DAS)', 'lp.inss.ano', '', '', ' data-v="lp.anexoIV"')}
       </article>
     </div>
     <p class="cmp-eq" data-v="lp.empate">Presumido e Simples empatam no ano.</p>`;
-  const cols = ['1º tri', '2º tri', '3º tri', '4º tri', 'Ano'];
+  // colunas: por trimestre (padrão) ou uma por mês salvo; o ano fecha sempre a tabela
+  const porMes = ui.lpMes;
+  const cols = (porMes ? (p.de.linhas || []).filter(x => x.resumo).map(x => mesCurto(x.periodo)) : ['1º tri', '2º tri', '3º tri', '4º tri']).concat(['Ano']);
+  const alternador = `<div class="cad-alt" role="group" aria-label="Período da tabela">` +
+    `<button class="cad-aba" type="button" data-act="lp-periodo" data-p="tri" aria-pressed="${!porMes}">Trimestre</button>` +
+    `<button class="cad-aba" type="button" data-act="lp-periodo" data-p="mes" aria-pressed="${porMes}">Mês</button></div>`;
   const linhaT = (rot, k, cls, attrs) => `<div class="gpres${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}</span>` +
     cols.map((_, i) => `<span data-o="lp.${k}.${i}"></span>`).join('') + `</div>`;
   // linha que abre o detalhe com um clique (INSS e CBS), com o valor de cada coluna
@@ -2157,7 +2154,7 @@ function rPresumido(){
   const baseInss = !inssAberto ? '' : linhaT('Base de cálculo', 'baseInss', 'base') +
     (p.linhas || []).map((l, j) => linhaT(`${esc(l.nome)} <small data-o="lp.lf.${j}.aliq"></small>`, `lf.${j}`, 'base item')).join('') +
     `<p class="gpres-nota" data-o="lp.inssNota"></p>`;
-  const trimestres = !aberto ? '' : `<div class="scroll-x lp-tri">
+  const trimestres = !aberto ? '' : `<div class="lp-alt">${alternador}</div><div class="scroll-x lp-tri" style="--cols:${cols.length}">
       <div class="gpres gh"><span></span>${cols.map((c, i) => `<span>${c}<small data-o="lp.meses.${i}"></small></span>`).join('')}</div>
       ${linhaT('Receita', 'rec', 'rec')}
       ${linhaT('Base do IRPJ', 'baseIrpj', 'sub')}${linhaT('Base da CSLL', 'baseCsll', 'sub')}
@@ -2170,7 +2167,8 @@ function rPresumido(){
       ${linhaT('Carga do Simples (melhor cenário)', 'cargaSN', 'sub')}
       ${linhaT('Presumido − melhor do Simples', 'dif', 'dif')}
     </div>
-    <p class="cmp-eq nota">Adicional do IRPJ: 10% sobre a base que passa de R$ 20 mil por mês do trimestre (R$ 60 mil no trimestre completo). CBS por fora: débito menos crédito, a mesma do regime híbrido.</p>`;
+    <p class="cmp-eq nota">Adicional do IRPJ: 10% sobre a base que passa de R$ 20 mil por mês do trimestre (R$ 60 mil no trimestre completo). CBS por fora: débito menos crédito, a mesma do regime híbrido.</p>
+    ${porMes ? `<p class="cmp-eq nota">IRPJ, adicional, CSLL e as bases são apurados por trimestre: nas colunas de mês eles aparecem rateados pela receita de cada mês. Receita, CBS, ISS, ICMS, INSS e o Simples são do próprio mês.</p>` : ''}`;
   return cartao(premissas + cartoes + trimestres + `
     <p class="cmp-eq nota" data-v="lp.temLc224">LC 224/2025: a presunção sobe 10% sobre a receita acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre, com ajuste nos seguintes). A regra está em disputa na Justiça (ADI 7920 no STF).</p>
     <p class="cmp-eq nota">Fica de fora: IBS (quase zero até 2028, cresce de 2029 a 2033), retenções, ISS fixo de sociedade de profissionais e distribuição de lucros. A troca vale para o ano inteiro: a saída do Simples por opção é comunicada até o fim de janeiro.</p>`, true);
@@ -2727,7 +2725,30 @@ function calcPresumido(linhas, folhas, prem, anexo){
   // no ano, débito menos crédito; sobrando crédito, a CBS do ano é zero e o saldo fica para o ano seguinte
   ano.credorCbs = Math.max(0, -ano.cbs);
   if(ano.credorCbs > 0){ ano.cbs = 0; ano.total += ano.credorCbs; ano.hib += ano.credorCbs; ano.hibr += ano.credorCbs; }
-  return {q, ano};
+  // Visão por mês: receita, CBS, ISS/ICMS, INSS e Simples são do próprio mês. IRPJ, adicional, CSLL e as bases são
+  // apurados POR TRIMESTRE (é assim na lei), então aqui aparecem rateados pela receita do mês dentro do trimestre —
+  // sem receita no trimestre, divididos igualmente. A tabela diz isso embaixo
+  const meses = (linhas || []).filter(x => x.resumo).sort((a, b) => a.periodo < b.periodo ? -1 : 1).map(x => {
+    const r = x.resumo, tri = q[Math.floor((+x.periodo.slice(5, 7) - 1) / 3)];
+    const m = Object.fromEntries(LP_CAMPOS.map(k => [k, 0]));
+    const cb = cbsDoMes(r), f = folhas[x.periodo];
+    m.periodo = x.periodo; m.n = 1;
+    m.rec = +r.receita || 0; m.das = +r.das || 0;
+    m.debCbs = cb.deb; m.credCbs = cb.cred; m.cbs = cb.deb - cb.cred;
+    m.semCbs = (+r.naTransicao || 0) - (+r.cbs || 0); m.hib = m.semCbs + m.cbs;
+    m.folha = typeof f === 'object' && f ? +f.folha || 0 : +f || 0;
+    m.prolabore = typeof f === 'object' && f ? +f.prolabore || 0 : 0;
+    m.baseInss = m.folha + m.prolabore;
+    m.inss = m.folha * prem.encargos + m.prolabore * (prem.encargosPro == null ? prem.encargos : prem.encargosPro);
+    m.iss = m.rec * prem.iss; m.icms = m.rec * prem.icms;
+    const parte = tri.rec > 0.004 ? m.rec / tri.rec : (tri.n ? 1 / tri.n : 0);
+    ['acrescimo', 'baseIrpj', 'baseCsll', 'irpj', 'adicional', 'csll'].forEach(k => { m[k] = tri[k] * parte; });
+    m.total = m.irpj + m.adicional + m.csll + m.cbs + m.iss + m.icms + m.inss;
+    const fora = anexo === 'IV' ? m.inss : 0;
+    m.conv = m.das + fora; m.hibr = m.hib + fora;
+    return m;
+  });
+  return {q, ano, meses};
 }
 // folha dos meses salvos: só as linhas de despesa de cada mês (dados->monthly->ga), não o estado inteiro
 async function carregarFolhas(a){
@@ -2834,30 +2855,6 @@ function alertaLimite(t){
   if(t.n >= 3 && proj > SUBLIMITE) return `No ritmo destes ${t.n} meses, o ano fecharia em ${brl(proj)} — acima do sublimite de ${brl(SUBLIMITE)}, que tira ICMS e ISS do DAS.`;
   return '';
 }
-// substitui as linhas do exercício pelos totais dos meses salvos (pede confirmação: o digitado se perde)
-async function preencherAno(){
-  const a = banco.ano;
-  if(!a || !a.linhas.length) return;
-  const t = totaisAno(a.linhas);
-  const r = await modal({
-    titulo: 'Preencher o exercício',
-    texto: `As linhas do exercício passam a ser os totais dos ${t.n} meses salvos de ${a.ano}. O que estiver digitado aqui é substituído.`,
-    botoes: [['cancelar', 'Cancelar'], ['preencher', 'Substituir pelos totais', 'prim']], padrao: 'cancelar'
-  });
-  if(r.botao !== 'preencher'){ render(); return; }
-  const rot = `soma dos meses salvos de ${a.ano}`;
-  S.annual.receita = t.rec;
-  S.annual.custos = [[`Custos — ${rot}`, t.custos]];
-  S.annual.ga = [[`Despesas gerais e administrativas — ${rot}`, t.ga]];
-  S.annual.vendas = t.vendas > 0.004 ? [[`Despesas com vendas — ${rot}`, t.vendas]] : [];
-  // a linha do Simples continua com esse nome: é ela que o cálculo do exercício procura
-  S.annual.tributarias = [['Simples Nacional', t.das], [`Outras despesas tributárias — ${rot}`, Math.max(0, t.trib - t.das)]];
-  S.annual.resultadoInformado = t.res;
-  S.annual.compraMercadoria = t.compras;
-  render();
-  toast(`Exercício preenchido com ${t.n} ${t.n === 1 ? 'mês salvo' : 'meses salvos'}`);
-}
-
 async function abrirMes(empresaId, periodo, op){
   op = op || {};
   const r = await sb('rpc/carregar_painel', {metodo: 'POST', corpo: {p_empresa_id: empresaId, p_periodo: periodo}});
@@ -3264,8 +3261,8 @@ app.addEventListener('click', e => {
     case 'presumido': ui.presumido = !ui.presumido; render(); focar('[data-act="presumido"]'); break;
     case 'lp-inss': ui.inssBase = !ui.inssBase; render(); focar('[data-act="lp-inss"]'); break;
     case 'lp-cbs': ui.cbsLP = !ui.cbsLP; render(); focar('[data-act="lp-cbs"]'); break;
+    case 'lp-periodo': ui.lpMes = b.dataset.p === 'mes'; render(); focar(`[data-act="lp-periodo"][data-p="${b.dataset.p}"]`); break;
     case 'an-cbs': ui.cbsAno = !ui.cbsAno; render(); focar('[data-act="an-cbs"]'); break;
-    case 'ano-preencher': comErro(preencherAno); break;
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;
     case 'detalhe': ui.detalhe = !ui.detalhe; render(); focar('[data-act="detalhe"]'); break;
     case 'estoque': ui.estoque = !ui.estoque; render(); focar('[data-act="estoque"]'); break;
@@ -3470,7 +3467,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, cbsAno: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
