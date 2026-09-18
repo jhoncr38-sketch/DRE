@@ -19,9 +19,12 @@
     --line:#E7E5E0; --line-2:#DAD8D2; --line-3:#C7C5BF; --on-fill:#C9CCD2;
     --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
     /* texto sobre --fill (recalculado em refresh() pela luz da cor) e tons que antes estavam cravados no CSS */
+    /* o cartão não é branco chapado: escurece um fio na base, como papel sob luz que vem de cima */
+    --card-luz:color-mix(in srgb, var(--surface) 97%, var(--canvas));
     --sobre-fill:#FFFFFF; --hover-rail:rgba(255,255,255,.6); --hover-linha:#FAF9F7; --alt:#F2F1ED; --veu:rgba(20,22,26,.45);
     /* compasso do espaço: todo recuo e toda distância saem desta escala (4 · 8 · 12 · 16 · 24 · 32 · 48).
        Antes cada bloco tinha o seu (28/30/22, 22/26, 12/18…), e era isso que fazia a página parecer desalinhada */
+    --r:4px; --r-2:3px;
     --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px; --e6:32px; --e7:48px;
     --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
     --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -35,13 +38,15 @@
     --canvas:#111214; --surface:#1B1C1F; --surface-2:#232529; --rail:#2B2D32;
     --line:#2C2E33; --line-2:#373A40; --line-3:#4B4F56;
     --ok:#2A8C5C;
+    --card-luz:color-mix(in srgb, var(--surface) 93%, #FFFFFF);   /* no escuro a luz clareia o alto, não a base */
     --hover-rail:rgba(255,255,255,.08); --hover-linha:#25272B; --alt:#232529; --veu:rgba(0,0,0,.62);
   }
   html[data-tema="escuro"] .logo{background:#fff; padding:3px}          /* a logo é escura: ganha uma placa clara */
   html[data-tema="escuro"] .btn.prim:hover{filter:brightness(.9)}       /* no escuro o botão é claro: clarear some */
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--canvas); color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased}
+  body{background:var(--canvas); color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.45;
+    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums}
   [hidden]{display:none !important}
   button{font:inherit; color:inherit}
   :focus-visible{outline:2px solid var(--brand); outline-offset:2px}
@@ -70,12 +75,12 @@
   .co{font-size:17px; font-weight:600; letter-spacing:-.01em}
   .ctx{font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.02em; text-transform:uppercase; margin-top:2px}
   .nav{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; max-width:100%}
-  .rail{display:flex; gap:6px; background:var(--rail); padding:4px; border-radius:2px; max-width:100%; overflow-x:auto; scrollbar-width:none}
-  .tab{padding:7px 14px; font:500 13px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap}
+  .rail{display:flex; gap:6px; background:var(--rail); padding:4px; border-radius:var(--r); max-width:100%; overflow-x:auto; scrollbar-width:none}
+  .tab{padding:7px 14px; font:500 13px/1 var(--sans); border:0; border-radius:var(--r-2); background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap}
   .tab[aria-selected="true"]{background:var(--fill); color:var(--sobre-fill)}
   .tab:not([aria-selected="true"]):hover{background:var(--hover-rail); color:var(--ink)}
   .rail-sep{flex:0 0 1px; background:var(--line-3); margin:4px 1px}
-  .btn{padding:10px 13px; font:500 12px/1 var(--sans); background:var(--surface); color:var(--ink); border:1px solid var(--line-2); border-radius:2px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px}
+  .btn{padding:10px 13px; font:500 12px/1 var(--sans); background:var(--surface); color:var(--ink); border:1px solid var(--line-2); border-radius:var(--r); cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px}
   .btn:hover{border-color:var(--line-3); background:var(--surface-2)}
   /* resposta ao toque: cor muda em 150ms e o botão afunda 1px enquanto está pressionado */
   .btn, .tab, .add, .lk, .x{transition:background-color .15s ease, border-color .15s ease, color .15s ease, filter .15s ease, transform .1s ease}
@@ -85,7 +90,7 @@
 
   /* Menu de opções */
   .menu-wrap{position:relative}
-  .menu{position:absolute; right:0; top:calc(100% + 6px); z-index:30; background:var(--surface); box-shadow:0 0 0 1px var(--line-2); min-width:240px; padding:6px 0; display:flex; flex-direction:column}
+  .menu{position:absolute; right:0; top:calc(100% + 6px); z-index:30; background:var(--surface); border-radius:var(--r); box-shadow:0 0 0 1px var(--line-2); min-width:240px; padding:6px 0; display:flex; flex-direction:column}
   .menu button{display:flex; justify-content:space-between; align-items:baseline; gap:12px; width:100%; text-align:left; padding:9px 14px; border:0; background:transparent; font-size:13px; cursor:pointer}
   .menu button:hover{background:var(--surface-2)}
   .menu button.armed{background:var(--fill); color:var(--sobre-fill)}
@@ -93,18 +98,20 @@
   .menu .sep{height:1px; background:var(--line); margin:6px 0}
 
   /* Personalizar */
-  .panel{background:var(--surface); padding:var(--e5)}
+  .panel{background:var(--surface); padding:var(--e5); border-radius:var(--r)}
   .panel-h{display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px}
   .fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr)); gap:18px 28px}
   .field{display:flex; flex-direction:column; gap:4px; min-width:0}
   .field > span{font-size:11px; color:var(--muted)}
   .swatches{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
   .sw{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-3)}
-  .sw input[type=color]{width:34px; height:26px; padding:0; border:1px solid var(--line-2); border-radius:2px; background:none; cursor:pointer}
+  .sw input[type=color]{width:34px; height:26px; padding:0; border:1px solid var(--line-2); border-radius:var(--r); background:none; cursor:pointer}
 
   /* Faixa de indicadores */
   .hero{display:grid; grid-template-columns:minmax(0,1fr); gap:var(--e4)}
-  .hero-side{display:grid; grid-auto-rows:1fr; gap:1px; background:var(--line-2); min-width:0}
+  /* o recorte arredondado fica no contêiner: assim o fundo que faz as divisórias não sobra nas quinas */
+  .hero-side{display:grid; grid-auto-rows:1fr; gap:1px; background:var(--line-2); min-width:0;
+    border-radius:var(--r); overflow:hidden}
   .hero-row{background:var(--surface-2); padding:var(--e3) var(--e4); display:flex; align-items:center; justify-content:space-between; gap:4px 16px; flex-wrap:wrap}
   .hero-row .lbl{font-size:13px; color:var(--ink-3)}
   .hero-row .suf{font-size:11px; color:var(--muted-2)}
@@ -121,7 +128,8 @@
      No escuro fica só o filete: sombra em fundo escuro suja em vez de dar volume */
   .card, .panel{box-shadow:0 0 0 1px var(--line), 0 1px 2px rgba(20,22,26,.045), 0 16px 32px -24px rgba(20,22,26,.30)}
   html[data-tema="escuro"] .card, html[data-tema="escuro"] .panel{box-shadow:0 0 0 1px var(--line)}
-  .card{background:var(--surface); padding:var(--e5) var(--e5) var(--e4); min-width:0}
+  .card{background:linear-gradient(180deg, var(--surface) 0, var(--card-luz) 100%); padding:var(--e5) var(--e5) var(--e4); min-width:0; border-radius:var(--r)}
+  html[data-tema="escuro"] .card{background:linear-gradient(180deg, var(--card-luz) 0, var(--surface) 160px)}
   .card-h{display:flex; align-items:flex-end; justify-content:space-between; gap:var(--e3) var(--e5); flex-wrap:wrap; margin-bottom:var(--e5)}
   .dl{display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:11px 0; border-top:1px solid var(--line)}
   .dl .l{font-size:14px; min-width:0}
@@ -145,7 +153,7 @@
   .dl.res .l{font-size:16px; font-weight:500}
   .dl.res .v{font-size:20px; font-weight:600}
   .dl.res .p{color:var(--muted-2); font-size:13px}
-  .det{background:var(--surface-2); padding:6px 14px 10px; margin-bottom:4px}
+  .det{background:var(--surface-2); padding:6px 14px 10px; margin-bottom:4px; border-radius:var(--r)}
   .scroll-x{overflow-x:auto}
   /* nome curto não precisa de meia tela: o item tem teto e a folga vai para as colunas de números */
   /* colunas elásticas: com largura fixa a tabela estourava e caía na rolagem lateral em tela menor ou com zoom */
@@ -169,7 +177,7 @@
   .li{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:5px 0; border-top:1px solid var(--line); font-size:13px}
   .li .v{font-family:var(--mono); white-space:nowrap; display:flex; align-items:baseline}
   .li .p{width:52px; flex-basis:52px}
-  .flag{margin-top:18px; background:var(--surface-2); padding:10px 14px; font-size:12px; color:var(--muted); line-height:1.5}
+  .flag{margin-top:18px; background:var(--surface-2); padding:10px 14px; border-radius:var(--r); font-size:12px; color:var(--muted); line-height:1.5}
 
   /* Campos: texto alinhado à coluna, sem caixa */
   .in{width:100%; min-width:0; text-align:right; font-family:var(--mono); font-size:13px; padding:2px 0; border:0; border-bottom:1px solid transparent; border-radius:0; background:transparent; color:var(--ink); outline:none}
@@ -185,7 +193,7 @@
 
   /* Reforma · CBS */
   .reforma{display:block}
-  .memo{background:var(--surface); padding:26px 28px; min-width:0}
+  .memo{background:var(--surface); padding:26px 28px; min-width:0; border-radius:var(--r)}
   .prem{background:var(--surface-2); padding:14px 16px; margin:18px 0 22px; display:flex; align-items:flex-end; gap:14px 28px; flex-wrap:wrap}
   .prem-t{display:flex; flex-direction:column; gap:3px; flex:1 1 200px; min-width:0}
   .prem-t .cap{font-size:10px; letter-spacing:.1em; color:var(--muted-2)}
@@ -275,7 +283,7 @@
   /* Tradicional × Híbrido: um cartão por regime — os números em cima, a composição dos tributos embaixo.
      Cada barra é o total do próprio regime; quem compara o tamanho dos dois é a faixa da decisão */
   .cmp2{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; margin:4px 0 16px}
-  .cmp-card{display:flex; flex-direction:column; min-width:0; border:1px solid var(--line-2); padding:var(--e5) var(--e5) var(--e4); background:var(--surface-2)}
+  .cmp-card{display:flex; flex-direction:column; min-width:0; border:1px solid var(--line-2); padding:var(--e5) var(--e5) var(--e4); background:var(--surface-2); border-radius:var(--r)}
   .cmp-card h3{font-size:16px}
   .cmp-nota{margin:0 0 10px; font-size:12px; color:var(--muted)}
   .cmp-row{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:9px 0; border-top:1px solid var(--line); font-size:13px; color:var(--ink-2)}
@@ -417,7 +425,7 @@
   .btn.prim{background:var(--fill); border-color:var(--fill); color:var(--sobre-fill)}
   .btn.prim:hover{border-color:var(--fill); filter:brightness(1.25)}
   .btn:disabled{opacity:.55; cursor:default; filter:none}
-  .barra{display:flex; align-items:flex-end; gap:12px 22px; flex-wrap:wrap; background:var(--surface); padding:var(--e3) var(--e4); box-shadow:0 0 0 1px var(--line-2)}
+  .barra{display:flex; align-items:flex-end; gap:12px 22px; flex-wrap:wrap; background:var(--surface); padding:var(--e3) var(--e4); box-shadow:0 0 0 1px var(--line-2); border-radius:var(--r)}
   .barra.local{padding:9px 16px; font-size:12px; color:var(--muted); background:var(--surface-2)}
   .bsel{display:flex; flex-direction:column; gap:2px; min-width:0; max-width:100%}
   .bsel .cap{font-size:10px; letter-spacing:.1em; color:var(--muted-2)}
@@ -432,7 +440,7 @@
   .bstatus.erro{color:var(--ink)}
   .bstatus.erro::before{background:var(--brand)}
   .menu .menu-email{font-size:11px; color:var(--muted-2); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .login{width:min(380px,100%); margin:8vh auto 0; background:var(--surface); padding:var(--e6) var(--e5); display:flex; flex-direction:column; gap:10px; box-shadow:0 0 0 1px var(--line-2)}
+  .login{width:min(380px,100%); margin:8vh auto 0; background:var(--surface); border-radius:var(--r); padding:var(--e6) var(--e5); display:flex; flex-direction:column; gap:10px; box-shadow:0 0 0 1px var(--line-2)}
   .login .logo{align-self:flex-start; margin-bottom:6px}
   .login .sub{margin:0}
   .login form{display:flex; flex-direction:column; gap:14px; margin-top:10px}
@@ -440,7 +448,7 @@
   .login-erro, .modal-erro{margin:0; min-height:1.2em; font-size:12px; color:var(--ink-3)}
   .login .btn.prim{justify-content:center; padding:12px}
   .modal-fundo{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--veu)}
-  .modal-caixa{width:min(440px,100%); background:var(--surface); padding:var(--e5); display:flex; flex-direction:column; gap:14px; box-shadow:0 0 0 1px var(--line-2)}
+  .modal-caixa{width:min(440px,100%); background:var(--surface); border-radius:var(--r); padding:var(--e5); display:flex; flex-direction:column; gap:14px; box-shadow:0 0 0 1px var(--line-2)}
   .modal-caixa .sub{margin:0}
   /* lixeira e histórico: lista com um botão por linha dentro da janela */
   .hist-t{margin:4px 0 0; font-size:13px; font-weight:600; color:var(--ink)}
@@ -475,8 +483,8 @@
   .cad-h-txt p{margin:0; font-size:13px; color:var(--muted); line-height:1.5}
   .cli-blocos > .cadeia:first-child{margin-top:0; padding-top:0; border-top:0}   /* primeiro bloco da aba: sem risco solto no topo */
   .cad-ctl{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
-  .cad-alt{display:flex; gap:6px; background:var(--alt); padding:4px; border-radius:2px}
-  .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--muted); cursor:pointer}
+  .cad-alt{display:flex; gap:6px; background:var(--alt); padding:4px; border-radius:var(--r)}
+  .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:var(--r-2); background:transparent; color:var(--muted); cursor:pointer}
   .cad-aba[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 0 0 1px var(--line-2)}
   .cad-aba .m{opacity:.6}
   .cad-grafico{display:flex; align-items:flex-start; gap:24px 32px; flex-wrap:wrap; margin-bottom:22px}
@@ -536,7 +544,7 @@
   .cred.sim .sel{color:var(--ink)}
   .cred.parcial .sel{color:var(--brand); font-weight:600}            /* o vermelho marca o parcial, como no gráfico */
   .cred.nao .sel{color:var(--ink-3)}
-  .cad-x{width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:0; border-radius:2px; background:transparent; color:var(--line-3); cursor:pointer; font-size:15px; line-height:1; padding:0}
+  .cad-x{width:22px; height:22px; display:flex; align-items:center; justify-content:center; border:0; border-radius:var(--r); background:transparent; color:var(--line-3); cursor:pointer; font-size:15px; line-height:1; padding:0}
   .cad-x:hover{color:var(--brand); background:var(--brand-wash)}
   @media (hover:none){ .sel-wrap::after{opacity:1} }
   .present .sel{pointer-events:none}
@@ -545,11 +553,11 @@
   .hint.deb-hint{margin:-8px 0 16px; font-size:12px; color:var(--ink-3)}
 
   /* Resumo do cliente e bloco anual */
-  .cli{background:var(--surface); padding:40px 44px 36px; min-width:0}
+  .cli{background:var(--surface); padding:40px 44px 36px; min-width:0; border-radius:var(--r)}
   .cli h2{font-size:22px; letter-spacing:-.02em; margin-bottom:6px}
   .cli .sub{margin:0 0 30px; font-size:14px; max-width:60ch}
   .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr)); gap:1px}
-  .kc{padding:var(--e5) var(--e4); display:flex; flex-direction:column; gap:6px; box-shadow:0 0 0 1px var(--line-2); container-type:inline-size; min-width:0}
+  .kc{padding:var(--e5) var(--e4); border-radius:var(--r); display:flex; flex-direction:column; gap:6px; box-shadow:0 0 0 1px var(--line-2); container-type:inline-size; min-width:0}
   .kc .cap{color:var(--muted-2); letter-spacing:.1em}
   .kv{font-family:var(--mono); font-weight:600; letter-spacing:-.02em; white-space:nowrap; font-size:26px; font-size:min(26px, calc(100cqi / 7.8))}
   .kv.brand{color:var(--brand)}
@@ -559,7 +567,7 @@
   .obs p{margin:0 0 8px}
 
   footer.foot{display:flex; justify-content:space-between; gap:8px 16px; flex-wrap:wrap; font-family:var(--mono); font-size:11px; color:var(--muted-2); padding-top:4px}
-  .toast{position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--fill); color:var(--sobre-fill); padding:10px 16px; border-radius:2px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; max-width:calc(100% - 32px)}
+  .toast{position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); background:var(--fill); color:var(--sobre-fill); padding:10px 16px; border-radius:var(--r); font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s, transform .2s; z-index:50; max-width:calc(100% - 32px)}
   .toast.show{opacity:1; transform:translate(-50%,0)}
 
   /* Movimento. Só recebe .entra o que não estava na tela antes do render() — ver animarNovos().
@@ -596,8 +604,8 @@
   .fixo-id b{font-size:13px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
   .fixo-id span{font-family:var(--mono); font-size:11px; letter-spacing:.02em; text-transform:uppercase; color:var(--muted); white-space:nowrap}
   .fixo-id:hover b{text-decoration:underline}
-  .fixo-abas{display:flex; gap:4px; margin-left:auto; padding:3px; background:var(--rail); border-radius:2px; overflow-x:auto; scrollbar-width:none}
-  .tabf{padding:6px 11px; font:500 12px/1 var(--sans); border:0; border-radius:2px; background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap; transition:background-color .15s ease, color .15s ease}
+  .fixo-abas{display:flex; gap:4px; margin-left:auto; padding:3px; background:var(--rail); border-radius:var(--r); overflow-x:auto; scrollbar-width:none}
+  .tabf{padding:6px 11px; font:500 12px/1 var(--sans); border:0; border-radius:var(--r-2); background:transparent; color:var(--ink-3); cursor:pointer; white-space:nowrap; transition:background-color .15s ease, color .15s ease}
   .tabf:hover{background:var(--hover-rail); color:var(--ink)}
   .tabf[aria-current="page"]{background:var(--fill); color:var(--sobre-fill)}
   .fixo-acao{display:flex; align-items:center; gap:12px}
@@ -609,8 +617,13 @@
   .var{margin-left:8px; font-family:var(--mono); font-size:11px; font-weight:400; letter-spacing:0; color:var(--muted); white-space:nowrap}
   .hero-row .var{display:inline-block}
 
+  html.tema-trocando *{transition:background-color .22s ease, color .22s ease, border-color .22s ease,
+    box-shadow .22s ease, fill .22s ease !important}
+
   /* Modo apresentação */
   /* letra 15% maior para TV e projetor: o conteúdo inteiro cresce e a largura máxima encolhe na mesma proporção */
+  @keyframes abrePresent{from{opacity:0}}
+  body.present #app{animation:abrePresent .26s ease-out backwards}
   @media screen and (min-width:900px){
     body.present .page{zoom:1.15}
     body.present .wrap, body.present .fixo-in{max-width:calc(1140px / 1.15)}
@@ -748,6 +761,8 @@
     .faixa-escr{border-bottom:0; padding-bottom:4px}               /* no papel basta o risco do próprio cabeçalho */
     .card, .memo, .cli{padding:0 16px}
     .card, .panel, .barra, .kc{box-shadow:none}                    /* no papel o filete vira ruído */
+    .card{background:var(--surface)}                               /* e a luz do cartão não se imprime */
+    .card, .panel, .memo, .cli, .kc, .cmp-card, .det, .hero-side{border-radius:0}
     .track, .sb-track, .cmp-bar2{animation:none !important; clip-path:none !important}
     .hero-row{padding:12px 16px}
     .card-h{margin-bottom:14px}
@@ -988,7 +1003,16 @@ function luz(c){
   return .2126 * r + .7152 * g + .0722 * b;
 }
 const temaEscuro = () => document.documentElement.dataset.tema === 'escuro';
-function aplicarTema(t){ if(t === 'escuro') document.documentElement.dataset.tema = 'escuro'; else delete document.documentElement.dataset.tema; }
+function aplicarTema(t){
+  // a troca de tema deixa de ser um corte seco: a transição universal vale só durante o cruzamento (260ms),
+  // e é ligada por uma classe para não custar nada no resto do tempo. O tema muda na hora, por baixo dela
+  const el = document.documentElement, tinha = el.dataset.tema === 'escuro';
+  if(t === 'escuro') el.dataset.tema = 'escuro'; else delete el.dataset.tema;
+  if(tinha === (t === 'escuro') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  el.classList.add('tema-trocando');
+  clearTimeout(aplicarTema.t);
+  aplicarTema.t = setTimeout(() => el.classList.remove('tema-trocando'), 260);
+}
 function mix(a, b, t){ const pa = hex(a), pb = hex(b); if(!pa || !pb) return a;
   return '#' + pa.map((x, i) => Math.round(x + (pb[i] - x) * t).toString(16).padStart(2, '0')).join(''); }
 

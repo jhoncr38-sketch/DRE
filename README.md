@@ -197,6 +197,19 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     esquerda para a direita por `clip-path`, e não por cada pedaço esticando — assim as partes empilhadas
     (débito, crédito, composição dos tributos) não se desencontram. O atraso segue o do bloco (`--i` herda do
     pai). Quando só o valor muda, a largura desliza em 300ms. No papel, barra cheia e sem animação.
+  - **Luz no cartão:** no claro a base escurece um fio (`--card-luz`, 3% do bege por cima do branco); no escuro é
+    o alto que clareia. É papel sob luz que vem de cima — não se vê, se sente. No papel o cartão volta a ser chapado.
+  - **A troca de tema cruza em 220ms** em vez de cortar seco: `aplicarTema()` liga a classe `tema-trocando`, que
+    vale uma transição universal (fundo, texto, borda, sombra) só durante o cruzamento, e a desliga em 260ms. O tema
+    em si muda na hora, por baixo dela — quem lê o estado logo depois vê o valor novo, só a cor chega andando.
+  - **A apresentação abre em vez de saltar:** o conteúdo entra com um fade de 260ms (`abrePresent`). O `zoom:1.15`
+    continua imediato de propósito — animá-lo borra o texto no meio do caminho.
+  - **Cantos de 4px em tudo** (`--r`, e `--r-2:3px` para o que fica dentro de um trilho, como as abas): antes o
+    painel falava duas línguas — cartões e tabelas retos, controles com 2px. Comparadas na tela a versão toda reta
+    e a de 4px, ganhou a de 4px. O recorte da faixa de indicadores fica no contêiner (`overflow:hidden`), senão o
+    fundo que faz as divisórias sobra nas quinas. No papel tudo volta a ser reto.
+  - **Dígitos de largura fixa** (`font-variant-numeric:tabular-nums` no `body`): em mono os números já alinhavam,
+    em Sans (percentuais, variações, valores dentro de frases) não.
   - **Quatro tons de texto no lugar de sete:** `--ink-2`/`--ink-3` passaram a ser o mesmo tom, e `--muted-2`/
     `--muted-3` também (nos dois temas). Os nomes ficaram — são centenas de usos —, o que saiu foi a variedade:
     sete cinzas liam como descuido, não como hierarquia.
