@@ -485,10 +485,9 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   para refazer (CNPJ, NCM, NBS). Para começar do zero existe "+ Nova empresa", que nasce sem os dois
 - **Modo apresentação** e link `#cliente` (abre no Resumo do cliente) deixam os campos só leitura. Desde
   16/09/2026, feito para a reunião com o cliente:
-  - **Capa** (`rCapa`, só na aba Resultado): três cartões em letra grande — resultado do mês (vermelho e
-    "Prejuízo do mês" quando negativo, com a variação), regime na reforma (qual sai mais barato e quanto) e o
-    ponto de atenção pela prioridade: acima do limite do Simples → acima do sublimite → DAS não confere → DAS não
-    lançado → CBS com crédito; sem nenhum, a receita do mês.
+  - **Testados e recusados pelo usuário** (17/09/2026, código removido): capa com três mensagens do mês (resultado,
+    regime, ponto de atenção), passo a passo com setas, cartão "Mês a mês" e gráfico dos últimos meses. A apresentação
+    é a página inteira; o que sobrou é o que está aqui embaixo.
   - **Tela cheia** ao lado de "Sair da apresentação" (no link do cliente, só ela); o rótulo acompanha o Esc pelo
     `fullscreenchange`, sem redesenhar. Sair da apresentação sai da tela cheia.
   - **Letra 15% maior** em tela a partir de 900px: `zoom:1.15` na `.page` com a largura máxima dividida por 1,15
@@ -499,11 +498,20 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   - **Maquinaria recolhida:** detalhamento, memória da CBS, estoque e trimestres do Presumido fecham ao entrar
     (os botões "Ver" continuam) e voltam como estavam ao sair (`ui.antesDeApresentar`).
   - **"digitar" do DAS calculado** não existe na apresentação e a ação recusa se chamada: alterava o mês.
+  - **Apontador** (17/09/2026): clicar numa linha (DRE, indicadores, cartões, memória, tabelas) destaca ela — cresce
+    6%, ganha fundo e sombra — e apaga as outras (`body.realcando`, opacidade .22); clicar de novo, clicar fora ou
+    Esc desfaz, e `render()` limpa. Enquanto há realce, `.scroll-x` não rola: a linha crescida dentro de uma área que
+    rola ligava as duas barras de rolagem.
+  - **Cadastro aberto na apresentação** (17/09/2026): "Ver cadastro" (cadeia de crédito e produtos) passou a valer
+    também no modo apresentação, só de leitura — sem ele não dava para mostrar a lista de fornecedores ao cliente.
+    Ao entrar, os cadastros começam fechados, como o resto da maquinaria.
+  - **Colunas do detalhamento elásticas** (17/09/2026): `.g5` e `.grec` tinham colunas fixas (somavam ~645px) e
+    caíam na rolagem lateral em janela menor ou com zoom do navegador; agora encolhem até ~475px.
 - **Comparação com o mês anterior** (16/09/2026): ▲/▼ ao lado da receita e do resultado na DRE e do Simples na
   faixa de indicadores — receita e DAS em %, resultado em reais (percentual sobre resultado negativo não diz nada).
   Compara com o **último mês salvo** antes deste (`anterior` do `carregar_painel`, que já vinha para a herança) e
   diz qual ("vs mar/2024"); mês salvo sem resumo é recalculado pelos dados. Some no primeiro mês e no modo local.
-  Testes: seção 16 do painel (capa, prioridade da atenção, recolher e voltar, zoom, "digitar") e 3h do banco.
+  Testes: seção 16 do painel (recolher e voltar, zoom, menos texto, "digitar", apontador) e 3h do banco.
 - **Salvar no banco** (com Supabase configurado): barra abaixo do cabeçalho com Empresa, Competência,
   situação ("Salvo às 10:32" / "Alterações não salvas") e botão **Salvar** (ou Ctrl+S). Ver a seção
   "Banco de dados". Sem Supabase, a barra avisa "Modo local" e o menu mantém o `window.storage`
