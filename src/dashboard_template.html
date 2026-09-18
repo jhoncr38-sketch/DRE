@@ -177,6 +177,12 @@
   .li{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:5px 0; border-top:1px solid var(--line); font-size:13px}
   .li .v{font-family:var(--mono); white-space:nowrap; display:flex; align-items:baseline}
   .li .p{width:52px; flex-basis:52px}
+  /* Estado vazio: não é erro nem aviso, é a ausência de conteúdo. Por isso não ganha caixa — ganha o espaço
+     que o conteúdo ocuparia, um traço em cima e a frase no meio. A caixa cinza fica para avisar (.flag) */
+  .vazio{margin-top:var(--e5); padding:var(--e6) var(--e4) var(--e5); text-align:center; border-top:1px solid var(--line);
+    font-size:13px; color:var(--muted); line-height:1.6}
+  .vazio strong{display:block; margin-bottom:6px; font-size:15px; font-weight:500; color:var(--ink-2)}
+  .vazio p{margin:0 auto; max-width:56ch}
   .flag{margin-top:18px; background:var(--surface-2); padding:10px 14px; border-radius:var(--r); font-size:12px; color:var(--muted); line-height:1.5}
 
   /* Campos: texto alinhado à coluna, sem caixa */
@@ -507,8 +513,8 @@
   .cad-alerta{display:flex; align-items:baseline; gap:4px 10px; flex-wrap:wrap; padding:10px 14px; margin-bottom:14px; background:var(--brand-wash); border-left:3px solid var(--brand)}
   .cad-alerta strong{font-size:13px; font-weight:600; color:var(--brand)}
   .cad-alerta span{font-size:12px; color:var(--muted)}
-  .cad-vazio{padding:38px 24px; text-align:center; background:var(--surface-2)}
-  .cad-vazio-t{font-size:14px; font-weight:600; color:var(--ink); margin-bottom:5px}
+  .cad-vazio{padding:var(--e6) var(--e5) var(--e5); text-align:center; border-top:1px solid var(--line)}
+  .cad-vazio-t{font-size:15px; font-weight:500; color:var(--ink-2); margin-bottom:6px}
   .cad-vazio p{margin:0 auto 16px; font-size:12px; color:var(--muted); max-width:46ch; line-height:1.55}
   .cad-vazio .btn.prim{padding:8px 16px; font-size:13px}
   .cad-pe{display:flex; align-items:baseline; justify-content:space-between; gap:8px 20px; flex-wrap:wrap; padding-top:12px}
@@ -589,10 +595,15 @@
   .modal-caixa{animation:entra .2s cubic-bezier(.2,.7,.2,1) backwards}
   /* troca de mês ou de empresa: o conteúdo esmaece e uma barra corre no topo enquanto o banco responde */
   #app > *{transition:opacity .15s ease}
-  body.trocando #app > :not(.top):not(.barra):not(.fixo){opacity:.45; pointer-events:none}
-  .progresso{position:fixed; top:0; left:0; right:0; height:3px; z-index:90; overflow:hidden; pointer-events:none}
-  .progresso::before{content:""; position:absolute; top:0; bottom:0; left:-40%; width:40%; background:var(--brand); animation:progresso 1s ease-in-out infinite}
-  @keyframes progresso{to{left:100%}}
+  body.trocando #app > :not(.top):not(.barra):not(.fixo){pointer-events:none}
+  /* Enquanto o mês chega do banco: os rótulos ficam e os números viram barras cinza, do tamanho que tinham.
+     Antes a tela inteira esmaecia e uma barra vermelha corria no topo — parecia erro, e escondia o que não ia mudar */
+  @keyframes esqueleto{to{background-position:-200% 0}}
+  body.trocando :is(.v, .val, .kv, .p, .sb-v, .cr-v, .pct-s, .m, .in, .sel, .cmp-parte b){
+    color:transparent !important; border-radius:var(--r-2);
+    background-image:linear-gradient(90deg, var(--line) 0 40%, var(--line-2) 50%, var(--line) 60%);
+    background-size:200% 100%; animation:esqueleto 1.15s linear infinite}
+  body.trocando .fill{background:var(--line)}
   /* Barra compacta ao rolar: abas e Salvar à mão sem voltar ao topo numa aba Resultado longa. Fica fora do
      fluxo e desce quando a barra de seleção (no modo local, o aviso) sai da tela — ver marcarRolagem() */
   html{scroll-padding-top:64px}                                   /* campo focado não fica escondido atrás dela */
@@ -671,7 +682,6 @@
   @media (prefers-reduced-motion: reduce){
     /* nada de "1ms": isso dava transição de 1ms a toda propriedade de todo elemento, inclusive a cor ao trocar de tema */
     *, *::before, *::after{animation:none !important; transition:none !important}
-    .progresso::before{left:0; width:100%}                         /* sem movimento, a barra de carregamento fica cheia e parada */
   }
 
   @media (max-width:800px){ .cmp2{grid-template-columns:minmax(0,1fr)} }   /* um cartão embaixo do outro */
@@ -738,7 +748,7 @@
     body{background:#fff}
     .page{padding:0}
     /* botão, link e instrução de uso não servem no papel */
-    .so-tela, .nav, .panel, .toast, .progresso, .fixo, .row-ctl, .btn, .lk, .add, .cad-mais, .cad-x, .cad-alt,
+    .so-tela, .nav, .panel, .toast, .fixo, .row-ctl, .btn, .lk, .add, .cad-mais, .cad-x, .cad-alt,
     .ano-acoes, .cad-vazio p, .anx:has(option[value=""]:checked){display:none !important}
     footer.foot{display:none}                                     /* o escritório vai no rodapé de toda página */
     .so-papel{display:revert}
@@ -791,7 +801,6 @@ try { if(JSON.parse(localStorage.getItem('dre.tema')) === 'escuro') document.doc
 <body>
 <div class="page"><div class="wrap" id="app"></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="progresso" id="progresso" hidden></div>
 <div id="modal" hidden></div>
 <script>
 const LOGO_DEFAULT = "data:image/png;base64,{{LOGO_B64}}";
@@ -2113,12 +2122,14 @@ function rAnoMeses(){
   const atualizar = `<button class="lk" type="button" data-act="ano-atualizar">atualizar</button>`;
   if(!a || a.carregando) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a && a.ano)}<p class="sub">Somando as competências…</p></section>`;
   if(a.semFuncao) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
-    <div class="flag">Este banco de dados ainda não tem a função <code>resumos</code>. Rode
-    <code>supabase/migrations/20260912120000_resumo_e_heranca.sql</code> no SQL Editor do Supabase
-    para o painel somar os meses salvos e o mês novo herdar do anterior.</div>
+    <div class="vazio"><strong>Falta uma função no banco de dados</strong>
+    <p>Rode <code>supabase/migrations/20260912120000_resumo_e_heranca.sql</code> no SQL Editor do Supabase
+    para o painel somar os meses salvos e o mês novo herdar do anterior.</p></div>
     <div class="ano-acoes">${atualizar}</div></section>`;
   if(!a.linhas.length) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
-    <p class="sub">Nenhuma competência salva em ${a.ano}.</p><div class="ano-acoes">${atualizar}</div></section>`;
+    <div class="vazio"><strong>Nenhuma competência salva em ${a.ano}</strong>
+    <p>Salve um mês na aba Resultado e ele passa a somar aqui.</p></div>
+    <div class="ano-acoes">${atualizar}</div></section>`;
   return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
     <div class="scroll-x">
       <div class="gano gh"><span>Mês</span><span>Receita</span><span>DAS</span><span>CBS a pagar</span><span>CBS crédito</span><span>Resultado</span><span>Margem</span></div>
@@ -2152,8 +2163,9 @@ function rAnual(){
   return `<section class="card" id="painel" role="tabpanel" aria-labelledby="tab-anual">
     <div class="card-h"><div><h2>O ano pelos meses salvos</h2>
       <p class="sub">Esta aba soma as competências salvas no banco de dados.</p></div></div>
-    <div class="flag">No modo local não há meses salvos para somar. Configure o Supabase (README → Banco de dados)
-    ou use a aba Resultado, que trabalha com o mês aberto.</div></section>`;
+    <div class="vazio"><strong>Nada para somar no modo local</strong>
+    <p>Esta aba vive dos meses salvos no banco. Configure o Supabase (README → Banco de dados) ou use a aba
+    Resultado, que trabalha com o mês aberto.</p></div></section>`;
 }
 // Sair do Simples? Só lê os meses salvos. À vista: a atividade (que define a presunção), o imposto e a carga tributária
 // nos dois regimes e a conclusão, no modelo dos cartões Tradicional × Híbrido. "Ver por trimestre" abre a apuração
@@ -2332,9 +2344,8 @@ function marcarRolagem(){
   document.body.classList.toggle('rolou', !!ref && ref.getBoundingClientRect().bottom < 0);
 }
 addEventListener('scroll', () => { if(!rolagemRAF) rolagemRAF = requestAnimationFrame(() => { rolagemRAF = 0; marcarRolagem(); }); }, {passive: true});
-function ocupado(sim){
+function ocupado(sim){                      // a espera aparece no próprio conteúdo (ver body.trocando no CSS)
   document.body.classList.toggle('trocando', sim);
-  document.getElementById('progresso').hidden = !sim;
 }
 
 function render(){

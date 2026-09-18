@@ -210,6 +210,14 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     fundo que faz as divisórias sobra nas quinas. No papel tudo volta a ser reto.
   - **Dígitos de largura fixa** (`font-variant-numeric:tabular-nums` no `body`): em mono os números já alinhavam,
     em Sans (percentuais, variações, valores dentro de frases) não.
+  - **Esqueleto no lugar da barra de carregamento** (`body.trocando`): enquanto o mês chega do banco, os rótulos
+    ficam e só os números viram barras cinza, do tamanho que tinham (texto transparente + gradiente que corre).
+    Antes a tela inteira esmaecia e uma barra vermelha corria no topo — parecia erro e escondia o que nem ia mudar.
+    O elemento `#progresso` e o CSS dele saíram.
+  - **Estado vazio não é aviso** (`.vazio`): ausência de conteúdo passa a ser um traço, um título e uma frase no
+    espaço que o conteúdo ocuparia — aba Anual sem banco, ano sem competências salvas, banco sem a função
+    `resumos`, e os cadastros de fornecedores, clientes e produtos (que perderam o fundo cinza). A caixa `.flag`
+    ficou só para o que é aviso de verdade (ICMS não informado, meses faltando, DAS sem tabela).
   - **Quatro tons de texto no lugar de sete:** `--ink-2`/`--ink-3` passaram a ser o mesmo tom, e `--muted-2`/
     `--muted-3` também (nos dois temas). Os nomes ficaram — são centenas de usos —, o que saiu foi a variedade:
     sete cinzas liam como descuido, não como hierarquia.
