@@ -187,8 +187,19 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     e sem invadir a linha de cima nem a de baixo. Fica de fora o resultado líquido, que já tem fundo próprio.
   - **Negrito só no que decide:** os rótulos desceram para 500 e o peso 600 ficou nos números — receita, totais,
     resultado, cartão vencedor. Antes quase toda linha era 600 dos dois lados.
-  - Ficaram para depois, da mesma lista: números que contam ao trocar de mês (só na apresentação) e barras que
-    crescem ao aparecer.
+  - **O número conta até chegar, só na apresentação** (`contarAte()`, `CONTA_SEL`): os valores de destaque (faixa
+    de indicadores, cartões do resumo, receita, lucro bruto, totais, resultado, os dois regimes) sobem até o valor
+    em 420ms, com desaceleração. Fora da apresentação o número entra pronto — quem digita quer ver na hora.
+    Dois cuidados que custaram teste: o carimbo do primeiro quadro pode ser **anterior** ao início da conta (sem
+    piso em 0 a curva dispara e o número aparece em outra casa), e um `setTimeout` de segurança crava o valor
+    final caso o navegador pare de dar quadros (aba escondida).
+  - **A barra se revela ao aparecer** (`@keyframes revela`): quando um bloco entra, a faixa é descoberta da
+    esquerda para a direita por `clip-path`, e não por cada pedaço esticando — assim as partes empilhadas
+    (débito, crédito, composição dos tributos) não se desencontram. O atraso segue o do bloco (`--i` herda do
+    pai). Quando só o valor muda, a largura desliza em 300ms. No papel, barra cheia e sem animação.
+  - **Quatro tons de texto no lugar de sete:** `--ink-2`/`--ink-3` passaram a ser o mesmo tom, e `--muted-2`/
+    `--muted-3` também (nos dois temas). Os nomes ficaram — são centenas de usos —, o que saiu foi a variedade:
+    sete cinzas liam como descuido, não como hierarquia.
 - **Abas:** Resultado · Resumo do cliente (mês) · Anual; setas do teclado navegam. A aba Resultado vai da
   DRE à apuração: Simples Nacional do mês → DRE → Estoque e compras → memória de cálculo da CBS
 - **Impressão e PDF** (16/09/2026), em Opções → "Imprimir / PDF…":
