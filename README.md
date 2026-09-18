@@ -758,8 +758,17 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
     32/32, hospitalares 8/12, construção com material 8/12, só mão de obra 32/32, transporte de cargas 8/12,
     passageiros 16/12, comércio e indústria 8/12, combustíveis 1,6/12 e "outra" (digita os dois). Sem escolha,
     vem do anexo (I e II comércio; III a V serviços). Guardado em `S.presumido`, que passa de um mês para o outro.
-  - **ISS ou ICMS** conforme a atividade (transporte e "outra": os dois). ICMS é carga sobre a receita,
-    informada; zerado, aparece o aviso — no Simples ele está dentro do DAS.
+  - **ISS ou ICMS** conforme a atividade (transporte e "outra": os dois). O ISS é carga sobre a receita, informada;
+    no Simples os dois estão dentro do DAS, e o ICMS zerado ainda mostra o aviso.
+  - **ICMS por débito menos crédito** (18/09/2026, a pedido do usuário — a empresa contribuinte credita o ICMS das
+    compras): duas premissas, **ICMS sobre a receita** (débito) e **ICMS sobre as compras** (crédito, `icmsCompras`),
+    e a mesma leitura da CBS. Crédito = compras do período (`resumo.compras`, as mesmas do bloco Estoque e compras)
+    × a alíquota informada. Trimestre com mais crédito que débito fica negativo e aparece em "Crédito de ICMS";
+    no ano, sobrando crédito, o ICMS fica zerado e o saldo vai para o ano seguinte — como na CBS, mas **sem mexer
+    no Simples**, onde o ICMS já está dentro do DAS. "▸ ICMS" abre débito, crédito e as compras do período
+    (`ui.icmsLP`); o cartão traz "débito de R$ X − crédito de R$ Y". Sem alíquota de compras informada, entra só o
+    débito, exatamente como era antes. De passagem, a linha "Crédito de CBS" passou a usar a última coluna em vez
+    da quarta: na visão por mês ela não aparecia.
   - **CBS por fora** = débito − crédito dos meses, como na tabela do ano (sem o transportado): por trimestre e, no
     ano, zerada quando sobra crédito — a linha "Crédito de CBS" só aparece nesse caso. "▸ CBS por fora" abre débito
     e crédito de cada trimestre (`ui.cbsLP`); o cartão mostra "débito de R$ X − crédito de R$ Y". IBS fica de fora
@@ -777,9 +786,41 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
     dentro do trimestre (sem receita, divididos igualmente), e a tabela diz isso. Receita, CBS, ISS, ICMS, INSS e o
     Simples são do próprio mês; o ano não muda em nenhuma das visões. No cartão, os valores do ano usam chaves
     `lp.*.ano`, que não dependem do número de colunas.
+  - **Leitura da tabela** (18/09/2026): a nota de rodapé saiu — a regra do adicional foi para o próprio rótulo
+    da linha ("Adicional do IRPJ / 10% sobre a base acima de R$ 20 mil por mês") e a da CBS já estava dentro da
+    linha aberta. A última linha deixou de ser "Presumido − melhor do Simples" e passou a dizer o resultado em
+    português (`lp.difRot`): "Simples sai mais barato no ano", com a explicação do sinal embaixo. O regime de
+    menor imposto **no ano** leva um troféu ao lado do nome (`lp.venc.total|conv|hibr`). Marcar a célula vencedora
+    de cada coluna — com filete verde ou com troféu no número — foi comparado na tela e recusado: poluía a leitura.
+  - **A visão por mês arrumada** (18/09/2026): com 8 ou 12 colunas os valores se encavalavam e o total do ano saía
+    cortado — a culpa era do `minmax(84px,1fr)`, que prendia a coluna em 84px enquanto o número (que não quebra)
+    invadia a vizinha. Agora o mínimo da coluna é o próprio conteúdo e o que não couber rola de lado. Junto disso:
+    nas colunas de mês o **"R$" sai** (a unidade aparece uma vez, em "valores em R$", no canto da tabela) e só a
+    coluna do Ano mantém o símbolo, porque é ela que fecha a conta e alimenta o cartão; o cabeçalho do mês virou
+    "jan" com o ano embaixo; e o **nome da linha e a coluna do Ano ficam presos nas bordas** enquanto o meio rola,
+    com uma sombra que aparece só do lado em que há coluna escondida (`marcarRolagemX`, classes `x-esq`/`x-dir`).
+  - **Filtros da tabela** (18/09/2026), no mesmo canto do alternador de período:
+    - **Coluna sem movimento sai** (`colunasLP`): trimestre ou mês sem receita e sem DAS ocupava a largura de quem
+      tem número. Some por padrão, e um botão diz quantos estão escondidos e os devolve (`ui.lpVazias`).
+    - **Cenário do Simples** (`ui.lpCenario`): Os dois (padrão), só o Tradicional ou só o Híbrido. Com um cenário
+      escolhido, a comparação passa a ser contra ele — e o rótulo diz qual ("Simples tradicional sai mais barato
+      no ano", "Carga do simples tradicional"), para nunca comparar contra um número que não está na tela.
+    - **Completo × Resumo** (`ui.lpResumo`): o resumo esconde as linhas de apoio (bases do IRPJ e da CSLL, o
+      acréscimo da LC 224 e as duas cargas) e deixa receita, impostos, total e comparação — é o que serve na
+      apresentação ao cliente.
+    - **Os controles cabem em um botão** (`ui.lpMenu`): a linha de sete botões tomava a largura da tabela e foi
+      recusada na tela. No lugar, um controle que mostra o estado ("Mês · Os dois cenários · Completo ▾") e abre um
+      menu com as três escolhas, no mesmo componente do menu Opções. A outra forma testada — três seletores curtos
+      (PERÍODO / COMPARAR COM / DETALHE) — continua no código atrás da classe `lp-selects` no `body`, para comparar
+      na tela; quando a escolha estiver feita, a que sobrar sai.
+    - **No papel sai tudo:** `imprimir()` guarda os três filtros, força a tabela completa e devolve no `afterprint`.
+      Filtro de tela não pode virar folha incompleta sem aviso.
+    - Ficou de fora, de propósito: filtro por tributo (a tabela é curta demais para mais um controle) e "simular
+      sem o INSS/ICMS", que parece filtro mas muda a conta — isso vive nas premissas, onde fica evidente.
   - Celular: a tabela mostra só a coluna do ano. Impressão "com o detalhamento" abre a apuração.
-  - Testes: seção 15 do painel (conta pura: LC 224 com ajuste, Anexo IV, comércio 8/12 com ICMS, atividade
-    pelo anexo) e 3g do banco (trimestres, adicional, cartões, atividade pelo seletor, comércio com ICMS).
+  - Testes: seção 15 do painel (conta pura: LC 224 com ajuste, Anexo IV, comércio 8/12 com ICMS, ICMS com crédito
+    das compras — trimestre credor e sobra no ano —, atividade pelo anexo) e 3g do banco (trimestres, adicional,
+    cartões, atividade pelo seletor, comércio com ICMS, ICMS das compras com a linha aberta).
 
 ### Testes
 Não há Postgres nesta máquina: o SQL foi validado com o parser do Postgres 17 (libpg_query) e o

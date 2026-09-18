@@ -366,12 +366,13 @@
   .present .ano-acoes{display:none}
   /* Lucro Presumido: uma linha por tributo, uma coluna por trimestre e o ano */
   /* o número de colunas muda com o período escolhido (4 trimestres ou um por mês salvo), por isso vem em --cols */
-  .gpres{display:grid; grid-template-columns:minmax(150px,1.5fr) repeat(var(--cols,5), minmax(84px,1fr)); gap:0 12px; padding:7px 0; border-top:1px solid var(--line); font-size:13px; align-items:baseline; min-width:640px}
+  .gpres{display:grid; grid-template-columns:minmax(150px,1.5fr) repeat(var(--cols,5), minmax(max-content,1fr)); gap:0 12px; padding:7px 0; border-top:1px solid var(--line); font-size:13px; align-items:baseline; min-width:640px}
   .gpres > span:not(:first-child){font-family:var(--mono); text-align:right; white-space:nowrap}
   .gpres > span:first-child{color:var(--ink-2)}
   .gpres.gh{border-top:0; padding-bottom:6px; font-size:11px; color:var(--muted)}
   .gpres.gh > span:not(:first-child){font-family:var(--sans); font-weight:500; color:var(--ink-3)}
   .gpres.gh small{display:block; font-weight:400; color:var(--muted-2); font-size:10px}
+  .gpres.gh .unid{font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase}
   .gpres.rec{border-top-color:var(--ink); font-weight:500}
   .gpres.rec > span:first-child{color:var(--ink)}
   .gpres.sub, .gpres.sub > span:first-child{color:var(--muted-2); font-size:12px}
@@ -379,6 +380,11 @@
   .gpres.tot > span:first-child{color:var(--ink)}
   .gpres.cmp > span{color:var(--ink-3)}
   .gpres.dif{border-top:1px solid var(--ink); font-weight:500}
+  .gpres > span:first-child small{display:block; font-family:var(--sans); font-size:11px; font-weight:400; color:var(--muted-2); line-height:1.35}
+  /* troféu do regime que sai mais barato no ano, junto do nome. Marcar a célula de cada coluna (filete verde
+     ou troféu no número) foi comparado na tela em 18/09/2026 e recusado: poluía a leitura dos valores */
+  .venc-tag{display:inline-flex; align-items:center; margin-left:7px; color:var(--ok); vertical-align:-2px}
+  .venc-tag .trofeu{width:13px; height:13px; flex:none}
   .gpres.dif > span:first-child{color:var(--ink)}
   .presumido .prem-f label{min-width:96px}
   .lp-ativ{display:flex; flex-direction:column; gap:6px; flex:1 1 320px; min-width:0}
@@ -405,7 +411,29 @@
   .gano.tot.base{border-top-color:var(--line-3)}
   .gpres-nota{margin:0; padding:6px 16px 10px; font-size:11px; line-height:1.5; color:var(--muted-2); background:var(--surface-2)}
   .lp-alt{display:flex; justify-content:flex-end; margin-top:18px}
+  .lp-alt{display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px 14px}
+  .lp-vazias{font-size:12px}
+  .lp-ver{display:flex; align-items:center; gap:14px}
+  .lp-ver .btn{font-family:var(--sans)}
+  .lp-ver .menu{min-width:220px}
+  .menu-t{margin:0; padding:8px 14px 2px; font:500 10px/1.4 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
+  .menu button[aria-checked="true"]{color:var(--ink); font-weight:500}
+  .lp-sel{display:flex; flex-direction:column; gap:2px; min-width:0}
+  .lp-sel .cap{font-size:10px; color:var(--muted-2)}
+  .lp-sel .sel{font-size:12px; padding-right:14px; border-bottom:1px solid var(--line-2)}
   .lp-tri{margin-top:10px}
+  /* muitas colunas: o rótulo e o Ano ficam presos nas bordas enquanto o meio rola */
+  .lp-tri .gpres > span:first-child, .lp-tri .gpres > span:last-child{position:sticky; background:var(--surface)}
+  .lp-tri .gpres > span:first-child{left:0; z-index:2; padding-right:8px}
+  .lp-tri .gpres > span:last-child{right:0; z-index:1; padding-left:8px}
+  /* a sombra só aparece do lado em que há coluna escondida — é ela que avisa que a tabela continua */
+  .lp-tri.x-esq .gpres > span:first-child{box-shadow:7px 0 7px -7px rgba(20,22,26,.18)}
+  .lp-tri.x-dir .gpres > span:last-child{box-shadow:-7px 0 7px -7px rgba(20,22,26,.18)}
+  .lp-tri .gpres.rec > span:first-child, .lp-tri .gpres.rec > span:last-child,
+  .lp-tri .gpres.tot > span:first-child, .lp-tri .gpres.tot > span:last-child,
+  .lp-tri .gpres.dif > span:first-child, .lp-tri .gpres.dif > span:last-child{background:var(--surface)}
+  @media (hover:hover){ .lp-tri .gpres:hover > span:first-child, .lp-tri .gpres:hover > span:last-child{background:var(--hover-linha)} }
+  html[data-tema="escuro"] .lp-tri .gpres > span:first-child, html[data-tema="escuro"] .lp-tri .gpres > span:last-child{background:var(--surface)}
   .seg .gr .sel{font-size:12px}
   .cbscol{display:flex; flex-direction:column; gap:1px; min-width:0}
   .cbscol small{font-size:11px; color:var(--muted-2); padding-left:2px}
@@ -830,7 +858,7 @@ function defaults(){ return {
   // simulação do Lucro Presumido (aba Anual). Dado da empresa como o anexo: passa de um mês para o outro.
   // atividade '' = pela do anexo (ver ATIVIDADES); irpjOutra/csllOutra só valem na atividade "outra";
   // ICMS é a carga sobre a receita, informada; encargos = 20% patronal + RAT + terceiros
-  presumido: {atividade: '', irpjOutra: 0.32, csllOutra: 0.32, iss: 0.05, icms: 0, encargos: 0.278, encargosProlabore: 0.20},
+  presumido: {atividade: '', irpjOutra: 0.32, csllOutra: 0.32, iss: 0.05, icms: 0, icmsCompras: 0, encargos: 0.278, encargosProlabore: 0.20},
   annual: {
     receita: 1187289.06,
     custos: [["Custo de medicamentos, produtos e outros",696475.30],["Produtos vencidos",3160.96]],
@@ -1584,30 +1612,52 @@ function saidas(){
     if(lp && lp.de === ano && !lp.carregando && !lp.erro){
       const pr = S.presumido || {}, anexo = anexoEmpresa(), at = atividadeLP(), prem = premissasLP();
       const c = calcPresumido(ano.linhas, lp.folhas, prem, anexo);
-      const cols = (ui.lpMes ? c.meses : c.q).concat([c.ano]);
-      const sinal = v => Math.abs(v) < 0.005 ? brl(0) : (v > 0 ? '+ ' : '− ') + brl(Math.abs(v));
+      const chaves = colunasLP(ano.linhas);
+      const cols = (ui.lpMes ? chaves.map(per => c.meses.find(m => m.periodo === per) || {n: 0})
+        : chaves.map(i => c.q[i])).concat([c.ano]);
       const ultima = cols.length - 1;
       cols.forEach((t, i) => {
-        const melhor = Math.min(t.conv, t.hibr), alias = k => { if(i === ultima) O[`lp.${k}.ano`] = O[`lp.${k}.${i}`]; };
-        LP_CAMPOS.forEach(k => { O[`lp.${k}.${i}`] = t.n ? brl(t[k]) : '—'; alias(k); });
+        // por mês são muitas colunas: nas de mês o "R$" sai (a unidade aparece uma vez, no canto da tabela) e
+        // a coluna do Ano mantém o símbolo — é ela que fecha a conta e alimenta o cartão
+        const money = ui.lpMes && i !== ultima ? (v => dec(v, 2, 2)) : brl;
+        const sinal = v => Math.abs(v) < 0.005 ? money(0) : (v > 0 ? '+ ' : '− ') + money(Math.abs(v));
+        const pagar = v => v > 0.004 ? money(v) : '—', credito = v => v < -0.004 ? money(-v) : '—';
+        const melhor = simplesDe(t), alias = k => { if(i === ultima) O[`lp.${k}.ano`] = O[`lp.${k}.${i}`]; };
+        LP_CAMPOS.forEach(k => { O[`lp.${k}.${i}`] = t.n ? money(t[k]) : '—'; alias(k); });
         O[`lp.acrescimo.${i}`] = t.n ? sinal(t.acrescimo) : '—';
         // CBS em duas linhas, como na tabela do ano: a pagar e crédito. No ano, o crédito é o que sobra depois do débito
-        O[`lp.cbs.${i}`] = t.n ? cbsPagar(t.cbs) : '—';
-        O[`lp.credCbsSobra.${i}`] = !t.n ? '—' : i === 4 ? cbsCredito(-t.credorCbs) : cbsCredito(t.cbs);
+        O[`lp.cbs.${i}`] = t.n ? pagar(t.cbs) : '—';
+        O[`lp.credCbsSobra.${i}`] = !t.n ? '—' : i === ultima ? credito(-t.credorCbs) : credito(t.cbs);
+        // ICMS na mesma leitura: a pagar numa linha, crédito que sobra na outra
+        O[`lp.icms.${i}`] = t.n ? pagar(t.icms) : '—';
+        O[`lp.credIcmsSobra.${i}`] = !t.n ? '—' : i === ultima ? credito(-t.credorIcms) : credito(t.icms);
         O[`lp.dif.${i}`] = t.n ? sinal(t.total - melhor) : '—';
         O[`lp.cargaLP.${i}`] = t.n ? P2(t.total, t.rec) : '—';
         O[`lp.cargaSN.${i}`] = t.n ? P2(melhor, t.rec) : '—';
         O[`lp.meses.${i}`] = i === ultima ? `${t.n} ${t.n === 1 ? 'mês' : 'meses'}`
-          : ui.lpMes ? '' : t.n === 3 ? '3 meses' : t.n ? `${t.n} de 3 meses` : 'sem meses';
-        ['acrescimo', 'dif', 'cargaLP', 'cargaSN', 'credCbsSobra', 'cbs'].forEach(alias);
+          : ui.lpMes ? String(t.periodo || '').slice(0, 4)      // na visão por mês, o ano fica embaixo do mês
+          : t.n === 3 ? '3 meses' : t.n ? `${t.n} de 3 meses` : 'sem meses';
+        ['acrescimo', 'dif', 'cargaLP', 'cargaSN', 'credCbsSobra', 'cbs', 'icms', 'credIcmsSobra'].forEach(alias);
       });
-      const t = c.ano, melhor = Math.min(t.conv, t.hibr), dif = t.total - melhor, qual = t.hibr < t.conv ? 'híbrido' : 'tradicional';
+      const t = c.ano, melhor = simplesDe(t), dif = t.total - melhor, qual = t.hibr < t.conv ? 'híbrido' : 'tradicional';
       V['lp.temLc224'] = cols.some(x => Math.abs(x.acrescimo) > 0.004);
       V['lp.temCredCbs'] = c.q.some(x => x.n && x.cbs < -0.004) || c.ano.credorCbs > 0.004;
+      V['lp.temCredIcms'] = at.icms && (c.q.some(x => x.n && x.icms < -0.004) || c.ano.credorIcms > 0.004);
       V['lp.anexoIV'] = anexo === 'IV';
       V['lp.ganha'] = dif < -0.004;
       V['lp.snGanha'] = dif > 0.004;
       V['lp.empate'] = Math.abs(dif) <= 0.004;
+      // troféu ao lado do nome do regime que sai mais barato no ano, entre os que estão na tela
+      // (marcar a célula de cada coluna foi testado e recusado)
+      const menorAno = Math.min(t.total, melhor);
+      ['total', 'conv', 'hibr'].forEach(k => { V[`lp.venc.${k}`] = t.n > 0 && t[k] - menorAno <= 0.004; });
+      O['lp.difRot'] = Math.abs(dif) <= 0.004 ? `Presumido e ${nomeSimples()} empatam no ano`
+        : dif > 0 ? `${nomeSimples()} sai mais barato no ano` : 'Presumido sai mais barato no ano';
+      O['lp.cargaSNRot'] = ui.lpCenario === 'ambos' ? 'Carga do Simples (melhor cenário)' : `Carga do ${nomeSimples().toLowerCase()}`;
+      V['lp.temEscondidas'] = escondidasLP(ano.linhas) > 0;
+      O['lp.escondidas'] = (() => { const n = escondidasLP(ano.linhas);
+        return n === 1 ? `1 ${ui.lpMes ? 'mês' : 'trimestre'} sem movimento está escondido`
+                       : `${n} ${ui.lpMes ? 'meses' : 'trimestres'} sem movimento estão escondidos`; })();
       O['lp.ganhoLP'] = `${brl(Math.abs(dif))} a menos que o Simples ${t.hibr < t.conv ? 'híbrido' : 'tradicional'}`;
       O['lp.ganhoSN'] = `${brl(Math.abs(dif))} a menos que o Presumido`;
       V['lp.semIcms'] = at.icms && !(prem.icms > 0);
@@ -1627,6 +1677,15 @@ function saidas(){
       O['lp.cbsNota'] = 'Débito menos crédito de cada mês, sem o crédito transportado: transportar ou não muda só o mês em que se paga. ' +
         (t.credorCbs > 0.004 ? `No ano sobra crédito de ${brl(t.credorCbs)}: a CBS do ano fica zerada e o saldo vai para o ano seguinte.`
                              : `No ano: ${brl(t.debCbs)} − ${brl(t.credCbs)} = ${brl(t.cbs)}.`);
+      // ICMS: no cartão, o líquido do ano com a conta ao lado; aberto na tabela, débito e crédito de cada período
+      O['lp.icmsInfo'] = prem.icmsCompras > 0
+        ? `débito de ${brl(t.icmsDeb)} − crédito de ${brl(t.icmsCred)}` + (t.credorIcms > 0.004 ? ` · sobra crédito de ${brl(t.credorIcms)}` : '')
+        : `${FMT.pct(prem.icms)} sobre a receita de ${brl(t.rec)}`;
+      O['lp.icmsNota'] = prem.icmsCompras > 0
+        ? `Débito de ${FMT.pct(prem.icms)} sobre a receita menos crédito de ${FMT.pct(prem.icmsCompras)} sobre as compras de ${brl(t.compras)}. `
+          + (t.credorIcms > 0.004 ? `No ano sobra crédito de ${brl(t.credorIcms)}: o ICMS do ano fica zerado e o saldo vai para o ano seguinte.`
+                                  : `No ano: ${brl(t.icmsDeb)} − ${brl(t.icmsCred)} = ${brl(t.icms)}.`)
+        : 'Sem alíquota sobre as compras informada, entra só o débito da receita. Informe a carga de crédito para a empresa que é contribuinte do ICMS.';
       // INSS: base à vista no cartão; aberta na tabela, cada despesa por trimestre com a sua alíquota
       const lf = lp.linhas || [], nomes = cat => lf.filter(l => l.cat === cat).map(l => l.nome);
       O['lp.folhaNota'] = !lf.length
@@ -2193,7 +2252,7 @@ function rPresumido(){
       </div>
       <div class="prem-f">
         ${at.id === 'outra' ? campo('presumido.irpjOutra', 'Presunção do IRPJ') + campo('presumido.csllOutra', 'Presunção da CSLL') : ''}
-        ${at.iss ? campo('presumido.iss', 'ISS do município') : ''}${at.icms ? campo('presumido.icms', 'ICMS sobre a receita') : ''}
+        ${at.iss ? campo('presumido.iss', 'ISS do município') : ''}${at.icms ? campo('presumido.icms', 'ICMS sobre a receita') + campo('presumido.icmsCompras', 'ICMS sobre as compras') : ''}
         ${campo('presumido.encargos', 'Encargos da folha')}
         ${(p.linhas || []).some(l => l.cat === 'prolabore') ? campo('presumido.encargosProlabore', 'Encargos do pró-labore') : ''}
       </div>
@@ -2205,7 +2264,7 @@ function rPresumido(){
       <article class="cmp-card" data-cls="ganha:lp.ganha"><span class="cmp-tag">${TROFEU}Mais barato no ano</span><h3>Lucro Presumido</h3><p class="cmp-nota" data-o="lp.notaLP"></p>
         ${linha('Imposto no ano', 'lp.total.ano', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoLP"></p>${linha('Carga tributária', 'lp.cargaLP.ano', 'tot', 'lp.cargaLPInfo')}
         ${linha('IRPJ com adicional', 'lp.irpjTot')}${linha('CSLL', 'lp.csll.ano')}${linha('CBS por fora', 'lp.cbs.ano', '', 'lp.cbsInfo')}
-        ${at.iss ? linha('ISS', 'lp.iss.ano') : ''}${at.icms ? linha('ICMS', 'lp.icms.ano') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.ano', '', 'lp.inssInfo')}
+        ${at.iss ? linha('ISS', 'lp.iss.ano') : ''}${at.icms ? linha('ICMS', 'lp.icms.ano', '', 'lp.icmsInfo') : ''}${linha('INSS patronal sobre a folha', 'lp.inss.ano', '', 'lp.inssInfo')}
       </article>
       <article class="cmp-card" data-cls="ganha:lp.snGanha"><span class="cmp-tag">${TROFEU}Mais barato no ano</span><h3>Simples Nacional</h3><p class="cmp-nota" data-o="lp.notaSN"></p>
         ${linha('Imposto no ano', 'lp.simples', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoSN"></p>${linha('Carga tributária', 'lp.cargaSN.ano', 'tot', 'lp.cargaSNInfo')}
@@ -2214,14 +2273,36 @@ function rPresumido(){
       </article>
     </div>
     <p class="cmp-eq" data-v="lp.empate">Presumido e Simples empatam no ano.</p>`;
-  // colunas: por trimestre (padrão) ou uma por mês salvo; o ano fecha sempre a tabela
+  // colunas: por trimestre (padrão) ou uma por mês salvo, só as que têm movimento; o ano fecha sempre a tabela
   const porMes = ui.lpMes;
-  const cols = (porMes ? (p.de.linhas || []).filter(x => x.resumo).map(x => mesCurto(x.periodo)) : ['1º tri', '2º tri', '3º tri', '4º tri']).concat(['Ano']);
-  const alternador = `<div class="cad-alt" role="group" aria-label="Período da tabela">` +
-    `<button class="cad-aba" type="button" data-act="lp-periodo" data-p="tri" aria-pressed="${!porMes}">Trimestre</button>` +
-    `<button class="cad-aba" type="button" data-act="lp-periodo" data-p="mes" aria-pressed="${porMes}">Mês</button></div>`;
+  const chaves = colunasLP(p.de.linhas);
+  const cols = (porMes ? chaves.map(per => mesCurto(per).slice(0, 3)) : chaves.map(i => `${i + 1}º tri`)).concat(['Ano']);
+  // as três escolhas da tabela (período, cenário do Simples e detalhe) em um controle só: a linha de sete
+  // botões tomava a largura da tabela. Duas formas em teste — menu (padrão) e seletores (body.lp-selects)
+  const ESCOLHAS = [
+    ['lp-periodo', 'Período', [['tri', 'Trimestre', !porMes], ['mes', 'Mês', porMes]]],
+    ['lp-cenario', 'Comparar com', [['ambos', 'Os dois cenários', ui.lpCenario === 'ambos'],
+      ['conv', 'Só o tradicional', ui.lpCenario === 'conv'], ['hibr', 'Só o híbrido', ui.lpCenario === 'hibr']]],
+    ['lp-detalhe', 'Detalhe', [['completo', 'Completo', !ui.lpResumo], ['resumo', 'Resumo', ui.lpResumo]]]
+  ];
+  const atual = ESCOLHAS.map(([, , itens]) => (itens.find(x => x[2]) || itens[0])[1]).join(' · ');
+  const semMov = `<button class="lk lp-vazias" type="button" data-act="lp-vazias" data-v="lp.temEscondidas">` +
+    `${ui.lpVazias ? 'esconder o que não tem movimento' : '<span data-o="lp.escondidas"></span> · mostrar'}</button>`;
+  const alternador = document.body.classList.contains('lp-selects')
+    ? ESCOLHAS.map(([act, rot, itens]) => `<label class="lp-sel"><span class="cap">${rot}</span>` +
+        `<span class="sel-wrap"><select class="sel" data-sel="${act}" aria-label="${rot}">` +
+        itens.map(([v, l, on]) => `<option value="${v}"${on ? ' selected' : ''}>${l}</option>`).join('') +
+        `</select></span></label>`).join('') + semMov
+    : `<div class="menu-wrap lp-ver">${semMov}<button class="btn" type="button" data-act="lp-ver" aria-haspopup="true" aria-expanded="${ui.lpMenu}">` +
+      `${atual} <span aria-hidden="true">▾</span></button>` +
+      (!ui.lpMenu ? '' : `<div class="menu entra" role="menu">` + ESCOLHAS.map(([act, rot, itens], n) =>
+        (n ? '<div class="sep" role="separator"></div>' : '') + `<p class="menu-t">${rot}</p>` +
+        itens.map(([v, l, on]) => `<button role="menuitemradio" aria-checked="${on}" type="button" data-act="${act}" data-p="${v}">` +
+          `${l}${on ? '<span class="chk">agora</span>' : ''}</button>`).join('')).join('') + `</div>`) + `</div>`;
   const linhaT = (rot, k, cls, attrs) => `<div class="gpres${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}</span>` +
     cols.map((_, i) => `<span data-o="lp.${k}.${i}"></span>`).join('') + `</div>`;
+  // regime que sai mais barato no ano: troféu junto do nome, que é onde se lê quem é quem
+  const trofeuAno = k => `<span class="venc-tag" data-v="lp.venc.${k}" title="Mais barato no ano">${TROFEU}</span>`;
   // linha que abre o detalhe com um clique (INSS e CBS), com o valor de cada coluna
   const linhaAbre = (act, aberto, rot, k) => `<div class="gpres clica"><span><button class="lk-linha" type="button" data-act="${act}" aria-expanded="${aberto}">` +
     `<span class="seta" aria-hidden="true">${aberto ? '▾' : '▸'}</span>${rot}</button></span>` +
@@ -2231,6 +2312,11 @@ function rPresumido(){
   const linhaCbs = linhaAbre('lp-cbs', ui.cbsLP, 'CBS por fora', 'cbs') +
     linhaT('Crédito de CBS', 'credCbsSobra', 'sub', ' data-v="lp.temCredCbs"') + (!ui.cbsLP ? ''
     : linhaT('Débito', 'debCbs', 'base') + linhaT('Crédito do período', 'credCbs', 'base') + `<p class="gpres-nota" data-o="lp.cbsNota"></p>`);
+  // ICMS: mesma leitura da CBS — a pagar numa linha, crédito que sobra em outra e, aberta, débito e crédito do período
+  const linhaIcms = linhaAbre('lp-icms', ui.icmsLP, 'ICMS', 'icms') +
+    linhaT('Crédito de ICMS', 'credIcmsSobra', 'sub', ' data-v="lp.temCredIcms"') + (!ui.icmsLP ? ''
+    : linhaT('Débito sobre a receita', 'icmsDeb', 'base') + linhaT('Crédito das compras', 'icmsCred', 'base')
+      + linhaT('Compras do período', 'compras', 'base') + `<p class="gpres-nota" data-o="lp.icmsNota"></p>`);
   // INSS: clicar na linha abre a base de cálculo — o total e cada despesa que o nome puxou, com a alíquota de cada uma
   const inssAberto = ui.inssBase;
   const linhaInss = linhaAbre('lp-inss', inssAberto, 'INSS patronal sobre a folha', 'inss');
@@ -2238,19 +2324,19 @@ function rPresumido(){
     (p.linhas || []).map((l, j) => linhaT(`${esc(l.nome)} <small data-o="lp.lf.${j}.aliq"></small>`, `lf.${j}`, 'base item')).join('') +
     `<p class="gpres-nota" data-o="lp.inssNota"></p>`;
   const trimestres = !aberto ? '' : `<div class="lp-alt">${alternador}</div><div class="scroll-x lp-tri" style="--cols:${cols.length}">
-      <div class="gpres gh"><span></span>${cols.map((c, i) => `<span>${c}<small data-o="lp.meses.${i}"></small></span>`).join('')}</div>
+      <div class="gpres gh"><span>${porMes ? '<small class="unid">valores em R$</small>' : ''}</span>${cols.map((c, i) => `<span>${c}<small data-o="lp.meses.${i}"></small></span>`).join('')}</div>
       ${linhaT('Receita', 'rec', 'rec')}
-      ${linhaT('Base do IRPJ', 'baseIrpj', 'sub')}${linhaT('Base da CSLL', 'baseCsll', 'sub')}
-      ${linhaT('Acréscimo da LC 224 na base do IRPJ', 'acrescimo', 'sub', ' data-v="lp.temLc224"')}
-      ${linhaT('IRPJ — 15% da base', 'irpj')}${linhaT('Adicional do IRPJ', 'adicional')}${linhaT('CSLL — 9% da base', 'csll')}
-      ${linhaCbs}${at.iss ? linhaT('ISS', 'iss') : ''}${at.icms ? linhaT('ICMS', 'icms') : ''}
+      ${ui.lpResumo ? '' : linhaT('Base do IRPJ', 'baseIrpj', 'sub') + linhaT('Base da CSLL', 'baseCsll', 'sub') +
+        linhaT('Acréscimo da LC 224 na base do IRPJ', 'acrescimo', 'sub', ' data-v="lp.temLc224"')}
+      ${linhaT('IRPJ — 15% da base', 'irpj')}${linhaT('Adicional do IRPJ <small>10% sobre a base acima de R$ 20 mil por mês</small>', 'adicional')}${linhaT('CSLL — 9% da base', 'csll')}
+      ${linhaCbs}${at.iss ? linhaT('ISS', 'iss') : ''}${at.icms ? linhaIcms : ''}
       ${linhaInss}${baseInss}
-      ${linhaT('Lucro Presumido', 'total', 'tot')}${linhaT('Carga tributária', 'cargaLP', 'sub')}
-      ${linhaT('Simples tradicional', 'conv', 'cmp')}${linhaT('Simples híbrido', 'hibr', 'cmp')}
-      ${linhaT('Carga do Simples (melhor cenário)', 'cargaSN', 'sub')}
-      ${linhaT('Presumido − melhor do Simples', 'dif', 'dif')}
+      ${linhaT('Lucro Presumido' + trofeuAno('total'), 'total', 'tot')}${ui.lpResumo ? '' : linhaT('Carga tributária', 'cargaLP', 'sub')}
+      ${ui.lpCenario === 'hibr' ? '' : linhaT('Simples tradicional' + trofeuAno('conv'), 'conv', 'cmp')}
+      ${ui.lpCenario === 'conv' ? '' : linhaT('Simples híbrido' + trofeuAno('hibr'), 'hibr', 'cmp')}
+      ${ui.lpResumo ? '' : linhaT('<span data-o="lp.cargaSNRot"></span>', 'cargaSN', 'sub')}
+      ${linhaT('<span data-o="lp.difRot"></span><small>quanto o Presumido custa a mais (+) ou a menos (−) em cada período</small>', 'dif', 'dif')}
     </div>
-    <p class="cmp-eq nota">Adicional do IRPJ: 10% sobre a base que passa de R$ 20 mil por mês do trimestre (R$ 60 mil no trimestre completo). CBS por fora: débito menos crédito, a mesma do regime híbrido.</p>
     ${porMes ? `<p class="cmp-eq nota">IRPJ, adicional, CSLL e as bases são apurados por trimestre: nas colunas de mês eles aparecem rateados pela receita de cada mês. Receita, CBS, ISS, ICMS, INSS e o Simples são do próprio mês.</p>` : ''}`;
   return cartao(premissas + cartoes + trimestres + `
     <p class="cmp-eq nota" data-v="lp.temLc224">LC 224/2025: a presunção sobe 10% sobre a receita acima de R$ 5 milhões no ano (R$ 1,25 milhão por trimestre, com ajuste nos seguintes). A regra está em disputa na Justiça (ADI 7920 no STF).</p>
@@ -2342,6 +2428,15 @@ function rFixo(){
     <nav class="fixo-abas" aria-label="Seções do painel">${abas}</nav>${salvar}</div></div>`;
 }
 let rolagemRAF = 0;
+// tabela larga: marca de que lado há coluna escondida (a sombra das bordas presas vem daqui)
+function marcarRolagemX(){
+  document.querySelectorAll('.lp-tri').forEach(el => {
+    el.classList.toggle('x-esq', el.scrollLeft > 2);
+    el.classList.toggle('x-dir', el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  });
+}
+addEventListener('scroll', e => { if(e.target instanceof Element && e.target.classList.contains('lp-tri')) marcarRolagemX(); }, true);
+addEventListener('resize', marcarRolagemX);
 function marcarRolagem(){
   const ref = app.querySelector('.barra') || app.querySelector('.top');
   document.body.classList.toggle('rolou', !!ref && ref.getBoundingClientRect().bottom < 0);
@@ -2437,6 +2532,7 @@ function refresh(){
   if(img && img.getAttribute('src') !== src) img.setAttribute('src', src);
   document.title = 'DRE — ' + (S.co || 'Painel');
   atualizarBarra();
+  marcarRolagemX();
 }
 
 /* ---------- ações ---------- */
@@ -2780,8 +2876,8 @@ const ATIVIDADES = [
   ['combustivel', 'Revenda de combustíveis', .016, .12, false, true],
   ['outra', 'Outra atividade — informar os percentuais', null, null, true, true],
 ];
-const LP_CAMPOS = ['n', 'rec', 'cbs', 'debCbs', 'credCbs', 'semCbs', 'folha', 'prolabore', 'baseInss', 'das', 'hib', 'acrescimo',
-  'baseIrpj', 'baseCsll', 'irpj', 'adicional', 'csll', 'iss', 'icms', 'inss', 'total', 'conv', 'hibr'];
+const LP_CAMPOS = ['n', 'rec', 'compras', 'cbs', 'debCbs', 'credCbs', 'semCbs', 'folha', 'prolabore', 'baseInss', 'das', 'hib', 'acrescimo',
+  'baseIrpj', 'baseCsll', 'irpj', 'adicional', 'csll', 'iss', 'icms', 'icmsDeb', 'icmsCred', 'inss', 'total', 'conv', 'hibr'];
 const RE_FOLHA = /folha|sal[aá]rio|funcion[aá]rio|ordenado|pr[oó][\s-]*labore/i;
 const RE_PROLABORE = /pr[oó][\s-]*labore/i;
 // pró-labore paga 20% patronal, sem RAT nem terceiros; linha que mistura ("Folha e pró-labore") fica com a alíquota da folha
@@ -2796,15 +2892,33 @@ function atividadeLP(){
 }
 function premissasLP(){
   const pr = S.presumido || {}, at = atividadeLP();
-  return {irpj: at.irpj, csll: at.csll, iss: at.iss ? +pr.iss || 0 : 0, icms: at.icms ? +pr.icms || 0 : 0, encargos: +pr.encargos || 0,
+  return {irpj: at.irpj, csll: at.csll, iss: at.iss ? +pr.iss || 0 : 0, icms: at.icms ? +pr.icms || 0 : 0,
+    icmsCompras: at.icms ? +pr.icmsCompras || 0 : 0, encargos: +pr.encargos || 0,
     encargosPro: pr.encargosProlabore == null ? 0.20 : +pr.encargosProlabore || 0};
 }
+// Colunas da tabela: trimestre (ou mês) com movimento. Coluna só de travessões ocupa a largura de quem tem
+// número — some por padrão, e o botão "mostrar sem movimento" devolve todas
+function colunasLP(linhas){
+  const ms = (linhas || []).filter(x => x.resumo).sort((a, b) => a.periodo < b.periodo ? -1 : 1);
+  const mov = r => (+r.receita || 0) > 0.004 || (+r.das || 0) > 0.004;
+  if(ui.lpMes) return ms.filter(x => ui.lpVazias || mov(x.resumo)).map(x => x.periodo);
+  return [0, 1, 2, 3].filter(i => ui.lpVazias ||
+    ms.some(x => Math.floor((+x.periodo.slice(5, 7) - 1) / 3) === i && mov(x.resumo)));
+}
+// cenário do Simples em disputa: os dois (padrão), só o tradicional ou só o híbrido
+const escondidasLP = linhas => {
+  const antes = ui.lpVazias; ui.lpVazias = true;
+  const total = colunasLP(linhas).length; ui.lpVazias = antes;
+  return total - colunasLP(linhas).length;
+};
+const simplesDe = t => ui.lpCenario === 'conv' ? t.conv : ui.lpCenario === 'hibr' ? t.hibr : Math.min(t.conv, t.hibr);
+const nomeSimples = () => ui.lpCenario === 'conv' ? 'Simples tradicional' : ui.lpCenario === 'hibr' ? 'Simples híbrido' : 'Simples';
 function calcPresumido(linhas, folhas, prem, anexo){
   const q = [0, 1, 2, 3].map(() => Object.fromEntries(LP_CAMPOS.map(k => [k, 0])));
   (linhas || []).forEach(x => {
     const r = x.resumo; if(!r) return;
     const t = q[Math.floor((+x.periodo.slice(5, 7) - 1) / 3)];
-    t.n++; t.rec += +r.receita || 0; t.das += +r.das || 0;
+    t.n++; t.rec += +r.receita || 0; t.das += +r.das || 0; t.compras += +r.compras || 0;
     // CBS pelo débito e crédito de cada mês, sem o transportado (ver totaisAno); o híbrido é o DAS sem a CBS mais ela
     const cb = cbsDoMes(r);
     t.debCbs += cb.deb; t.credCbs += cb.cred; t.semCbs += (+r.naTransicao || 0) - (+r.cbs || 0);
@@ -2827,7 +2941,10 @@ function calcPresumido(linhas, folhas, prem, anexo){
     t.adicional = Math.max(0, t.baseIrpj - LP.limiteMes * t.n) * LP.adicional;   // limite pelos meses salvos do trimestre
     t.csll = t.baseCsll * LP.csll;
     t.iss = t.rec * prem.iss;
-    t.icms = t.rec * prem.icms;
+    // ICMS como a CBS: débito sobre a receita menos crédito das compras (quem é contribuinte credita o das compras).
+    // Sem alíquota de compras informada, o crédito é zero e sobra só o débito, como era antes
+    t.icmsDeb = t.rec * prem.icms; t.icmsCred = t.compras * (prem.icmsCompras || 0);
+    t.icms = t.icmsDeb - t.icmsCred;
     t.baseInss = t.folha + t.prolabore;
     t.inss = t.folha * prem.encargos + t.prolabore * (prem.encargosPro == null ? prem.encargos : prem.encargosPro);
     t.total = t.irpj + t.adicional + t.csll + t.cbs + t.iss + t.icms + t.inss;
@@ -2839,6 +2956,10 @@ function calcPresumido(linhas, folhas, prem, anexo){
   // no ano, débito menos crédito; sobrando crédito, a CBS do ano é zero e o saldo fica para o ano seguinte
   ano.credorCbs = Math.max(0, -ano.cbs);
   if(ano.credorCbs > 0){ ano.cbs = 0; ano.total += ano.credorCbs; ano.hib += ano.credorCbs; ano.hibr += ano.credorCbs; }
+  // mesmo tratamento para o ICMS: sobrando crédito no ano, o imposto do ano é zero e o saldo vai para o ano seguinte.
+  // O ICMS não entra no Simples (lá ele está dentro do DAS), então só o total do Presumido muda
+  ano.credorIcms = Math.max(0, -ano.icms);
+  if(ano.credorIcms > 0){ ano.icms = 0; ano.total += ano.credorIcms; }
   // Visão por mês: receita, CBS, ISS/ICMS, INSS e Simples são do próprio mês. IRPJ, adicional, CSLL e as bases são
   // apurados POR TRIMESTRE (é assim na lei), então aqui aparecem rateados pela receita do mês dentro do trimestre —
   // sem receita no trimestre, divididos igualmente. A tabela diz isso embaixo
@@ -2854,7 +2975,9 @@ function calcPresumido(linhas, folhas, prem, anexo){
     m.prolabore = typeof f === 'object' && f ? +f.prolabore || 0 : 0;
     m.baseInss = m.folha + m.prolabore;
     m.inss = m.folha * prem.encargos + m.prolabore * (prem.encargosPro == null ? prem.encargos : prem.encargosPro);
-    m.iss = m.rec * prem.iss; m.icms = m.rec * prem.icms;
+    m.compras = +r.compras || 0;
+    m.iss = m.rec * prem.iss;
+    m.icmsDeb = m.rec * prem.icms; m.icmsCred = m.compras * (prem.icmsCompras || 0); m.icms = m.icmsDeb - m.icmsCred;
     const parte = tri.rec > 0.004 ? m.rec / tri.rec : (tri.n ? 1 / tri.n : 0);
     ['acrescimo', 'baseIrpj', 'baseCsll', 'irpj', 'adicional', 'csll'].forEach(k => { m[k] = tri[k] * parte; });
     m.total = m.irpj + m.adicional + m.csll + m.cbs + m.iss + m.icms + m.inss;
@@ -3375,7 +3498,13 @@ app.addEventListener('click', e => {
     case 'presumido': ui.presumido = !ui.presumido; render(); focar('[data-act="presumido"]'); break;
     case 'lp-inss': ui.inssBase = !ui.inssBase; render(); focar('[data-act="lp-inss"]'); break;
     case 'lp-cbs': ui.cbsLP = !ui.cbsLP; render(); focar('[data-act="lp-cbs"]'); break;
-    case 'lp-periodo': ui.lpMes = b.dataset.p === 'mes'; render(); focar(`[data-act="lp-periodo"][data-p="${b.dataset.p}"]`); break;
+    case 'lp-icms': ui.icmsLP = !ui.icmsLP; render(); focar('[data-act="lp-icms"]'); break;
+    case 'lp-ver': ui.lpMenu = !ui.lpMenu; render(); focar('[data-act="lp-ver"]'); break;
+    case 'lp-cenario': ui.lpCenario = b.dataset.p; ui.lpMenu = false; render(); focar('[data-act="lp-ver"]'); break;
+    case 'lp-detalhe': ui.lpResumo = b.dataset.p === 'resumo'; ui.lpMenu = false; render(); focar('[data-act="lp-ver"]'); break;
+    case 'lp-vazias': ui.lpVazias = !ui.lpVazias; render(); focar('[data-act="lp-vazias"]'); break;
+    case 'lp-periodo': ui.lpMes = b.dataset.p === 'mes'; ui.lpMenu = false; render();
+      focar(ui.lpMenu === false && document.querySelector('[data-act="lp-ver"]') ? '[data-act="lp-ver"]' : `[data-act="lp-periodo"][data-p="${b.dataset.p}"]`); break;
     case 'an-cbs': ui.cbsAno = !ui.cbsAno; render(); focar('[data-act="an-cbs"]'); break;
     case 'menu': ui.menu = !ui.menu; ui.armado = false; render(); focar('[data-act="menu"]'); break;
     case 'detalhe': ui.detalhe = !ui.detalhe; render(); focar('[data-act="detalhe"]'); break;
@@ -3481,6 +3610,16 @@ app.addEventListener('click', e => {
 });
 document.addEventListener('click', e => {
   if(ui.menu && !e.target.closest('.menu-wrap')){ ui.menu = false; ui.armado = false; render(); }
+  if(ui.lpMenu && !e.target.closest('.lp-ver')){ ui.lpMenu = false; render(); }
+});
+document.addEventListener('change', e => {              // forma B: as mesmas escolhas em seletores
+  const sel = e.target instanceof Element ? e.target.closest('select[data-sel]') : null;
+  if(!sel) return;
+  const v = sel.value;
+  if(sel.dataset.sel === 'lp-periodo') ui.lpMes = v === 'mes';
+  else if(sel.dataset.sel === 'lp-cenario') ui.lpCenario = v;
+  else ui.lpResumo = v === 'resumo';
+  render();
 });
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.body.classList.contains('realcando')){ realcar(null); return; }
@@ -3516,7 +3655,10 @@ async function imprimir(){
     botoes: [['cancelar', 'Cancelar'], ['totais', 'Só os totais', aberto ? '' : 'prim'], ['completo', 'Com o detalhamento', aberto ? 'prim' : '']],
     padrao: aberto ? 'completo' : 'totais'});
   if(botao !== 'totais' && botao !== 'completo') return;
-  const antes = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, presumido: ui.presumido, cadastro: {...ui.cadastro}};
+  // no papel a tabela do Presumido sai inteira: filtro da tela não pode virar folha incompleta sem aviso
+  const antes = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, presumido: ui.presumido,
+    lpCenario: ui.lpCenario, lpResumo: ui.lpResumo, lpVazias: ui.lpVazias, cadastro: {...ui.cadastro}};
+  ui.lpCenario = 'ambos'; ui.lpResumo = false; ui.lpVazias = true;
   const tudo = botao === 'completo';
   if(ui.tab === 'cliente') ui.cadastro = {cadeia: tudo, produtos: tudo};
   else {
@@ -3580,7 +3722,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, lpCenario: 'ambos', lpResumo: false, lpVazias: false, lpMenu: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
