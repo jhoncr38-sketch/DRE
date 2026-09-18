@@ -93,7 +93,7 @@ reforma/CBS `#B3122B` (o vermelho só aparece em valores da reforma e no foco), 
 sem sombras. Tema claro por padrão e **modo noturno** opcional (ver "Modo noturno" abaixo).
 
 **Fundo e cartões em três níveis** (16/09/2026): página `#E3E2DD`, cartão branco e, dentro dele, cartão
-em `--surface-2` com faixas brancas (hoje no quadro Convencional × Híbrido). O fundo era `#EFEEEA` e, sem
+em `--surface-2` com faixas brancas (hoje no quadro Tradicional × Híbrido). O fundo era `#EFEEEA` e, sem
 sombra, cartão branco e página quase não se separavam. A barra das abas (`--rail`) desceu junto para
 `#DAD8D2`, porque o fundo novo tem o tom que ela tinha e ela sumiria. Escolhido entre quatro versões
 renderizadas lado a lado.
@@ -164,9 +164,31 @@ Sem senha — Revisão → Desproteger Planilha.
 Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 (`{{LOGO_B64}}`, `{{FONTS_CSS}}`). Barras em HTML/CSS, sem biblioteca.
 
-- **Cabeçalho e faixa de indicadores** fixos em todas as abas, sem bloco herói (o resultado líquido
-  já fecha a DRE e está nos cartões do resumo): Simples Nacional e CBS a pagar no mês; despesas
-  operacionais e Simples no ano (o lucro operacional bruto fica só na DRE)
+- **Cabeçalho em duas linhas** (17/09/2026): em cima, uma faixa só do escritório — logo pequena e nome em
+  maiúsculas finas, fechada por um filete; embaixo, a empresa do cliente em destaque e a linha de contexto
+  (`DRE · Dezembro 2025 · CNPJ 00.000.000/0001-00` — o CNPJ vem do banco e antes só saía na impressão).
+  Antes a logo ficava colada ao nome da empresa e parecia ser do cliente. A outra forma testada — escritório
+  e cliente lado a lado, com um traço no meio — foi recusada. Sem rótulo "preparado por": a faixa já diz quem
+  assina. As abas ficam à direita, na altura do nome do cliente (em tela estreita voltam para baixo dele)
+- **Faixa de indicadores** fixa nas abas do mês, sem bloco herói (o resultado líquido já fecha a DRE e está
+  nos cartões do resumo): Simples Nacional e CBS a pagar no mês. A aba Anual não tem faixa
+- **Acabamento visual** (18/09/2026): quatro mudanças de sistema, todas de aparência — nenhuma conta mudou.
+  Vieram de uma conversa sobre o painel estar "chapado demais":
+  - **Escala de espaço** em tokens (`--e1:4px … --e7:48px`): todo recuo e toda distância saem dela. Antes cada
+    bloco tinha o seu compasso (cartão `28/30/22`, painel `22/26`, faixa `12/18`, barra `12/16`), e era isso que
+    fazia a página parecer desalinhada. O espaço entre cartões subiu para 32px e o recuo interno caiu para 24px:
+    os blocos se separam melhor e o miolo fica mais junto.
+  - **Filete e sombra no cartão:** `.card` era branco sobre bege sem borda nenhuma, enquanto `.kc`, `.barra` e
+    `.login` já tinham filete. Agora todos têm 1px, mais uma sombra de papel (contato bem fraco + sombra larga e
+    quase invisível embaixo). Comparada na tela com a versão só de filete, esta ganhou. No modo noturno fica só o
+    filete (sombra em fundo escuro suja em vez de dar volume) e no papel não sai nenhum dos dois.
+  - **A linha acende ao passar o mouse** (`.dl`, `.hero-row`, `.sn-l`, `.gano`, `.gpres`, `.gr`, `.cr`): o fundo
+    avança 12px para os lados com duas sombras sem borrão, para respirar sobre o recuo do cartão sem empurrar nada
+    e sem invadir a linha de cima nem a de baixo. Fica de fora o resultado líquido, que já tem fundo próprio.
+  - **Negrito só no que decide:** os rótulos desceram para 500 e o peso 600 ficou nos números — receita, totais,
+    resultado, cartão vencedor. Antes quase toda linha era 600 dos dois lados.
+  - Ficaram para depois, da mesma lista: números que contam ao trocar de mês (só na apresentação) e barras que
+    crescem ao aparecer.
 - **Abas:** Resultado · Resumo do cliente (mês) · Anual; setas do teclado navegam. A aba Resultado vai da
   DRE à apuração: Simples Nacional do mês → DRE → Estoque e compras → memória de cálculo da CBS
 - **Impressão e PDF** (16/09/2026), em Opções → "Imprimir / PDF…":
@@ -180,7 +202,8 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     no `beforeprint`, porque o texto muda com a empresa. As caixas vazias não são enfeite: cada borda com caixa
     definida cala a data, o título e o endereço que o Chrome põe quando "Cabeçalhos e rodapés" está ligado.
     O rodapé da tela (`footer.foot`) sai do papel: sozinho no fim, chegava a ocupar uma folha inteira.
-  - **Cabeçalho:** CNPJ (com banco), "valores em reais" e data e hora de emissão.
+  - **Cabeçalho:** "valores em reais" e data e hora de emissão (o CNPJ está na linha de contexto, que
+    também sai no papel).
   - **Nome do PDF:** o título da página vira "Empresa — DRE dez-2025" durante a impressão (o Chrome usa o
     título como nome do arquivo); caracteres proibidos em nome de arquivo viram hífen ("S/A" → "S-A").
   - **Quebra de página:** cartão grande pode quebrar (com `break-inside:avoid` inteiro ele pulava para a folha
@@ -262,7 +285,7 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **DAS não digitado: a DRE usa o calculado** (`dasNaDre`, 13/09/2026). Enquanto a linha "Simples Nacional"
   estiver zerada e houver anexo e receita dos 12 meses, ela mostra o **DAS que sai da receita por tipo**,
   com "*calculado · digitar*" embaixo, e esse valor entra nas despesas tributárias, no resultado e na
-  margem. Antes o quadro "Convencional × Híbrido" já usava o DAS calculado e a DRE contava zero — o lucro
+  margem. Antes o quadro "Tradicional × Híbrido" já usava o DAS calculado e a DRE contava zero — o lucro
   do mês aparecia maior do que é. O link **digitar** passa o valor para o campo (vira declarado, editável).
   Nada é gravado sozinho; quem digita, manda. Os dois formatos ficam no DOM e o `data-v` escolhe, porque
   digitar a receita só dá `refresh()`. **Sem a linha do Simples** na lista não há onde mostrar o valor, e
@@ -323,7 +346,7 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   perdeu-se a saída para um caso em que a lei dê um número que não seja exatamente 40% da cheia; se
   aparecer, o lugar dele é uma alíquota própria **na linha**, não uma premissa do mês
 - **Receita por tipo** (detalhamento da receita, aba Resultado — seção 2 da planilha "Simples CBS
-  Convencional vs Híbrido"): tipo, receita, **situação no DAS** (`r[5]`: Integral, ICMS-ST, Monofásico,
+  Tradicional vs Híbrido"): tipo, receita, **situação no DAS** (`r[5]`: Integral, ICMS-ST, Monofásico,
   ICMS-ST + monofásico, ISS retido), **tipo da CBS por fora** (com a alíquota da linha embaixo, para não
   confundir a alíquota da CBS com a parcela dela dentro do DAS) e débito. São as mesmas linhas do débito
   da memória da Reforma — editar em uma vale para a outra
@@ -356,7 +379,7 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   - informar o RBT12 volta a mandar em qualquer caso, e o campo Situação some
 - **Apuração do mês** — `rApuracaoSimples()`, **fora da tela por enquanto** (decisão do usuário: entra
   depois, no fim da DRE, quando receitas e despesas já foram demonstradas). O cálculo continua valendo
-  (`segregacao()`, `dasBase`) e alimenta o quadro Convencional × Híbrido. Quando voltar, traz: receita
+  (`segregacao()`, `dasBase`) e alimenta o quadro Tradicional × Híbrido. Quando voltar, traz: receita
   dos 12 meses (`monthly.rbt12`, do mês) dão a faixa e a alíquota efetiva; em seguida o DAS que sai da
   receita por tipo, o **DAS declarado** (campo ligado à linha do Simples nas despesas tributárias, sem
   precisar de "Editar valores") e a **conferência** entre os dois (tolerância de R$ 1,00; sem DAS
@@ -375,16 +398,19 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **As duas CBS lado a lado** (fim do cartão, também fora da tela por enquanto): a de dentro é uma fatia do DAS (15,33% dele) e a de fora
   incide sobre a receita (8% dela) — bases diferentes, por isso aparecem com a legenda de cada uma, mais
   o DAS sem a CBS e a conclusão ("Com a CBS por fora, o mês custa R$ X a mais", com o total ao lado)
-- **Convencional × Híbrido** (último bloco da aba Resultado — seção 4 da planilha), **um cartão por regime**
-  (16/09/2026, a partir de um modelo do usuário, nas cores do sistema: cantos retos, sem sombra):
-  - **Simples convencional:** DAS total em destaque, alíquota efetiva e, numa faixa branca sobre o cartão
+- **Tradicional × Híbrido** (último bloco da aba Resultado — seção 4 da planilha), **um cartão por regime**
+  (16/09/2026, a partir de um modelo do usuário, nas cores do sistema: cantos retos, sem sombra). Na tela o
+  regime de hoje chama-se **tradicional** (era "convencional" até 17/09/2026 — o usuário achou o termo mais
+  claro para o cliente); no código as chaves continuam `conv` (`k.conv`, `lp.conv`, `convGanha`), para não
+  mexer no que já está salvo no banco:
+  - **Simples tradicional:** DAS total em destaque, alíquota efetiva e, numa faixa branca sobre o cartão
     cinza, a CBS dentro do DAS — em tom apagado porque é parte do DAS, não soma a ele.
   - **Regime híbrido:** DAS sem CBS, CBS por fora (com "crédito de R$ X vai para o mês seguinte" quando
     credora), **IBS por fora só quando informado** (`monthly.ibs`), total em faixa branca e alíquota efetiva.
   - **Composição dos tributos do mês** no pé de cada cartão, alinhada entre os dois (`margin-top:auto`):
     barra empilhada (DAS em cinza `--muted-2`, CBS `--brand`, IBS `--line-3`) e legenda com marcador quadrado
     (`.cg-q`, o mesmo da pizza), percentual e valor. **Cada barra é o total do próprio regime** — quem
-    compara os dois é o destaque do cartão vencedor. No convencional a CBS dá 15,33% do DAS: é a parcela.
+    compara os dois é o destaque do cartão vencedor. No tradicional a CBS dá 15,33% do DAS: é a parcela.
     O DAS era preto (17/09/2026): pesava mais que a parte vermelha, que é a CBS, o que se compara ali.
   - Embaixo de cada composição, a **carga tributária do mês** (todas as despesas tributárias; no híbrido,
     trocando o DAS pelo par DAS sem CBS + CBS).
@@ -414,8 +440,8 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 - **Cores:** preto para estrutura e totais; vermelho da marca para a CBS; verde só para o que é a favor da
   empresa (crédito, vencedor), sempre suave e com texto ou ícone junto; no máximo uma cor de destaque por bloco.
   Vermelho e verde não fazem par de "ruim × bom" lado a lado.
-- **Ponto de equilíbrio** (`textoEquilibrio()`, no quadro Convencional × Híbrido, fim da aba Resultado):
-  quanto falta para o híbrido empatar com o convencional, ou quanta folga ele tem, dito **no gasto** que
+- **Ponto de equilíbrio** (`textoEquilibrio()`, no quadro Tradicional × Híbrido, fim da aba Resultado):
+  quanto falta para o híbrido empatar com o tradicional, ou quanta folga ele tem, dito **no gasto** que
   produz o crédito: "*faltam no mês R$ 16.917,42 em compras (9%) ou R$ 19.032,10 em despesas com direito
   a crédito (8%)*". Compra e despesa creditável servem igual; o que muda é a alíquota de cada uma, e por
   isso o gasto necessário é diferente (quanto maior a alíquota, menos gasto). Com as duas alíquotas iguais
@@ -439,7 +465,7 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   pizza ao lado das barras). O aviso de CNPJ inválido continua visível mesmo recolhido — é problema a
   resolver, não detalhe. "Para onde foi a receita", os quatro cartões ("O mês em quatro números") e o "O que
   observar" foram retirados a pedido do usuário — os mesmos números já estão na faixa de indicadores do
-  topo e no quadro Convencional × Híbrido. Saíram com eles `textoObservar()` e `textoClientesCadeia()`
+  topo e no quadro Tradicional × Híbrido. Saíram com eles `textoObservar()` e `textoClientesCadeia()`
 - **Cadeia de crédito** (fim do Resumo do cliente, handoff seção 5.1, gráficos **A e B**: as barras
   por regime e, ao lado, a pizza de 108px com a proporção do total. O handoff pedia escolher só um;
   o usuário pediu os dois — as barras quebram por regime, a pizza dá a proporção. A legenda é única,
@@ -686,9 +712,9 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
     for diferente, quanto seria e por quê.
 - **Aba Anual → "Sair do Simples? Lucro Presumido"** (16/09/2026): estimativa de quanto a empresa pagaria no
   Presumido com os meses salvos do ano, pelas regras de 2027. Só lê — não muda nada no banco.
-  - **À vista:** atividade, e dois cartões (modelo Convencional × Híbrido) com **imposto no ano e carga
+  - **À vista:** atividade, e dois cartões (modelo Tradicional × Híbrido) com **imposto no ano e carga
     tributária** — Presumido com a composição (IRPJ com adicional, CSLL, CBS por fora, ISS/ICMS, INSS patronal)
-    e Simples no melhor cenário, com convencional e híbrido separados — e a faixa da conclusão. "Ver por
+    e Simples no melhor cenário, com tradicional e híbrido separados — e a faixa da conclusão. "Ver por
     trimestre" abre a apuração. A primeira versão só mostrava a diferença; o usuário quis ver imposto e carga.
   - **Apuração trimestral** (`calcPresumido`): IRPJ 15% e CSLL 9% sobre receita × presunção; adicional de 10%
     sobre a base do IRPJ acima de R$ 20 mil por mês salvo do trimestre. Mês a mês o adicional sai errado quando
@@ -761,7 +787,7 @@ dado de um cliente nunca serve de modelo para outro; ativar backup no Supabase c
 5. **Crédito por item:** cada despesa tem % da base com direito e alíquota própria
    (aluguel 30%, contabilidade 70%, pessoal 0%, demais 100%).
 6. Comparação da carga = **Hoje (Simples declarado)** × **CBS por fora**
-   (Simples sem CBS + CBS + IBS), no quadro Convencional × Híbrido, fim da aba Resultado.
+   (Simples sem CBS + CBS + IBS), no quadro Tradicional × Híbrido, fim da aba Resultado.
 
 ### Números de referência (dezembro) — usar como teste de regressão
 ```

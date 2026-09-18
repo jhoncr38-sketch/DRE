@@ -23,6 +23,9 @@
     --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
     /* texto sobre --fill (recalculado em refresh() pela luz da cor) e tons que antes estavam cravados no CSS */
     --sobre-fill:#FFFFFF; --hover-rail:rgba(255,255,255,.6); --hover-linha:#FAF9F7; --alt:#F2F1ED; --veu:rgba(20,22,26,.45);
+    /* compasso do espaço: todo recuo e toda distância saem desta escala (4 · 8 · 12 · 16 · 24 · 32 · 48).
+       Antes cada bloco tinha o seu (28/30/22, 22/26, 12/18…), e era isso que fazia a página parecer desalinhada */
+    --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px; --e6:32px; --e7:48px;
     --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
     --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
@@ -53,13 +56,20 @@
   .sub{margin:4px 0 0; font-size:13px; color:var(--muted)}
   .cap{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase}
 
-  .page{padding:28px 24px 64px}
-  .wrap{max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:24px}
+  .page{padding:var(--e6) var(--e5) var(--e7)}
+  .wrap{max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:var(--e6)}
 
   /* Cabeçalho */
-  .top{display:flex; align-items:flex-end; justify-content:space-between; gap:16px 24px; flex-wrap:wrap}
-  .ident{display:flex; align-items:center; gap:14px; min-width:0}
+  /* faixa de cima: logo e nome do escritório, que assina o trabalho; embaixo, a empresa do cliente e o período */
+  .top{position:relative; display:flex; flex-direction:column; align-items:stretch; gap:10px}
+  .faixa-escr{display:flex; align-items:center; gap:10px; padding-bottom:10px; border-bottom:1px solid var(--line-2)}
+  .faixa-escr .logo{height:30px}
+  .escr-nome{font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+  .ident{display:flex; align-items:flex-end; gap:14px; min-width:0}
+  .cli-id{min-width:0}
   .logo{height:44px; width:auto; display:block; flex:0 0 auto}
+  .top .nav{position:absolute; right:0; bottom:0}
+  @media (max-width:640px){ .top .nav{position:static; justify-content:flex-start} }
   .co{font-size:17px; font-weight:600; letter-spacing:-.01em}
   .ctx{font-family:var(--mono); font-size:12px; color:var(--muted); letter-spacing:.02em; text-transform:uppercase; margin-top:2px}
   .nav{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; max-width:100%}
@@ -86,7 +96,7 @@
   .menu .sep{height:1px; background:var(--line); margin:6px 0}
 
   /* Personalizar */
-  .panel{background:var(--surface); padding:22px 26px}
+  .panel{background:var(--surface); padding:var(--e5)}
   .panel-h{display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px}
   .fields{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr)); gap:18px 28px}
   .field{display:flex; flex-direction:column; gap:4px; min-width:0}
@@ -96,9 +106,9 @@
   .sw input[type=color]{width:34px; height:26px; padding:0; border:1px solid var(--line-2); border-radius:2px; background:none; cursor:pointer}
 
   /* Faixa de indicadores */
-  .hero{display:grid; grid-template-columns:minmax(0,1fr); gap:16px}
+  .hero{display:grid; grid-template-columns:minmax(0,1fr); gap:var(--e4)}
   .hero-side{display:grid; grid-auto-rows:1fr; gap:1px; background:var(--line-2); min-width:0}
-  .hero-row{background:var(--surface-2); padding:12px 18px; display:flex; align-items:center; justify-content:space-between; gap:4px 16px; flex-wrap:wrap}
+  .hero-row{background:var(--surface-2); padding:var(--e3) var(--e4); display:flex; align-items:center; justify-content:space-between; gap:4px 16px; flex-wrap:wrap}
   .hero-row .lbl{font-size:13px; color:var(--ink-3)}
   .hero-row .suf{font-size:11px; color:var(--muted-2)}
   .hero-row .val{font-family:var(--mono); font-size:16px; font-weight:600; white-space:nowrap; margin-left:auto}
@@ -109,28 +119,33 @@
   .pct-s{color:var(--muted-2); font-size:12px; font-weight:400}
 
   /* DRE */
-  .card{background:var(--surface); padding:28px 30px 22px; min-width:0}
-  .card-h{display:flex; align-items:flex-end; justify-content:space-between; gap:12px 20px; flex-wrap:wrap; margin-bottom:20px}
+  /* filete de 1px mais uma sombra de papel: uma de contato bem fraca e uma larga e quase invisível embaixo.
+     Comparada na tela com a versão só de filete (18/09/2026) — esta ganhou, o cartão deixa de parecer chapado.
+     No escuro fica só o filete: sombra em fundo escuro suja em vez de dar volume */
+  .card, .panel{box-shadow:0 0 0 1px var(--line), 0 1px 2px rgba(20,22,26,.045), 0 16px 32px -24px rgba(20,22,26,.30)}
+  html[data-tema="escuro"] .card, html[data-tema="escuro"] .panel{box-shadow:0 0 0 1px var(--line)}
+  .card{background:var(--surface); padding:var(--e5) var(--e5) var(--e4); min-width:0}
+  .card-h{display:flex; align-items:flex-end; justify-content:space-between; gap:var(--e3) var(--e5); flex-wrap:wrap; margin-bottom:var(--e5)}
   .dl{display:flex; align-items:baseline; justify-content:space-between; gap:16px; padding:11px 0; border-top:1px solid var(--line)}
   .dl .l{font-size:14px; min-width:0}
   .dl .v{font-family:var(--mono); font-size:15px; white-space:nowrap; display:flex; align-items:baseline; justify-content:flex-end}
   .p{color:var(--muted-2); font-size:12px; font-weight:400; display:inline-block; width:52px; flex:0 0 52px; text-align:right}
   .tag-src{font-weight:400; color:var(--muted-2); font-size:12px; font-family:var(--mono)}
   .dl.rec{border-top-color:var(--ink); padding:12px 0}
-  .dl.rec .l{font-size:15px; font-weight:600}
+  .dl.rec .l{font-size:15px; font-weight:500}
   .dl.rec .v{font-size:17px; font-weight:600}
   .dl.tot{padding:14px 0 11px}
-  .dl.tot .l{font-size:15px; font-weight:600}
+  .dl.tot .l{font-size:15px; font-weight:500}
   .dl.tot .v{font-size:16px; font-weight:600}
   /* lucro bruto só em texto vermelho: com fundo rosa ele chamava mais atenção que o próprio resultado */
   .dl.gross{padding:12px 0}
   .dl.gross .l, .dl.gross .v, .dl.gross .p{color:var(--brand)}
-  .dl.gross .l{font-size:15px; font-weight:600}
+  .dl.gross .l{font-size:15px; font-weight:500}
   .dl.gross .v{font-size:16px; font-weight:600}
   /* fechamento da DRE (17/09/2026): traço duplo em cima e fundo bege claro, a convenção do total final em demonstrativo
      impresso. Substituiu o bloco preto; a faixa com filete escuro à esquerda foi comparada na tela e perdeu */
   .dl.res{background:var(--surface-2); color:var(--ink); margin:10px -16px 0; padding:14px 16px; border-top:4px double var(--ink); align-items:center}
-  .dl.res .l{font-size:16px; font-weight:600}
+  .dl.res .l{font-size:16px; font-weight:500}
   .dl.res .v{font-size:20px; font-weight:600}
   .dl.res .p{color:var(--muted-2); font-size:13px}
   .det{background:var(--surface-2); padding:6px 14px 10px; margin-bottom:4px}
@@ -213,7 +228,7 @@
   .add:hover{color:var(--ink); text-decoration:underline}
   .present .row-ctl, .present .add{display:none !important}
   .sum{display:flex; justify-content:space-between; gap:12px; padding:10px 0; font-size:14px}
-  .sum span:first-child{font-weight:600}
+  .sum span:first-child{font-weight:500}
   .sum span:last-child{font-family:var(--mono); font-weight:600; white-space:nowrap}
   .sum.deb{padding-bottom:18px}
   .sum.credor{padding-top:0; font-size:13px}
@@ -222,7 +237,7 @@
      de crédito, verde suave. Substituiu o bloco vermelho em 17/09/2026 */
   .total{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px 14px 13px; margin:10px -16px 0;
     background:var(--surface-2); color:var(--ink); border-left:3px solid var(--brand)}
-  .total > span:first-child{font-size:15px; font-weight:600}
+  .total > span:first-child{font-size:15px; font-weight:500}
   .total > span:last-child{font-family:var(--mono); font-size:19px; font-weight:600; white-space:nowrap; color:var(--brand)}
   .total.credito{border-left-color:color-mix(in srgb, var(--ok) 80%, var(--surface))}
   .total.credito > span:last-child{color:var(--ok)}
@@ -230,7 +245,7 @@
   /* débito e crédito com a barra na mesma linha: rótulo, barra, valor; a origem do crédito embaixo da barra */
   .sum-bar{display:grid; grid-template-columns:minmax(120px,.8fr) minmax(0,2fr) auto; align-items:center; gap:4px 18px;
     padding:11px 0; border-bottom:1px solid var(--line); font-size:14px}
-  .sb-l{font-weight:600}
+  .sb-l{font-weight:500}
   .sb-track{display:flex; height:8px; background:var(--canvas)}
   .sb-v{font-family:var(--mono); font-weight:600; white-space:nowrap; text-align:right; min-width:110px}
   .sb-leg{grid-column:2 / 4; font-size:11px; color:var(--muted-2)}
@@ -259,17 +274,17 @@
   .prem2 .in:focus{border-bottom-color:var(--brand)}
   .hint{margin:12px 0 0; font-size:11px; color:var(--muted-2); line-height:1.5}
 
-  /* Convencional × Híbrido: um cartão por regime — os números em cima, a composição dos tributos embaixo.
+  /* Tradicional × Híbrido: um cartão por regime — os números em cima, a composição dos tributos embaixo.
      Cada barra é o total do próprio regime; quem compara o tamanho dos dois é a faixa da decisão */
   .cmp2{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; margin:4px 0 16px}
-  .cmp-card{display:flex; flex-direction:column; min-width:0; border:1px solid var(--line-2); padding:18px 20px 16px; background:var(--surface-2)}
+  .cmp-card{display:flex; flex-direction:column; min-width:0; border:1px solid var(--line-2); padding:var(--e5) var(--e5) var(--e4); background:var(--surface-2)}
   .cmp-card h3{font-size:16px}
   .cmp-nota{margin:0 0 10px; font-size:12px; color:var(--muted)}
   .cmp-row{display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:9px 0; border-top:1px solid var(--line); font-size:13px; color:var(--ink-2)}
   .cmp-row > span:first-child{min-width:0}
   .cmp-row small{display:block; font-size:11px; color:var(--muted-2)}
   .cmp-row .v{font-family:var(--mono); font-size:14px; color:var(--ink); white-space:nowrap}
-  .cmp-row.dest > span:first-child, .cmp-row.tot > span:first-child{font-weight:600; color:var(--ink)}
+  .cmp-row.dest > span:first-child, .cmp-row.tot > span:first-child{font-weight:500; color:var(--ink)}
   .cmp-row.dest .v, .cmp-row.tot .v{font-size:17px; font-weight:600}
   .cmp-row.sub, .cmp-row.tot{margin-top:4px; padding:9px 10px; border-top:0; background:var(--surface)}   /* faixa branca no cartão cinza */
   .cmp-row.sub, .cmp-row.sub .v{color:var(--muted)}               /* parte do DAS, não soma a ele */
@@ -325,8 +340,10 @@
   .gano > span:not(:first-child){font-family:var(--mono); text-align:right; white-space:nowrap}
   .gano.gh{border-top:0; padding-bottom:5px; font-size:11px; color:var(--muted)}
   .gano.gh > span:not(:first-child){font-family:var(--sans); font-weight:400}
-  .gano.tot{border-top:1px solid var(--line-3); font-weight:600}
-  .gano.tot > span:first-child{font-weight:600}
+  .gano.tot{border-top:1px solid var(--line-3); font-weight:500}
+  .gano.tot > span:first-child{font-weight:500}
+  .gano.tot > span:not(:first-child), .gpres.tot > span:not(:first-child),
+  .gpres.dif > span:not(:first-child), .sn-fim > .v{font-weight:600}
   .ano-acoes{display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:16px}
   .ano-acoes .lk{border:0; background:none; padding:0; font:inherit; font-size:12px; color:var(--ink-3); text-decoration:underline; cursor:pointer}
   .ano-acoes .lk:hover{color:var(--brand)}
@@ -337,15 +354,15 @@
   .gpres > span:not(:first-child){font-family:var(--mono); text-align:right; white-space:nowrap}
   .gpres > span:first-child{color:var(--ink-2)}
   .gpres.gh{border-top:0; padding-bottom:6px; font-size:11px; color:var(--muted)}
-  .gpres.gh > span:not(:first-child){font-family:var(--sans); font-weight:600; color:var(--ink-3)}
+  .gpres.gh > span:not(:first-child){font-family:var(--sans); font-weight:500; color:var(--ink-3)}
   .gpres.gh small{display:block; font-weight:400; color:var(--muted-2); font-size:10px}
-  .gpres.rec{border-top-color:var(--ink); font-weight:600}
+  .gpres.rec{border-top-color:var(--ink); font-weight:500}
   .gpres.rec > span:first-child{color:var(--ink)}
   .gpres.sub, .gpres.sub > span:first-child{color:var(--muted-2); font-size:12px}
-  .gpres.tot{border-top:1px solid var(--line-3); font-weight:600}
+  .gpres.tot{border-top:1px solid var(--line-3); font-weight:500}
   .gpres.tot > span:first-child{color:var(--ink)}
   .gpres.cmp > span{color:var(--ink-3)}
-  .gpres.dif{border-top:1px solid var(--ink); font-weight:600}
+  .gpres.dif{border-top:1px solid var(--ink); font-weight:500}
   .gpres.dif > span:first-child{color:var(--ink)}
   .presumido .prem-f label{min-width:96px}
   .lp-ativ{display:flex; flex-direction:column; gap:6px; flex:1 1 320px; min-width:0}
@@ -388,7 +405,7 @@
   .sn-l .v{font-family:var(--mono); font-weight:600; white-space:nowrap}
   .sn-l .in{width:140px; flex:0 0 140px; font-weight:600; border-bottom-color:var(--line-3)}
   .sn-l small{display:block; margin-top:1px; font-family:var(--sans); font-size:11px; font-weight:400; color:var(--muted-2)}
-  .sn-fim{border-top:1px solid var(--ink); font-weight:600}
+  .sn-fim{border-top:1px solid var(--ink); font-weight:500}
   .sn-fim > span:first-child{color:var(--ink)}
   .sn-fim .v{display:flex; flex-direction:column; align-items:flex-end; gap:1px}
   .sn-fim .v small{text-align:right}
@@ -401,7 +418,7 @@
   .btn.prim{background:var(--fill); border-color:var(--fill); color:var(--sobre-fill)}
   .btn.prim:hover{border-color:var(--fill); filter:brightness(1.25)}
   .btn:disabled{opacity:.55; cursor:default; filter:none}
-  .barra{display:flex; align-items:flex-end; gap:12px 22px; flex-wrap:wrap; background:var(--surface); padding:12px 16px; box-shadow:0 0 0 1px var(--line-2)}
+  .barra{display:flex; align-items:flex-end; gap:12px 22px; flex-wrap:wrap; background:var(--surface); padding:var(--e3) var(--e4); box-shadow:0 0 0 1px var(--line-2)}
   .barra.local{padding:9px 16px; font-size:12px; color:var(--muted); background:var(--surface-2)}
   .bsel{display:flex; flex-direction:column; gap:2px; min-width:0; max-width:100%}
   .bsel .cap{font-size:10px; letter-spacing:.1em; color:var(--muted-2)}
@@ -416,7 +433,7 @@
   .bstatus.erro{color:var(--ink)}
   .bstatus.erro::before{background:var(--brand)}
   .menu .menu-email{font-size:11px; color:var(--muted-2); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .login{width:min(380px,100%); margin:8vh auto 0; background:var(--surface); padding:30px 28px; display:flex; flex-direction:column; gap:10px; box-shadow:0 0 0 1px var(--line-2)}
+  .login{width:min(380px,100%); margin:8vh auto 0; background:var(--surface); padding:var(--e6) var(--e5); display:flex; flex-direction:column; gap:10px; box-shadow:0 0 0 1px var(--line-2)}
   .login .logo{align-self:flex-start; margin-bottom:6px}
   .login .sub{margin:0}
   .login form{display:flex; flex-direction:column; gap:14px; margin-top:10px}
@@ -424,7 +441,7 @@
   .login-erro, .modal-erro{margin:0; min-height:1.2em; font-size:12px; color:var(--ink-3)}
   .login .btn.prim{justify-content:center; padding:12px}
   .modal-fundo{position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; padding:16px; background:var(--veu)}
-  .modal-caixa{width:min(440px,100%); background:var(--surface); padding:24px 26px; display:flex; flex-direction:column; gap:14px; box-shadow:0 0 0 1px var(--line-2)}
+  .modal-caixa{width:min(440px,100%); background:var(--surface); padding:var(--e5); display:flex; flex-direction:column; gap:14px; box-shadow:0 0 0 1px var(--line-2)}
   .modal-caixa .sub{margin:0}
   /* lixeira e histórico: lista com um botão por linha dentro da janela */
   .hist-t{margin:4px 0 0; font-size:13px; font-weight:600; color:var(--ink)}
@@ -533,7 +550,7 @@
   .cli h2{font-size:22px; letter-spacing:-.02em; margin-bottom:6px}
   .cli .sub{margin:0 0 30px; font-size:14px; max-width:60ch}
   .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr)); gap:1px}
-  .kc{padding:22px 20px; display:flex; flex-direction:column; gap:6px; box-shadow:0 0 0 1px var(--line-2); container-type:inline-size; min-width:0}
+  .kc{padding:var(--e5) var(--e4); display:flex; flex-direction:column; gap:6px; box-shadow:0 0 0 1px var(--line-2); container-type:inline-size; min-width:0}
   .kc .cap{color:var(--muted-2); letter-spacing:.1em}
   .kv{font-family:var(--mono); font-weight:600; letter-spacing:-.02em; white-space:nowrap; font-size:26px; font-size:min(26px, calc(100cqi / 7.8))}
   .kv.brand{color:var(--brand)}
@@ -604,7 +621,16 @@
   /* a linha em foco cresce para ser lida de longe: 6% a partir do centro, com sombra leve — assim ela parece
      levantada do cartão, e não desalinhada quando passa do recuo. Sobe de camada para cobrir as vizinhas */
   .present .realce{background:var(--alt); transform:scale(1.06); position:relative; z-index:2; box-shadow:0 2px 14px rgba(20,22,26,.14)}
+  /* passar o mouse acende a linha. O fundo avança 12px para os lados por duas sombras sem borrão — assim ele
+     respira sobre o recuo do cartão sem empurrar nada e sem invadir a linha de cima nem a de baixo */
+  @media (hover:hover){
+    .dl:not(.res):hover, .sn-l:not(.sn-fim):hover, .gano:not(.gh):not(.tot):hover, .gpres:not(.gh):not(.tot):not(.dif):hover,
+    .cr:not(.gh):hover, .gr:not(.gh):hover{background:var(--hover-linha);
+      box-shadow:var(--e3) 0 0 var(--hover-linha), calc(var(--e3) * -1) 0 0 var(--hover-linha)}
+    .hero-row:hover{background:var(--hover-linha)}
+  }
   .dl, .hero-row, .cmp-row, .sum-bar, .total, .li, .gr, .cr, .gano, .gpres, .sn-l{transition:transform .15s ease}
+  .dl, .hero-row, .sn-l, .gano, .gpres, .gr, .cr{transition:background-color .12s ease, box-shadow .12s ease}
   .dl, .hero-row, .cmp-row, .sum-bar, .total, .li, .gr, .cr, .gano, .gpres, .sn-l{transition:opacity .15s ease}
   body.realcando .dl:not(.realce), body.realcando .hero-row:not(.realce), body.realcando .cmp-row:not(.realce),
   body.realcando .sum-bar:not(.realce), body.realcando .total:not(.realce), body.realcando .li:not(.realce),
@@ -632,10 +658,10 @@
 
   @media (max-width:800px){ .cmp2{grid-template-columns:minmax(0,1fr)} }   /* um cartão embaixo do outro */
   @media (max-width:640px){
-    .card{padding:22px 18px 18px}
+    .card{padding:var(--e5) var(--e4) var(--e4)}
     .memo{padding:22px 18px}
     .cli{padding:26px 20px 24px}
-    .panel{padding:20px 18px}
+    .panel{padding:var(--e5) var(--e4)}
     .dl.res{margin:8px -10px 0; padding:14px 10px}
     .total{margin:10px -10px 0; padding:14px 10px 14px 7px}
     .sum-bar{grid-template-columns:minmax(0,1fr) auto}
@@ -650,7 +676,7 @@
     .g5 > :nth-child(4){grid-area:aliq}
     .g5 > :nth-child(5){grid-area:cred}
     .g5.gh{display:none}
-    .cmp-card{padding:16px 14px 14px}
+    .cmp-card{padding:var(--e4) var(--e3) var(--e3)}
     .cmp-leg{grid-template-columns:minmax(0,1fr); gap:6px}             /* uma fatia por linha: três colunas não cabem */
     .cmp-parte{align-items:center}
     .cmp-parte .cg-q{margin-top:0}
@@ -680,7 +706,7 @@
     .gpres > span:not(:first-child):not(:last-child){display:none}
   }
   @media (max-width:560px){
-    .page{padding:20px 16px 48px}
+    .page{padding:var(--e5) var(--e4) var(--e7)}
     .tab{padding:7px 10px}
     .tl-long{display:none}
     .logo{height:38px}
@@ -714,7 +740,9 @@
     .wrap, .reforma{display:block}
     #app > *{margin-top:18px}
     #app > .top{margin-top:0; padding:0 16px 12px; border-bottom:1px solid var(--line-3)}
+    .faixa-escr{border-bottom:0; padding-bottom:4px}               /* no papel basta o risco do próprio cabeçalho */
     .card, .memo, .cli{padding:0 16px}
+    .card, .panel, .barra, .kc{box-shadow:none}                    /* no papel o filete vira ruído */
     .hero-row{padding:12px 16px}
     .card-h{margin-bottom:14px}
     /* campo de texto não quebra linha: no papel o nome vai num texto comum (ver nomesNoPapel) */
@@ -1281,7 +1309,7 @@ function textoEquilibrio(c){
     : aC > 0 ? emC(aC) : aD > 0 ? emD(aD) : `${brl(v)} de crédito de CBS`;
   // "no mês" vem antes do valor: no fim ele cairia depois do parêntese da alíquota, longe do verbo
   return c.faltaCredito > 0
-    ? `Para o híbrido empatar com o convencional, faltam no mês ${quanto}.`
+    ? `Para o híbrido empatar com o tradicional, faltam no mês ${quanto}.`
     : `O híbrido continua mais barato mesmo perdendo no mês ${quanto}.`;
 }
 /* ---------- saídas: todo texto calculado da tela, por chave ---------- */
@@ -1296,7 +1324,9 @@ function saidas(){
   const an = ui.tab === 'anual';
 
   O.co = S.co || ''; O.footer = S.footer || '';
-  O.ctx = 'DRE · ' + (an ? S.anoLabel : S.mesLabel);
+  // a logo é do escritório: o CNPJ ao lado do nome deixa claro de quem é a empresa do painel
+  const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
+  O.ctx = 'DRE · ' + (an ? S.anoLabel : S.mesLabel) + (emp && emp.cnpj ? ' · CNPJ ' + fmtCnpj(emp.cnpj) : '');
   O.comp = an ? 'Valores em reais · ' + String(S.anoLabel || '').toLowerCase()
               : 'Valores em reais · competência ' + competencia(S.mesLabel);
 
@@ -1413,7 +1443,7 @@ function saidas(){
     : `Com a CBS por fora, o mês custa ${brl(-cm.delta)} a menos`;
   V['r.manual'] = !cm.pelaTabela;
 
-  // Convencional × Híbrido: um cartão por regime, com os números e a composição dos tributos do mês
+  // Tradicional × Híbrido: um cartão por regime, com os números e a composição dos tributos do mês
   Object.assign(O, {
     'k.dasConv': brl(cm.dasBase), 'k.cbsConv': brl(cm.parcelaCbs),
     'k.dasHib': brl(cm.simplesSemCbs), 'k.cbsHib': brl(cm.cbsPagar), 'k.ibsHib': brl(cm.ibs), 'k.totHib': brl(cm.naTransicao),
@@ -1453,10 +1483,10 @@ function saidas(){
   V['k.hibGanha'] = comparaDas && cm.delta < -0.004;
   V['k.empate'] = comparaDas && Math.abs(cm.delta) <= 0.004;
   O['k.ganhoConv'] = `${brl(Math.abs(cm.delta))} a menos que o híbrido`;
-  O['k.ganhoHib'] = `${brl(Math.abs(cm.delta))} a menos que o convencional`;
+  O['k.ganhoHib'] = `${brl(Math.abs(cm.delta))} a menos que o tradicional`;
   V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
   V['k.semDas'] = cm.dasBase <= 0.004;
-  // "Tributos do mês" soma as despesas tributárias da DRE. Sem nenhuma lançada, o convencional daria
+  // "Tributos do mês" soma as despesas tributárias da DRE. Sem nenhuma lançada, o tradicional daria
   // R$ 0,00 e o híbrido, só a diferença — dois números que não se comparam. Melhor não mostrar.
   V['k.temCarga'] = cm.trib > 0.004;
 
@@ -1529,14 +1559,14 @@ function saidas(){
           : ui.lpMes ? '' : t.n === 3 ? '3 meses' : t.n ? `${t.n} de 3 meses` : 'sem meses';
         ['acrescimo', 'dif', 'cargaLP', 'cargaSN', 'credCbsSobra', 'cbs'].forEach(alias);
       });
-      const t = c.ano, melhor = Math.min(t.conv, t.hibr), dif = t.total - melhor, qual = t.hibr < t.conv ? 'híbrido' : 'convencional';
+      const t = c.ano, melhor = Math.min(t.conv, t.hibr), dif = t.total - melhor, qual = t.hibr < t.conv ? 'híbrido' : 'tradicional';
       V['lp.temLc224'] = cols.some(x => Math.abs(x.acrescimo) > 0.004);
       V['lp.temCredCbs'] = c.q.some(x => x.n && x.cbs < -0.004) || c.ano.credorCbs > 0.004;
       V['lp.anexoIV'] = anexo === 'IV';
       V['lp.ganha'] = dif < -0.004;
       V['lp.snGanha'] = dif > 0.004;
       V['lp.empate'] = Math.abs(dif) <= 0.004;
-      O['lp.ganhoLP'] = `${brl(Math.abs(dif))} a menos que o Simples ${t.hibr < t.conv ? 'híbrido' : 'convencional'}`;
+      O['lp.ganhoLP'] = `${brl(Math.abs(dif))} a menos que o Simples ${t.hibr < t.conv ? 'híbrido' : 'tradicional'}`;
       O['lp.ganhoSN'] = `${brl(Math.abs(dif))} a menos que o Presumido`;
       V['lp.semIcms'] = at.icms && !(prem.icms > 0);
       // os dois cartões: imposto do ano e carga tributária sobre a receita somada dos meses salvos
@@ -1630,9 +1660,14 @@ function rTopo(){
   if(!ui.client) ctl = ui.present
     ? telaCheia + `<button class="btn" data-act="present">Sair da apresentação</button>`
     : `<div class="menu-wrap"><button class="btn" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">Opções <span aria-hidden="true">▾</span></button>${ui.menu ? rMenu() : ''}</div>`;
+  const cliente = `<div class="cli-id"><div class="co" data-o="co"></div><div class="ctx" data-o="ctx"></div>` +
+    `<div class="imp-info so-papel" id="imp-info"></div></div>`;
+  // a logo é do escritório: fica na faixa de cima, com o nome dele, longe do nome da empresa do cliente
+  const escritorio = `<div class="faixa-escr"><img class="logo" data-src="logo" alt="Logo do escritório">` +
+    `<span class="escr-nome" data-o="footer"></span></div>`;
   return `<header class="top">
-    <div class="ident"><img class="logo" data-src="logo" alt="Logo do escritório">
-      <div><div class="co" data-o="co"></div><div class="ctx" data-o="ctx"></div><div class="imp-info so-papel" id="imp-info"></div></div></div>
+    ${escritorio}
+    <div class="ident">${cliente}</div>
     <nav class="nav"><div class="rail" role="tablist" aria-label="Seções do painel">${botoes}</div>${ctl}</nav>
   </header>`;
 }
@@ -1809,10 +1844,10 @@ function rComparativo(){
       <div class="cmp-leg">${parte(pre, 'das', rotDas, 'c-das')}${parte(pre, 'cbs', rotCbs, 'c-brand')}` +
       (rotIbs ? `<div data-v="k.temIbs">${parte(pre, 'ibs', rotIbs, 'c-line')}</div>` : '') + `</div>
       <small class="cmp-carga" data-o="${carga}" data-v="k.temCarga"></small></div>`;
-  return `<section class="card comparativo" aria-label="Convencional × Híbrido">
-    <div class="card-h"><div><h2>Convencional × Híbrido</h2><p class="sub">Compare os dois cenários e veja qual sai mais barato neste mês.</p></div></div>
+  return `<section class="card comparativo" aria-label="Tradicional × Híbrido">
+    <div class="card-h"><div><h2>Tradicional × Híbrido</h2><p class="sub">Compare os dois cenários e veja qual sai mais barato neste mês.</p></div></div>
     <div class="cmp2">
-      <article class="cmp-card" data-cls="ganha:k.convGanha"><span class="cmp-tag">${TROFEU}Mais barato no mês</span><h3>Simples convencional</h3><p class="cmp-nota">CBS dentro do DAS</p>
+      <article class="cmp-card" data-cls="ganha:k.convGanha"><span class="cmp-tag">${TROFEU}Mais barato no mês</span><h3>Simples tradicional</h3><p class="cmp-nota">CBS dentro do DAS</p>
         ${linha('DAS total', 'k.dasConv', 'dest')}<p class="cmp-ganho" data-o="k.ganhoConv"></p>${linha('Alíquota efetiva', 'k.efetConv')}${linha('CBS dentro do DAS', 'k.cbsConv', 'sub')}
         ${comp('k.conv', 'DAS base', 'CBS', '', 'k.cargaConv')}</article>
       <article class="cmp-card" data-cls="ganha:k.hibGanha"><span class="cmp-tag">${TROFEU}Mais barato no mês</span><h3>Regime híbrido</h3><p class="cmp-nota">DAS sem a CBS e CBS por fora</p>
@@ -1936,7 +1971,7 @@ function rReforma(){
 }
 
 // Os quatro cartões e o "O que observar" saíram a pedido do usuário: os mesmos números já estão na
-// faixa de indicadores do topo e no quadro Convencional × Híbrido, no fim da aba Resultado.
+// faixa de indicadores do topo e no quadro Tradicional × Híbrido, no fim da aba Resultado.
 function rCliente(){
   return painel('cli', 'cliente', `<div class="cli-blocos">${rCadeia()}${rProdutos()}</div>`);
 }
@@ -2091,7 +2126,7 @@ function rAnual(){
     ou use a aba Resultado, que trabalha com o mês aberto.</div></section>`;
 }
 // Sair do Simples? Só lê os meses salvos. À vista: a atividade (que define a presunção), o imposto e a carga tributária
-// nos dois regimes e a conclusão, no modelo dos cartões Convencional × Híbrido. "Ver por trimestre" abre a apuração
+// nos dois regimes e a conclusão, no modelo dos cartões Tradicional × Híbrido. "Ver por trimestre" abre a apuração
 function rPresumido(){
   const a = banco.ano;
   if(!banco.ativo || !banco.empresaId || !a || a.carregando || a.semFuncao || !a.linhas.length) return '';
@@ -2129,7 +2164,7 @@ function rPresumido(){
       </article>
       <article class="cmp-card" data-cls="ganha:lp.snGanha"><span class="cmp-tag">${TROFEU}Mais barato no ano</span><h3>Simples Nacional</h3><p class="cmp-nota" data-o="lp.notaSN"></p>
         ${linha('Imposto no ano', 'lp.simples', 'dest')}<p class="cmp-ganho" data-o="lp.ganhoSN"></p>${linha('Carga tributária', 'lp.cargaSN.ano', 'tot', 'lp.cargaSNInfo')}
-        ${linha('Convencional — CBS dentro do DAS', 'lp.conv.ano', '', 'lp.cargaConv')}${linha('Híbrido — CBS por fora', 'lp.hibr.ano', '', 'lp.cargaHibr')}
+        ${linha('Tradicional — CBS dentro do DAS', 'lp.conv.ano', '', 'lp.cargaConv')}${linha('Híbrido — CBS por fora', 'lp.hibr.ano', '', 'lp.cargaHibr')}
         ${linha('INSS patronal (Anexo IV, fora do DAS)', 'lp.inss.ano', '', '', ' data-v="lp.anexoIV"')}
       </article>
     </div>
@@ -2166,7 +2201,7 @@ function rPresumido(){
       ${linhaCbs}${at.iss ? linhaT('ISS', 'iss') : ''}${at.icms ? linhaT('ICMS', 'icms') : ''}
       ${linhaInss}${baseInss}
       ${linhaT('Lucro Presumido', 'total', 'tot')}${linhaT('Carga tributária', 'cargaLP', 'sub')}
-      ${linhaT('Simples convencional', 'conv', 'cmp')}${linhaT('Simples híbrido', 'hibr', 'cmp')}
+      ${linhaT('Simples tradicional', 'conv', 'cmp')}${linhaT('Simples híbrido', 'hibr', 'cmp')}
       ${linhaT('Carga do Simples (melhor cenário)', 'cargaSN', 'sub')}
       ${linhaT('Presumido − melhor do Simples', 'dif', 'dif')}
     </div>
@@ -2835,8 +2870,8 @@ function textoAno(t, linhas){
   if(t.nat > 0.004){
     const dif = t.nat - t.das;
     p.push(Math.abs(dif) < 0.005 ? 'No acumulado do ano, os dois regimes empatam.'
-      : dif > 0 ? `No acumulado do ano, o convencional sai ${brl(dif)} mais barato que apurar a CBS por fora.`
-                : `No acumulado do ano, apurar a CBS por fora sai ${brl(-dif)} mais barato que o convencional.`);
+      : dif > 0 ? `No acumulado do ano, o tradicional sai ${brl(dif)} mais barato que apurar a CBS por fora.`
+                : `No acumulado do ano, apurar a CBS por fora sai ${brl(-dif)} mais barato que o tradicional.`);
   }
   const faixas = [...new Set((linhas || []).map(x => x.resumo && x.resumo.faixa).filter(Boolean))].sort();
   if(faixas.length === 1) p.push(`A empresa ficou na ${faixas[0]}ª faixa do Simples o ano todo.`);
@@ -3421,10 +3456,9 @@ async function imprimir(){
 function prepararFolha(){
   const rotulo = (ui.tab === 'cliente' ? 'Resumo do cliente' : 'DRE') + ' · ' + (ui.tab === 'anual' ? S.anoLabel : S.mesLabel);
   const periodo = ui.tab === 'anual' ? String(S.anoLabel || '').toLowerCase() : competencia(S.mesLabel).replace('/', '-');
-  const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
   const info = document.getElementById('imp-info');
-  if(info) info.textContent = [emp && emp.cnpj ? 'CNPJ ' + fmtCnpj(emp.cnpj) : '', 'valores em reais',
-    'emitido em ' + dataHora(Date.now()).replace(', ', ' às ')].filter(Boolean).join(' · ');
+  if(info) info.textContent = ['valores em reais',              // o CNPJ já aparece na linha de contexto
+    'emitido em ' + dataHora(Date.now()).replace(', ', ' às ')].join(' · ');
   const aspas = s => '"' + String(s || '').replace(/\s+/g, ' ').replace(/[\\"]/g, '\\$&') + '"';
   const caixa = 'font-family:"IBM Plex Mono",monospace; font-size:8pt; color:#8A8D94';
   let st = document.getElementById('estilo-folha');
