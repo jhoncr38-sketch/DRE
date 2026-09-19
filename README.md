@@ -266,8 +266,8 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   - **Preferência de quem olha, não dado da empresa:** fica no navegador (`localStorage` `dre.tema`), não no
     estado salvo. Um script no `<head>` aplica o tema antes de desenhar, para a página não piscar clara.
   - **Imprimir sai sempre no claro** (`beforeprint`/`afterprint`) e volta ao escuro depois.
-  - Cores dos gráficos seguem os tokens. Em "Produtos e serviços", "Alíquota cheia" continua no tom mais
-    próximo do fundo nos dois temas, de propósito (a cor marca a exceção): contraste 1,42 no claro, 1,47 no escuro.
+  - Cores dos gráficos seguem os tokens. As faixas de redução da CBS têm rampa própria (`--cbs-0…--cbs-6`),
+    com passos mais cheios no escuro, porque sobre fundo escuro a mistura com branco clareia rápido demais.
   - Testes (seção 13): ligar pelo menu, tokens e cores recalculadas, cor clara personalizada, impressão no
     claro e volta, desligar esquece; 13b abre já escuro quando lembrado. O perfil do Chrome de teste guarda o
     `localStorage` entre execuções: os testes limpam `dre.tema` no fim, senão contaminariam as suítes seguintes.
@@ -517,6 +517,28 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
     "+ adicionar" e a legenda da visão; estado vazio explicando por que cadastrar
   - dados em `cadeia.fornecedores` e `cadeia.clientes` (`[cnpj, nome, regime, 'sim'|'parcial'|'nao'|'']`),
     começam vazios e ficam no banco (tabela `parceiros`) ou no Baixar HTML — nunca no código
+- **O vermelho do painel é o da logo** (18/09/2026): era `#B3122B`, um carmim com azul na mistura; a logo do
+  escritório usa `#A80000` (medido nos pixels dela). Com o carmim, os tons claros da rampa da CBS puxavam para o
+  rosa e destoavam da marca. Trocado no token, no estado padrão e no fallback do `refresh()`.
+- **Cores da cadeia de crédito** (18/09/2026): "gera crédito" era preto chapado e "parcial", o vermelho da marca —
+  duas cores fortes escolhidas por acaso para um dado que tem ordem. Viraram escala neutra (`--cad-sim`,
+  `--cad-parcial`, `--cad-nao`): grafite em quem gera crédito, cinza médio no parcial, cinza claro em quem não gera.
+  A versão em verde (gerar crédito é a favor da empresa) foi comparada na tela e recusada, e o grafite que veio
+  depois também: frio demais ao lado do bege e do vermelho. A escala terrosa ganhou de outra na família do vermelho
+  da logo — com as duas vermelhas, cadeia e CBS se confundiam.
+- **Com uma categoria só não há gráfico** (`discoCg`, `soloCg`): um disco inteiro de uma cor não compara nada —
+  acontecia sempre que todos os itens caíam na mesma faixa (todos na alíquota cheia, todos gerando crédito). O anel
+  com a contagem no meio foi testado e recusado, e o número grande também ("grosseiro"): ficou o chapéu em mono
+  ("100% DOS ITENS") e uma linha de leitura com o que faltava — a contagem, a faixa e a alíquota que vale para
+  todos ("17 itens · CBS de 8,00%"). O chapéu é sempre plural: com um cadastro só saía "100% dos item".
+  Com duas faixas ou mais, segue a pizza.
+- **Cores das faixas de redução da CBS** (18/09/2026): eram cinza, grafite, preto e vermelho misturados — cores
+  de categoria para um dado que é **escala**. Viraram uma rampa de um tom só (`--cbs-6` … `--cbs-1`): o vermelho
+  da marca na alíquota cheia, clareando conforme a redução cresce, para a leitura ser "quanto mais forte, mais
+  imposto". A **alíquota zero fica fora da rampa**, em neutro (`--cbs-0`): nenhum imposto não é um vermelho fraco.
+  As fatias da pizza deixaram de se encostar (meio grau da cor do cartão entre elas separa tons vizinhos), o disco
+  ganhou filete — sem ele os passos claros somem no cartão — e as amostras da legenda também. O contraste baixo dos
+  passos claros é compensado por nome e percentual ao lado de cada faixa, que é o que a leitura exige.
 - **Produtos e serviços** (logo abaixo da cadeia de crédito, mesmo vocabulário visual): cadastro do que
   a empresa vende, com as **duas alíquotas calculadas** — nada de digitar percentual:
   - colunas: **Nome**, **Tipo** (Produto / Serviço), **NCM / NBS**, **cClassTrib**, **Redução da CBS**
@@ -811,8 +833,7 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
     - **Os controles cabem em um botão** (`ui.lpMenu`): a linha de sete botões tomava a largura da tabela e foi
       recusada na tela. No lugar, um controle que mostra o estado ("Mês · Os dois cenários · Completo ▾") e abre um
       menu com as três escolhas, no mesmo componente do menu Opções. A outra forma testada — três seletores curtos
-      (PERÍODO / COMPARAR COM / DETALHE) — continua no código atrás da classe `lp-selects` no `body`, para comparar
-      na tela; quando a escolha estiver feita, a que sobrar sai.
+      (PERÍODO / COMPARAR COM / DETALHE) — foi comparada na tela e perdeu.
     - **No papel sai tudo:** `imprimir()` guarda os três filtros, força a tabela completa e devolve no `afterprint`.
       Filtro de tela não pode virar folha incompleta sem aviso.
     - Ficou de fora, de propósito: filtro por tributo (a tabela é curta demais para mais um controle) e "simular

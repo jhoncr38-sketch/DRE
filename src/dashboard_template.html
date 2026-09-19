@@ -12,12 +12,29 @@
     color-scheme:light;
     --ink:#14161A; --fill:#14161A; --ink-2:#40434A; --ink-3:#40434A;
     --muted:#6E7178; --muted-2:#91949B; --muted-3:#91949B; --disabled:#B6B8BC;
-    --brand:#B3122B; --brand-dark:#7d0c1e; --brand-wash:#FBF3F4;
+    /* o vermelho é o da logo do escritório (#A80000, medido nos pixels dela), não um carmim próximo:
+       com azul na mistura, os tons claros da rampa da CBS puxavam para o rosa e destoavam da marca */
+    --brand:#A80000; --brand-dark:#760000; --brand-wash:#FBF2F2;
     /* fundo um tom abaixo do antigo #EFEEEA: com ele, cartão branco e página quase não se separavam.
        A barra das abas desce junto, senão some no fundo novo (que tem o tom que ela tinha) */
     --canvas:#E3E2DD; --surface:#FFFFFF; --surface-2:#F8F7F4; --rail:#DAD8D2;
     --line:#E7E5E0; --line-2:#DAD8D2; --line-3:#C7C5BF; --on-fill:#C9CCD2;
     --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
+    /* Faixas de redução da CBS: uma escala, não categorias. Um tom só — o vermelho da marca —, escuro na
+       alíquota cheia e clareando conforme a redução cresce, para a leitura ser "quanto mais forte, mais imposto".
+       A alíquota zero fica fora da rampa: nenhum imposto não é um vermelho fraco */
+    --cbs-6:var(--brand);
+    --cbs-5:color-mix(in srgb, var(--brand) 76%, #FFFFFF);
+    --cbs-4:color-mix(in srgb, var(--brand) 60%, #FFFFFF);
+    --cbs-3:color-mix(in srgb, var(--brand) 46%, #FFFFFF);
+    --cbs-2:color-mix(in srgb, var(--brand) 33%, #FFFFFF);
+    --cbs-1:color-mix(in srgb, var(--brand) 22%, #FFFFFF);
+    --cbs-0:var(--line-2);
+    /* Cadeia de crédito: escala quente, para conversar com o bege do painel e com o vermelho da logo — o
+       grafite frio destoava dos dois (o verde foi comparado antes e recusado) */
+    --cad-sim:#8C7A6E;
+    --cad-parcial:#BAAAA0;
+    --cad-nao:#DED8D1;
     /* texto sobre --fill (recalculado em refresh() pela luz da cor) e tons que antes estavam cravados no CSS */
     /* o cartão não é branco chapado: escurece um fio na base, como papel sob luz que vem de cima */
     --card-luz:color-mix(in srgb, var(--surface) 97%, var(--canvas));
@@ -39,6 +56,16 @@
     --line:#2C2E33; --line-2:#373A40; --line-3:#4B4F56;
     --ok:#2A8C5C;
     --card-luz:color-mix(in srgb, var(--surface) 93%, #FFFFFF);   /* no escuro a luz clareia o alto, não a base */
+    /* a mesma rampa das faixas da CBS, com passos mais cheios: no fundo escuro o branco chega rápido demais */
+    --cbs-5:color-mix(in srgb, var(--brand) 84%, #FFFFFF);
+    --cbs-4:color-mix(in srgb, var(--brand) 70%, #FFFFFF);
+    --cbs-3:color-mix(in srgb, var(--brand) 58%, #FFFFFF);
+    --cbs-2:color-mix(in srgb, var(--brand) 48%, #FFFFFF);
+    --cbs-1:color-mix(in srgb, var(--brand) 40%, #FFFFFF);
+    --cbs-0:var(--line-3);
+    --cad-sim:#C0AC9E;
+    --cad-parcial:#8C7D73;
+    --cad-nao:#4B4640;
     --hover-rail:rgba(255,255,255,.08); --hover-linha:#25272B; --alt:#232529; --veu:rgba(0,0,0,.62);
   }
   html[data-tema="escuro"] .logo{background:#fff; padding:3px}          /* a logo é escura: ganha uma placa clara */
@@ -415,9 +442,7 @@
   .lp-ver .menu{min-width:220px}
   .menu-t{margin:0; padding:8px 14px 2px; font:500 10px/1.4 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted-2)}
   .menu button[aria-checked="true"]{color:var(--ink); font-weight:500}
-  .lp-sel{display:flex; flex-direction:column; gap:2px; min-width:0}
-  .lp-sel .cap{font-size:10px; color:var(--muted-2)}
-  .lp-sel .sel{font-size:12px; padding-right:14px; border-bottom:1px solid var(--line-2)}
+  .lp-ver .chk{color:var(--muted-2)}
   .lp-tri{margin-top:10px}
   /* muitas colunas: o rótulo e o Ano ficam presos nas bordas enquanto o meio rola */
   .lp-tri .gpres > span:first-child, .lp-tri .gpres > span:last-child{position:sticky; background:var(--surface)}
@@ -524,19 +549,26 @@
   .cad-grafico{display:flex; align-items:flex-start; gap:24px 32px; flex-wrap:wrap; margin-bottom:22px}
   .cg-linhas{flex:1 1 280px; max-width:520px; min-width:0}
   .cg-pizza{display:flex; align-items:center; gap:16px; flex:0 1 auto}
-  .cg-disco{width:108px; height:108px; border-radius:50%; flex:none}   /* pizza cheia (o anel foi testado e recusado) */
+  /* pizza cheia (o anel foi testado e recusado). O filete segura as fatias claras da rampa, que sozinhas
+     somem no cartão branco; a legenda ao lado carrega o nome e o percentual de cada faixa */
+  .cg-disco{width:108px; height:108px; border-radius:50%; flex:none; box-shadow:inset 0 0 0 1px var(--line)}
+  /* uma categoria só: no lugar do gráfico, a proporção como chapéu, a faixa em destaque e a leitura embaixo */
+  .cg-solo{display:flex; flex-direction:column; gap:5px; padding-left:20px; border-left:1px solid var(--line);
+    align-self:stretch; justify-content:center; min-width:0}
+  .cg-solo-c{color:var(--muted-2)}
+  .cg-solo-s{font-size:13px; color:var(--ink-3)}
   .cg-linha{display:flex; flex-direction:column; gap:4px; margin-bottom:10px}
   .cg-linha .bar-h > span:first-child{color:var(--ink-3)}
   .cg-linha .bar-h > span:last-child{font-family:var(--mono)}
-  .cg-trilho{display:flex; height:8px; background:var(--canvas)}
+  .cg-trilho{display:flex; height:8px; background:var(--canvas); border-radius:2px; overflow:hidden}
   .cg-trilho > span{display:block; height:100%}
-  .cg-sim, .cg-q.cg-sim{background:var(--fill)}
-  .cg-parcial, .cg-q.cg-parcial{background:var(--brand)}
-  .cg-nao, .cg-q.cg-nao{background:var(--muted-3)}
+  .cg-sim, .cg-q.cg-sim{background:var(--cad-sim)}
+  .cg-parcial, .cg-q.cg-parcial{background:var(--cad-parcial)}
+  .cg-nao, .cg-q.cg-nao{background:var(--cad-nao)}
   .cg-legenda{display:flex; flex-direction:column; gap:8px; min-width:150px; font-size:11px; color:var(--muted-2)}
   .cg-item{display:flex; align-items:center; gap:7px; width:100%}
   .cg-pct{margin-left:auto; padding-left:12px; font-family:var(--mono); color:var(--ink-3)}
-  .cg-q{width:9px; height:9px; flex:none}
+  .cg-q{width:9px; height:9px; flex:none; box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent)}
   .cg-q.cg-def{box-shadow:inset 0 0 0 1px var(--line-3)}
   .cad-alerta{display:flex; align-items:baseline; gap:4px 10px; flex-wrap:wrap; padding:10px 14px; margin-bottom:14px; background:var(--brand-wash); border-left:3px solid var(--brand)}
   .cad-alerta strong{font-size:13px; font-weight:600; color:var(--brand)}
@@ -840,7 +872,7 @@ const SCHEMA = 7;
 /* ---------- dados iniciais (DRE do cliente) ---------- */
 function defaults(){ return {
   v: SCHEMA,
-  fill: "#14161A", brand: "#B3122B",
+  fill: "#14161A", brand: "#A80000",
   co: "Aragão Produtos Farmacêuticos",
   mesLabel: "Dezembro 2025",
   anoLabel: "Exercício anual",
@@ -1298,10 +1330,10 @@ function graficoCadeia(lst, forn){
   }).join('');
   // pizza gera/não gera (handoff 5.1, opção B), nas mesmas cores das barras: as barras quebram por
   // regime, a pizza dá a proporção do total. A legenda é uma só, ao lado da pizza, com o percentual.
-  // o parcial é o vermelho (pedido do usuário); o "não" fica com o cinza que era dele
-  const CATEGORIAS = [['sim', forn ? 'gera crédito' : 'aproveita o crédito', 'var(--fill)'],
-    ['parcial', forn ? 'gera crédito parcial' : 'aproveita parcialmente', 'var(--brand)'],
-    ['nao', forn ? 'não gera' : 'não aproveita', 'var(--muted-3)'],
+  // escala neutra: grafite em quem gera crédito, cinza médio no parcial, cinza claro em quem não gera
+  const CATEGORIAS = [['sim', forn ? 'gera crédito' : 'aproveita o crédito', 'var(--cad-sim)'],
+    ['parcial', forn ? 'gera crédito parcial' : 'aproveita parcialmente', 'var(--cad-parcial)'],
+    ['nao', forn ? 'não gera' : 'não aproveita', 'var(--cad-nao)'],
     ['', 'a definir', 'var(--line-3)']];
   const presentes = CATEGORIAS.map(([v, rotulo, cor]) => ({v, rotulo, cor, q: conta(lst, v)}))
     .filter(c => c.q > 0);                                         // só aparece o que existe
@@ -1313,19 +1345,38 @@ function graficoCadeia(lst, forn){
   const parte = q => dec(q / n * 100, 1, 1) + '%';
   const legenda = presentes.map(c => `<span class="cg-item"><span class="cg-q cg-${c.v || 'def'}"></span>` +
     `<span class="cg-rot">${c.rotulo}</span><span class="cg-pct">${parte(c.q)}</span></span>`).join('');
-  return `<div class="cg-linhas">${linhas}</div>
-    <div class="cg-pizza">
-      <div class="cg-disco" role="img" aria-label="${esc(presentes.map(c => `${c.rotulo} ${parte(c.q)}`).join(', '))}" style="background:conic-gradient(${fatias})"></div>
+  // com uma categoria só, o lugar do gráfico recebe o número e o que ele quer dizer
+  const quem = forn ? 'fornecedores' : 'clientes';
+  return `<div class="cg-linhas">${linhas}</div>` + (presentes.length < 2
+    ? (n ? `<div class="cg-pizza">${soloCg(presentes[0], quem,
+        `${n} ${n === 1 ? quem.slice(0, -1) : quem} ${n === 1 ? 'cadastrado' : 'cadastrados'} · ${presentes[0].rotulo}`)}</div>` : '')
+    : `<div class="cg-pizza">
+      ${discoCg(presentes, n, fatias)}
       <div class="cg-legenda">${legenda}</div>
-    </div>`;
+    </div>`);
+}
+
+// Com uma categoria só não há proporção para mostrar (disco cheio de uma cor e anel com o número foram
+// comparados na tela e recusados). No lugar do gráfico entra o número em destaque com o que ele significa —
+// a leitura que o gráfico não dava.
+function discoCg(grupos, n, fatias) {
+  const rotulo = esc(grupos.map(g => `${g.rotulo} ${dec(g.q / n * 100, 1, 1)}%`).join(', '));
+  return `<div class="cg-disco" role="img" aria-label="${rotulo}" style="background:conic-gradient(${fatias})"></div>`;
+}
+function soloCg(g, quem, sub) {
+  // a contagem e o nome da faixa já estão na barra ao lado: aqui fica só a proporção (o que o gráfico
+  // mostraria) e a leitura que faltava — a alíquota que vale para todos
+  return `<div class="cg-solo"><span class="cap cg-solo-c">100% dos ${quem}</span>` +
+    (sub ? `<span class="cg-solo-s">${sub}</span>` : '') + `</div>`;
 }
 
 /* ---------- produtos e serviços ---------- */
 const NATUREZAS = [['', 'Escolha…'], ['produto', 'Produto'], ['servico', 'Serviço']];
 // a alíquota cheia é o caso comum e fica no tom mais claro; quanto maior a redução, mais escuro —
 // assim a tinta marca a exceção, e não o padrão (um catálogo quase todo cheio não vira um borrão)
-const COR_TIPO = {geral: 'var(--line-2)', red30: 'var(--muted)', red50: 'var(--ink-3)',
-  reduzida: 'var(--ink-2)', red70: 'var(--fill)', zero: 'var(--brand)'};
+// da alíquota cheia (mais forte) à redução de 70% (mais clara); alíquota zero em neutro, com filete na fatia
+const COR_TIPO = {geral: 'var(--cbs-6)', red30: 'var(--cbs-5)', red40: 'var(--cbs-4)', red50: 'var(--cbs-3)',
+  reduzida: 'var(--cbs-2)', red70: 'var(--cbs-1)', zero: 'var(--cbs-0)'};
 function resumoProdutos(lst){
   const n = lst.length;
   if(!n) return 'O que a empresa vende. Cada produto ou serviço tem a sua redução na CBS, e a alíquota reduzida sai das premissas do mês.';
@@ -1344,19 +1395,26 @@ function graficoProdutos(lst){
     .filter(g => g.q > 0);                                         // só aparece a faixa que existe
   const linhas = grupos.map(g => `<div class="cg-linha"><div class="bar-h"><span>${g.rotulo}</span><span>${g.q}</span></div>` +
     `<div class="cg-trilho" aria-hidden="true"><span style="width:${g.q / n * 100}%;background:${g.cor}"></span></div></div>`).join('');
+  // as fatias não se encostam: meio grau da cor do cartão entre elas separa tons vizinhos da mesma rampa
   let acumulado = 0;
-  const fatias = grupos.map(g => {
+  const vao = grupos.length > 1 ? 0.5 : 0;
+  const fatias = grupos.map((g, i) => {
     const ini = acumulado / n * 100; acumulado += g.q;
-    return `${g.cor} ${ini}% ${acumulado / n * 100}%`;
+    const fim = acumulado / n * 100;
+    return `${g.cor} ${i ? ini + vao : ini}% ${i === grupos.length - 1 ? fim : fim - vao}%` +
+      (i === grupos.length - 1 ? '' : `, var(--surface) ${fim - vao}% ${fim + vao}%`);
   }).join(', ');
   const parte = q => dec(q / n * 100, 1, 1) + '%';
   const legenda = grupos.map(g => `<span class="cg-item"><span class="cg-q" style="background:${g.cor}"></span>` +
     `<span class="cg-rot">${g.rotulo}</span><span class="cg-pct">${parte(g.q)}</span></span>`).join('');
-  return `<div class="cg-linhas">${linhas}</div>
-    <div class="cg-pizza">
-      <div class="cg-disco" role="img" aria-label="${esc(grupos.map(g => `${g.rotulo} ${parte(g.q)}`).join(', '))}" style="background:conic-gradient(${fatias})"></div>
+  // com uma faixa só, o lugar do gráfico recebe o número e a alíquota que vale para todos eles
+  return `<div class="cg-linhas">${linhas}</div>` + (grupos.length < 2
+    ? (n ? `<div class="cg-pizza">${soloCg(grupos[0], 'itens',
+        `${n} ${n === 1 ? 'item' : 'itens'} · CBS de ${FMT.pct(aliqTipo(grupos[0].v))}`)}</div>` : '')
+    : `<div class="cg-pizza">
+      ${discoCg(grupos, n, fatias)}
       <div class="cg-legenda">${legenda}</div>
-    </div>`;
+    </div>`);
 }
 
 // Quanto de crédito separa os dois regimes, dito no gasto que produz esse crédito — compra e despesa
@@ -2275,7 +2333,7 @@ function rPresumido(){
   const chaves = colunasLP(p.de.linhas);
   const cols = (porMes ? chaves.map(per => mesCurto(per).slice(0, 3)) : chaves.map(i => `${i + 1}º tri`)).concat(['Ano']);
   // as três escolhas da tabela (período, cenário do Simples e detalhe) em um controle só: a linha de sete
-  // botões tomava a largura da tabela. Duas formas em teste — menu (padrão) e seletores (body.lp-selects)
+  // botões tomava a largura da tabela
   const ESCOLHAS = [
     ['lp-periodo', 'Período', [['tri', 'Trimestre', !porMes], ['mes', 'Mês', porMes]]],
     ['lp-cenario', 'Comparar com', [['ambos', 'Os dois cenários', ui.lpCenario === 'ambos'],
@@ -2285,17 +2343,13 @@ function rPresumido(){
   const atual = ESCOLHAS.map(([, , itens]) => (itens.find(x => x[2]) || itens[0])[1]).join(' · ');
   const semMov = `<button class="lk lp-vazias" type="button" data-act="lp-vazias" data-v="lp.temEscondidas">` +
     `${ui.lpVazias ? 'esconder o que não tem movimento' : '<span data-o="lp.escondidas"></span> · mostrar'}</button>`;
-  const alternador = document.body.classList.contains('lp-selects')
-    ? ESCOLHAS.map(([act, rot, itens]) => `<label class="lp-sel"><span class="cap">${rot}</span>` +
-        `<span class="sel-wrap"><select class="sel" data-sel="${act}" aria-label="${rot}">` +
-        itens.map(([v, l, on]) => `<option value="${v}"${on ? ' selected' : ''}>${l}</option>`).join('') +
-        `</select></span></label>`).join('') + semMov
-    : `<div class="menu-wrap lp-ver">${semMov}<button class="btn" type="button" data-act="lp-ver" aria-haspopup="true" aria-expanded="${ui.lpMenu}">` +
+  const alternador = `<div class="menu-wrap lp-ver">${semMov}<button class="btn" type="button" data-act="lp-ver" aria-haspopup="true" aria-expanded="${ui.lpMenu}">` +
       `${atual} <span aria-hidden="true">▾</span></button>` +
       (!ui.lpMenu ? '' : `<div class="menu entra" role="menu">` + ESCOLHAS.map(([act, rot, itens], n) =>
         (n ? '<div class="sep" role="separator"></div>' : '') + `<p class="menu-t">${rot}</p>` +
         itens.map(([v, l, on]) => `<button role="menuitemradio" aria-checked="${on}" type="button" data-act="${act}" data-p="${v}">` +
           `${l}${on ? '<span class="chk">agora</span>' : ''}</button>`).join('')).join('') + `</div>`) + `</div>`;
+  // (a forma com três seletores curtos foi comparada na tela em 18/09/2026 e perdeu para o menu)
   const linhaT = (rot, k, cls, attrs) => `<div class="gpres${cls ? ' ' + cls : ''}"${attrs || ''}><span>${rot}</span>` +
     cols.map((_, i) => `<span data-o="lp.${k}.${i}"></span>`).join('') + `</div>`;
   // regime que sai mais barato no ano: troféu junto do nome, que é onde se lê quem é quem
@@ -2494,7 +2548,7 @@ function contarAte(el, alvo){
 }
 function refresh(){
   const root = document.documentElement.style;
-  let brand = hex(S.brand) ? S.brand : '#B3122B', fill = hex(S.fill) ? S.fill : '#14161A';
+  let brand = hex(S.brand) ? S.brand : '#A80000', fill = hex(S.fill) ? S.fill : '#14161A';
   const escuro = temaEscuro();
   if(escuro){
     brand = mix(brand, '#ffffff', .3);             // o vermelho da reforma vira texto em fundo escuro: precisa clarear
@@ -3608,15 +3662,6 @@ app.addEventListener('click', e => {
 document.addEventListener('click', e => {
   if(ui.menu && !e.target.closest('.menu-wrap')){ ui.menu = false; ui.armado = false; render(); }
   if(ui.lpMenu && !e.target.closest('.lp-ver')){ ui.lpMenu = false; render(); }
-});
-document.addEventListener('change', e => {              // forma B: as mesmas escolhas em seletores
-  const sel = e.target instanceof Element ? e.target.closest('select[data-sel]') : null;
-  if(!sel) return;
-  const v = sel.value;
-  if(sel.dataset.sel === 'lp-periodo') ui.lpMes = v === 'mes';
-  else if(sel.dataset.sel === 'lp-cenario') ui.lpCenario = v;
-  else ui.lpResumo = v === 'resumo';
-  render();
 });
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.body.classList.contains('realcando')){ realcar(null); return; }
