@@ -10,16 +10,20 @@
      --ink (texto) nunca muda, para uma cor clara escolhida não apagar o texto. */
   :root{
     color-scheme:light;
-    --ink:#14161A; --fill:#14161A; --ink-2:#40434A; --ink-3:#40434A;
-    --muted:#6E7178; --muted-2:#91949B; --muted-3:#91949B; --disabled:#B6B8BC;
+    --ink:#16171A; --fill:#16171A; --ink-2:#4A4D52; --ink-3:#4A4D52;
+    --muted:#82868C; --muted-2:#9A9EA4; --muted-3:#9A9EA4; --disabled:#B6B8BC;
     /* o vermelho é o da logo do escritório (#A80000, medido nos pixels dela), não um carmim próximo:
        com azul na mistura, os tons claros da rampa da CBS puxavam para o rosa e destoavam da marca */
     --brand:#A80000; --brand-dark:#760000; --brand-wash:#FBF2F2;
     /* fundo um tom abaixo do antigo #EFEEEA: com ele, cartão branco e página quase não se separavam.
        A barra das abas desce junto, senão some no fundo novo (que tem o tom que ela tinha) */
-    --canvas:#E3E2DD; --surface:#FFFFFF; --surface-2:#F8F7F4; --rail:#DAD8D2;
-    --line:#E7E5E0; --line-2:#DAD8D2; --line-3:#C7C5BF; --on-fill:#C9CCD2;
+    --canvas:#E9E7E2; --surface:#FFFFFF; --surface-2:#F5F3EF; --rail:#E0DDD6;
+    --line:#EFECE6; --line-2:#E2DFD8; --line-3:#D8D3C9; --on-fill:#C9CCD2;
+    /* barra lateral: superfícies escuras próprias, que não dependem do tema da página */
+    --lat:#17181A; --lat-2:#1E1F22; --lat-linha:#2A2C30; --lat-ativo:#26282B;
+    --lat-ink:#F2F1EE; --lat-mut:#8D9096; --lat-mut-2:#63666B;
     --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
+    --aviso:#C9A227;                              /* conferência: ponto que pede atenção antes de entregar */
     /* Faixas de redução da CBS: uma escala, não categorias. Um tom só — o vermelho da marca —, escuro na
        alíquota cheia e clareando conforme a redução cresce, para a leitura ser "quanto mais forte, mais imposto".
        A alíquota zero fica fora da rampa: nenhum imposto não é um vermelho fraco */
@@ -38,12 +42,12 @@
     /* texto sobre --fill (recalculado em refresh() pela luz da cor) e tons que antes estavam cravados no CSS */
     /* o cartão não é branco chapado: escurece um fio na base, como papel sob luz que vem de cima */
     --card-luz:color-mix(in srgb, var(--surface) 97%, var(--canvas));
-    --sobre-fill:#FFFFFF; --hover-rail:rgba(255,255,255,.6); --hover-linha:#FAF9F7; --alt:#F2F1ED; --veu:rgba(20,22,26,.45);
+    --sobre-fill:#FFFFFF; --hover-rail:rgba(255,255,255,.6); --hover-linha:#FAF9F6; --alt:#EDEAE4; --veu:rgba(20,22,26,.45);
     /* compasso do espaço: todo recuo e toda distância saem desta escala (4 · 8 · 12 · 16 · 24 · 32 · 48).
        Antes cada bloco tinha o seu (28/30/22, 22/26, 12/18…), e era isso que fazia a página parecer desalinhada */
-    --r:4px; --r-2:3px;
+    --r:9px; --r-2:7px; --r-card:14px;
     --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px; --e6:32px; --e7:48px;
-    --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    --sans:'Instrument Sans','IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
     --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   /* Modo noturno: só os tokens trocam. --fill e --brand ficam de fora de propósito: são as cores personalizáveis,
@@ -85,8 +89,92 @@
   .sub{margin:4px 0 0; font-size:13px; color:var(--muted)}
   .cap{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase}
 
-  .page{padding:var(--e6) var(--e5) var(--e7)}
-  .wrap{max-width:1140px; margin:0 auto; display:flex; flex-direction:column; gap:var(--e6)}
+  /* Casca v2: barra lateral fixa + cabeçalho preso no alto + coluna de conteúdo */
+  .page{padding:0}
+  .wrap{max-width:none; margin:0; display:block}
+  .app2{display:flex; align-items:stretch; min-height:100vh}
+  .lat{width:244px; flex:0 0 244px; background:var(--lat); color:var(--lat-ink); display:flex; flex-direction:column;
+    position:sticky; top:0; align-self:flex-start; height:100vh; transition:width .18s ease, flex-basis .18s ease}
+  .lat-topo{display:flex; align-items:center; gap:9px; padding:22px 14px 22px 20px}
+  .lat-topo .logo{height:22px; border-radius:4px}
+  .lat-marca{flex:1; min-width:0; font-size:10.5px; font-weight:600; letter-spacing:.13em; text-transform:uppercase;
+    color:var(--lat-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lat-x{background:transparent; border:0; color:var(--lat-mut-2); font-size:15px; line-height:1; cursor:pointer; padding:5px 7px; border-radius:var(--r-2)}
+  .lat-x:hover{background:var(--lat-ativo); color:var(--lat-ink)}
+  .lat-emp{padding:0 14px 22px}
+  .lat-emp-b{width:100%; display:flex; align-items:center; gap:10px; background:var(--lat-2); border:1px solid var(--lat-linha);
+    border-radius:10px; padding:11px 12px; font:inherit; color:var(--lat-ink); cursor:pointer; text-align:left}
+  .lat-emp-b:hover{background:#232427}
+  .lat-emp-t{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
+  .lat-emp-n{font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lat-emp-c{font-size:10px; color:#75787E; font-family:var(--mono)}
+  .lat-emp-b{position:relative}
+  .lat-emp-sel{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; font:inherit}
+  .lat-nav{display:flex; flex-direction:column; padding:0 12px}
+  .lat-grupo{font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; color:var(--lat-mut-2); padding:0 10px 9px; font-family:var(--mono)}
+  .lat-grupo + .lat-grupo, .lat-nav .lat-grupo ~ .lat-grupo{padding-top:22px}
+  .lat-item{display:flex; align-items:center; gap:10px; width:100%; background:transparent; border:0; color:var(--lat-mut);
+    font:inherit; font-size:13px; text-align:left; padding:9px 10px; border-radius:8px; cursor:pointer; transition:background-color .12s ease, color .12s ease}
+  .lat-item:hover{background:var(--lat-2); color:var(--lat-ink)}
+  .lat-item[aria-current="page"]{background:var(--lat-ativo); color:#fff; font-weight:600}
+  .lat-ponto{width:4px; height:4px; border-radius:50%; background:transparent; flex:0 0 4px}
+  .lat-item[aria-current="page"] .lat-ponto{background:var(--brand)}
+  .lat-pe{margin-top:auto; padding:18px 20px; display:flex; flex-direction:column; gap:12px; border-top:1px solid #232427}
+  .lat-salvo{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--lat-mut)}
+  .lat-salvo::before{content:""; width:5px; height:5px; border-radius:50%; background:#3FA87A; flex:0 0 5px}
+  .lat-salvo.sujo::before{background:var(--lat-mut)}
+  .lat-salvo.erro::before{background:var(--brand)}
+  .lat-acoes{display:flex; flex-direction:column; gap:2px; position:relative}
+  .lat-acoes .menu{left:0; right:auto; top:auto; bottom:calc(100% + 6px); min-width:240px}
+  .lat-acoes button{text-align:left; background:transparent; border:0; color:var(--lat-mut); padding:6px 0; font:inherit; font-size:12px; cursor:pointer}
+  .lat-acoes button:hover{color:var(--lat-ink)}
+  /* recolhida: só os pontos, com o nome no title */
+  body.lat-fina .lat{width:64px; flex-basis:64px}
+  body.lat-fina .lat-marca, body.lat-fina .lat-emp-t, body.lat-fina .lat-emp-seta,
+  body.lat-fina .lat-grupo:first-of-type, body.lat-fina .lat-salvo span, body.lat-fina .lat-acoes{display:none}
+  body.lat-fina .lat-grupo{height:18px; overflow:hidden; font-size:0; padding:0}
+  body.lat-fina .lat-topo, body.lat-fina .lat-pe{flex-direction:column; align-items:center; padding:18px 0}
+  body.lat-fina .lat-emp{padding:0 12px 22px}
+  body.lat-fina .lat-emp-b, body.lat-fina .lat-item{justify-content:center; padding:9px 0}
+  body.lat-fina .lat-ponto{width:7px; height:7px; flex-basis:7px; background:var(--lat-mut-2)}
+  body.lat-fina .lat-item span:not(.lat-ponto){display:none}
+  .main{flex:1; min-width:0; display:flex; flex-direction:column}
+  .cab{position:sticky; top:0; z-index:5; background:color-mix(in srgb, var(--canvas) 92%, transparent);
+    backdrop-filter:blur(8px); border-bottom:1px solid color-mix(in srgb, var(--line-3) 70%, var(--canvas));
+    padding:18px 36px}
+  /* o cabeçalho ocupa a largura toda (o filete vai de ponta a ponta), mas o conteúdo dele fica na mesma
+     coluna centralizada do resto — senão, com a barra recolhida, tudo encosta na esquerda */
+  .cab-in{max-width:1120px; margin:0 auto; width:100%; display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap}
+  body.present .cab-in{max-width:1240px}
+  .cab-id{display:flex; align-items:center; gap:12px; min-width:0}
+  .cab-id h1{margin:0; font-size:21px; font-weight:600; letter-spacing:-.015em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .cab-sub{display:flex; align-items:center; gap:9px; font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-top:5px}
+  .cab-dir{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .modo{display:flex; background:var(--rail); border-radius:10px; padding:3px; gap:2px}
+  .modo button{background:transparent; border:0; border-radius:8px; padding:7px 14px; font:inherit; font-size:12.5px; color:var(--ink-3); cursor:pointer}
+  .modo button[aria-pressed="true"]{background:var(--surface); color:var(--ink); font-weight:600; box-shadow:0 1px 2px rgba(20,18,16,.08)}
+  .cab-comp{display:flex; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line-2); border-radius:var(--r); padding:5px 12px}
+  .cab-comp .cap{color:var(--muted-2)}
+  .cab-comp select{font:inherit; font-size:13px; font-weight:600; color:var(--ink); background:transparent; border:0; padding:2px 0; cursor:pointer; outline:none}
+  .hamburguer{display:none}
+  .conteudo{padding:28px 36px 56px; margin:0 auto; display:flex; flex-direction:column; gap:20px; max-width:1120px; width:100%; box-sizing:border-box}
+  body.present .conteudo{max-width:1240px}
+  .lat-veu{display:none}
+  @media (max-width:900px){
+    .lat{position:fixed; top:0; left:0; z-index:60; width:250px; flex-basis:250px; height:100vh;
+      box-shadow:0 0 40px rgba(0,0,0,.35); transform:translateX(-105%); transition:transform .22s ease}
+    body.lat-aberta .lat{transform:none}
+    body.lat-fina .lat{width:250px; flex-basis:250px}
+    .lat-x{display:none}
+    .lat-veu{display:block; position:fixed; inset:0; z-index:50; background:rgba(20,18,16,.45)}
+    body:not(.lat-aberta) .lat-veu{display:none}
+    .hamburguer{display:inline-flex; align-items:center; justify-content:center; background:var(--surface); border:1px solid var(--line-2);
+      border-radius:var(--r); width:36px; height:36px; font-size:15px; line-height:1; cursor:pointer; color:var(--ink); flex:0 0 36px}
+    .cab{padding:14px 18px}
+    .cab-in{align-items:center; gap:12px}
+    .cab-id h1{font-size:16px}
+    .conteudo{padding:18px 16px 44px; gap:14px}
+  }
 
   /* Cabeçalho */
   /* faixa de cima: logo e nome do escritório, que assina o trabalho; embaixo, a empresa do cliente e o período */
@@ -148,6 +236,65 @@
   .hero-row.cbs.credito{border-left-color:var(--ok)}
   .hero-row.cbs.credito .val{color:var(--ok)}
   .pct-s{color:var(--muted-2); font-size:12px; font-weight:400}
+
+  /* Glossário: botão redondo ao lado do termo e o painel no canto de baixo */
+  .ajuda{width:15px; height:15px; margin-left:6px; border:1px solid var(--line-3); background:var(--surface); color:var(--muted);
+    border-radius:50%; font:700 9.5px/1 var(--sans); cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center}
+  .ajuda:hover{color:var(--ink); border-color:var(--muted)}
+  .gloss{position:fixed; right:24px; bottom:24px; z-index:70; width:330px; max-width:calc(100% - 24px); background:var(--surface);
+    border:1px solid var(--line-2); border-radius:12px; padding:16px 18px; box-shadow:0 12px 32px rgba(30,26,20,.16)}
+  .gloss-h{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px}
+  .gloss h3{font-size:13.5px}
+  .gloss p{margin:0; font-size:13px; color:var(--ink-3); line-height:1.5; text-wrap:pretty}
+  @media (max-width:640px){ .gloss{right:12px; left:12px; width:auto} }
+  /* Como ler: a leitura em português no pé da DRE, só na apresentação */
+  .como-ler{margin-top:var(--e4); padding:14px 16px; background:var(--surface-2); border-radius:var(--r)}
+  .como-ler .cap{color:var(--muted-2)}
+  .como-ler p{margin:4px 0 0; font-size:14px; color:var(--ink-2); line-height:1.5; text-wrap:pretty}
+
+  /* Selo de conferência: filete verde quando está tudo certo, âmbar quando algo pede atenção */
+  .selo{background:var(--surface); border:1px solid var(--line-2); border-left:4px solid var(--ok); border-radius:12px; overflow:hidden}
+  .selo.atencao{border-color:#EDE0C2; border-left-color:var(--aviso)}
+  .selo-b{display:flex; align-items:center; gap:12px; width:100%; background:transparent; border:0; padding:14px 18px; font:inherit; cursor:pointer; text-align:left}
+  .selo-ponto{width:9px; height:9px; border-radius:50%; flex:0 0 9px; background:var(--ok)}
+  .selo.atencao .selo-ponto{background:var(--aviso)}
+  .selo-txt{display:flex; flex-direction:column; gap:2px; flex:1; min-width:0}
+  .selo-tit{font-size:13.5px; font-weight:600}
+  .selo-sub{font-size:12.5px; color:var(--ink-3)}
+  .selo-seta{font-size:12px; color:var(--muted)}
+  .selo-lista{display:flex; flex-direction:column; border-top:1px solid var(--line)}
+  .selo-item{display:flex; align-items:flex-start; gap:11px; padding:11px 18px; border-bottom:1px solid var(--line)}
+  .selo-item:last-child{border-bottom:0}
+  .selo-marca{width:18px; height:18px; border-radius:5px; flex:0 0 18px; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700}
+  .selo-marca.ok{background:#E8F3ED; color:var(--ok)}
+  .selo-marca.atencao{background:#FBF2DE; color:#96701A}
+  .selo-t{display:block; font-size:13px; font-weight:500}
+  .selo-d{display:block; font-size:12.5px; color:var(--muted); text-wrap:pretty}
+
+  /* Visão geral: o mês em três números */
+  .inds{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px}
+  .ind{background:var(--surface); border:1px solid var(--line-2); border-radius:var(--r-card); padding:20px 22px;
+    display:flex; flex-direction:column; gap:10px}
+  .ind .cap{color:var(--muted)}
+  .ind-v{font-family:var(--mono); font-size:27px; font-weight:600; letter-spacing:-.02em}
+  .ind.brand .ind-v{color:var(--brand)}
+  .ind-s{font-size:12px; color:var(--ink-3)}
+  /* Receita e imposto, mês a mês */
+  .mb-grade{display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:8px; align-items:end; height:176px}
+  .mb{display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end; min-width:0}
+  .mb-col{flex:1; width:100%; display:flex; align-items:flex-end; justify-content:center}
+  .mb-barra{width:100%; background:var(--cbs-1); border-radius:3px 3px 0 0; display:flex; align-items:flex-end; overflow:hidden}
+  .mb-imp{width:100%; background:var(--brand)}
+  .mb-vazio{width:100%; height:8px; border-radius:2px;
+    background:repeating-linear-gradient(45deg, var(--line-2) 0 3px, transparent 3px 6px)}
+  .mb-rot{font-family:var(--mono); font-size:9.5px; color:var(--muted-2)}
+  .mb-rot.agora{color:var(--ink); font-weight:600}
+  .faixa-sn{padding:18px 22px}
+  .faixa-sn-in{display:flex; flex-wrap:wrap; gap:14px 34px}
+  .faixa-sn-in > div{display:flex; flex-direction:column; gap:4px; padding-left:18px; border-left:1px solid var(--line)}
+  .faixa-sn-in > div:first-child{padding-left:0; border-left:0}
+  .fsn-v{font-family:var(--mono); font-size:14px; color:var(--ink)}
 
   /* DRE */
   /* filete de 1px mais uma sombra de papel: uma de contato bem fraca e uma larga e quase invisível embaixo.
@@ -652,17 +799,17 @@
   @keyframes revela{from{clip-path:inset(0 100% 0 0)}}
   .entra .track, .entra .sb-track, .entra .cmp-bar2{animation:revela .5s cubic-bezier(.2,.7,.2,1) backwards;
     animation-delay:calc(min(var(--i, 0), 6) * 35ms + 140ms)}
-  #app > .entra{animation-delay:calc(min(var(--i, 0), 6) * 35ms)}        /* os blocos da aba entram em cascata */
+  .conteudo > .entra{animation-delay:calc(min(var(--i, 0), 6) * 35ms)}   /* os blocos da seção entram em cascata */
   .menu.entra{animation:cai .14s ease-out backwards}
   .modal-fundo{animation:esmaece .16s ease-out backwards}
   .modal-caixa{animation:entra .2s cubic-bezier(.2,.7,.2,1) backwards}
   /* troca de mês ou de empresa: o conteúdo esmaece e uma barra corre no topo enquanto o banco responde */
-  #app > *{transition:opacity .15s ease}
-  body.trocando #app > :not(.top):not(.barra):not(.fixo){pointer-events:none}
+  .conteudo > *{transition:opacity .15s ease}
+  body.trocando .conteudo > *{pointer-events:none}
   /* Enquanto o mês chega do banco: os rótulos ficam e os números viram barras cinza, do tamanho que tinham.
      Antes a tela inteira esmaecia e uma barra vermelha corria no topo — parecia erro, e escondia o que não ia mudar */
   @keyframes esqueleto{to{background-position:-200% 0}}
-  body.trocando :is(.v, .val, .kv, .p, .sb-v, .cr-v, .pct-s, .m, .in, .sel, .cmp-parte b){
+  body.trocando :is(.v, .val, .kv, .ind-v, .ind-s, .p, .sb-v, .cr-v, .pct-s, .m, .in, .sel, .cmp-parte b){
     color:transparent !important; border-radius:var(--r-2);
     background-image:linear-gradient(90deg, var(--line) 0 40%, var(--line-2) 50%, var(--line) 60%);
     background-size:200% 100%; animation:esqueleto 1.15s linear infinite}
@@ -700,7 +847,7 @@
   body.present #app{animation:abrePresent .26s ease-out backwards}
   @media screen and (min-width:900px){
     body.present .page{zoom:1.15}
-    body.present .wrap, body.present .fixo-in{max-width:calc(1140px / 1.15)}
+    body.present .conteudo, body.present .cab-in{max-width:calc(1240px / 1.15)}   /* o zoom de 1,15 encolhe a área útil */
   }
   /* projetor clareia as cores: cinzas de rótulo e de linha ficam mais escuros */
   html:not([data-tema="escuro"]) body.present{--muted:#55585E; --muted-2:#65686F; --muted-3:#85888F; --line:#D8D6D0; --line-2:#C8C6C0}
@@ -829,8 +976,11 @@
        (lucro bruto, resultado, CBS a pagar) avançarem sobre ele — o que passa da área útil da folha o Chrome corta.
        Os blocos viram fluxo comum porque é no fluxo comum que o Chrome respeita "não quebrar aqui" */
     .wrap, .reforma{display:block}
-    #app > *{margin-top:18px}
-    #app > .top{margin-top:0; padding:0 16px 12px; border-bottom:1px solid var(--line-3)}
+    .conteudo > *{margin-top:18px}
+    .conteudo > *:first-child{margin-top:0}
+    .cab{position:static; padding:0 16px 12px; border-bottom:1px solid var(--line-3); backdrop-filter:none; background:none}
+    .lat, .modo, .cab-comp, .hamburguer{display:none !important}      /* a folha não tem navegação */
+    .conteudo{padding:0; max-width:none; gap:0}
     .faixa-escr{border-bottom:0; padding-bottom:4px}               /* no papel basta o risco do próprio cabeçalho */
     .card, .memo, .cli{padding:0 16px}
     .card, .panel, .barra, .kc{box-shadow:none}                    /* no papel o filete vira ruído */
@@ -849,6 +999,18 @@
     .grec{grid-template-columns:minmax(0,1fr) 110px 140px 130px 100px}
     .gprod{min-width:0; grid-template-columns:minmax(0,1fr) 70px 90px 90px 120px 80px}
     .cad-row{grid-template-columns:150px minmax(0,1fr) 170px 100px}
+    /* Presumido e ano: na tela as colunas têm a largura do conteúdo e a área rola de lado; no papel não há
+       para onde rolar, então elas encolhem e a tabela cabe na folha */
+    .gpres, .gano{min-width:0; font-size:10px; gap:0 6px}
+    .gpres{grid-template-columns:minmax(86px,1.25fr) repeat(var(--cols,5), minmax(0,1fr))}
+    .gpres > span:not(:first-child){letter-spacing:-.02em}         /* o número em mono não quebra: aperta um fio */
+    .gpres > span:first-child small{font-size:8.5px}
+    .gpres.gh{font-size:9px}
+    .lp-tri .gpres > span:first-child, .lp-tri .gpres > span:last-child{position:static; background:none; box-shadow:none}
+    .lp-alt{display:none}                                          /* os controles da tabela não vão ao papel */
+    .deitado .gpres{font-size:8px; gap:0 3px; grid-template-columns:minmax(56px,1fr) repeat(var(--cols,5), minmax(0,1fr))}
+    .deitado .gpres.gh{font-size:7.5px}
+    .deitado .gpres > span:first-child small{font-size:7px}
     .gprod.gh > span:last-child, .cad-row.gh > span:last-child{display:none}
     .gprod.gh{font-size:10px}                                      /* como o cabeçalho da cadeia: no tamanho da linha, quebrava */
     /* quebra de página: o cartão grande pode quebrar (antes pulava inteiro e deixava meia folha em branco);
@@ -1452,6 +1614,8 @@ function saidas(){
   const an = ui.tab === 'anual';
 
   O.co = S.co || ''; O.footer = S.footer || '';
+  // barra lateral e Visão geral (layout v2)
+  O['lat.grupoMes'] = 'Mês · ' + (banco.ativo && banco.periodo ? mesCurto(banco.periodo) : (S.mesLabel || ''));
   // a logo é do escritório: o CNPJ ao lado do nome deixa claro de quem é a empresa do painel
   const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
   O.ctx = 'DRE · ' + (an ? S.anoLabel : S.mesLabel) + (emp && emp.cnpj ? ' · CNPJ ' + fmtCnpj(emp.cnpj) : '');
@@ -1636,6 +1800,23 @@ function saidas(){
 
 
   // ano
+  // Visão geral: cada indicador com a sua leitura embaixo
+  const vAnt = banco.anterior && banco.anterior.resumo;
+  const varTexto = (agora, antes) => {
+    if(!vAnt || !isFinite(antes) || Math.abs(antes) < 0.004) return '';
+    const d = agora - antes, quando = mesCurto(banco.anterior.periodo);
+    if(Math.abs(d) <= 0.004) return ` · sem variação vs ${quando}`;
+    return ` · ${d > 0 ? '▲' : '▼'} ${P2(Math.abs(d), Math.abs(antes))} vs ${quando}`;
+  };
+  O['v.impostoSub'] = P(cm.trib, cm.R) + ' da receita' + varTexto(cm.trib, vAnt ? +vAnt.trib || 0 : NaN);
+  O['v.cbsSub'] = rf ? `Débito ${brl(cm.debitoTotal)} − crédito ${brl(cm.creditoTotal)}` : '';
+  O['v.comoLer'] = `De cada R$ 100 de receita, ${P(cm.trib, cm.R).replace('%', '')} foram para imposto e ` +
+    `${P(cm.resultado, cm.R).replace('%', '')} sobraram como resultado. ` +
+    (cm.cbsPagar > 0.004 ? `A CBS da reforma, paga por fora, seria ${brl(cm.cbsPagar)} neste mês.`
+                         : 'Neste mês o crédito de CBS passou o débito: não haveria CBS a pagar.');
+  O['v.rbt12'] = brl(+m.rbt12 || 0);
+  O['v.anexo'] = S.anexo && ANEXOS[S.anexo] ? `${S.anexo} · ${ANEXOS[S.anexo].nome}` : 'não informado';
+  O['v.resultadoSub'] = P(cm.resultado, cm.R) + ' da receita' + varTexto(cm.resultado, vAnt ? +vAnt.resultado || 0 : NaN);
   // aba Anual: o ano somado pelas competências salvas no banco
   const ano = banco.ano;
   if(ano && ano.linhas && ano.linhas.length){
@@ -1677,7 +1858,8 @@ function saidas(){
       cols.forEach((t, i) => {
         // por mês são muitas colunas: nas de mês o "R$" sai (a unidade aparece uma vez, no canto da tabela) e
         // a coluna do Ano mantém o símbolo — é ela que fecha a conta e alimenta o cartão
-        const money = ui.lpMes && i !== ultima ? (v => dec(v, 2, 2)) : brl;
+        // no papel deitado até a coluna do Ano abre mão do "R$": são treze colunas e o valor do ano é o mais longo
+        const money = ui.lpMes && (i !== ultima || ui.papelDeitado) ? (v => dec(v, 2, 2)) : brl;
         const sinal = v => Math.abs(v) < 0.005 ? money(0) : (v > 0 ? '+ ' : '− ') + money(Math.abs(v));
         const pagar = v => v > 0.004 ? money(v) : '—', credito = v => v < -0.004 ? money(-v) : '—';
         const melhor = simplesDe(t), alias = k => { if(i === ultima) O[`lp.${k}.ano`] = O[`lp.${k}.${i}`]; };
@@ -1829,6 +2011,142 @@ function rTopo(){
     <div class="ident">${cliente}</div>
     <nav class="nav"><div class="rail" role="tablist" aria-label="Seções do painel">${botoes}</div>${ctl}</nav>
   </header>`;
+}
+// Glossário: o que cada termo quer dizer, em português de quem não é da área. O "?" abre o painel no canto.
+const TERMOS = {
+  das: ['DAS', 'A guia única do Simples Nacional. Ela junta IRPJ, CSLL, PIS, Cofins, ISS ou ICMS e a contribuição ' +
+    'previdenciária patronal num pagamento só, calculado sobre a receita do mês e a faixa da empresa.'],
+  cbs: ['CBS', 'A Contribuição sobre Bens e Serviços, que a partir de 2027 substitui PIS e Cofins. No regime híbrido ' +
+    'ela é paga por fora do DAS: débito sobre a receita menos o crédito das compras e despesas.'],
+  hibrido: ['Regime híbrido', 'A empresa continua no Simples, mas paga a CBS por fora, com direito a crédito. ' +
+    'O DAS encolhe (fica sem a parcela de PIS/Cofins) e a CBS passa a ser calculada à parte.'],
+  efetiva: ['Alíquota efetiva', 'Quanto o imposto representa da receita do mês. É a conta que permite comparar ' +
+    'regimes diferentes: dois valores de imposto sobre a mesma receita.'],
+  rbt12: ['Receita dos últimos 12 meses', 'A soma da receita dos doze meses anteriores (RBT12). É ela que define ' +
+    'a faixa do Simples e, com a faixa, a alíquota efetiva do mês.'],
+  credito: ['Crédito de CBS', 'O que a empresa pagou de CBS nas compras e despesas e pode abater do que deve. ' +
+    'Sobrando crédito, ele vai para o mês seguinte em vez de virar dinheiro de volta.'],
+};
+const ajuda = k => `<button class="ajuda" type="button" data-act="termo" data-k="${k}" aria-label="O que é" title="O que é">?</button>`;
+function rGlossario(){
+  const t = TERMOS[ui.termo];
+  if(!t) return '';
+  return `<aside class="gloss" role="dialog" aria-label="Glossário">
+    <div class="gloss-h"><h3>${t[0]}</h3><button class="cad-x" type="button" data-act="termo" data-k="" aria-label="Fechar">×</button></div>
+    <p>${t[1]}</p></aside>`;
+}
+// Conferência do mês: cada item é uma pergunta que o painel consegue responder sozinho com o que está lançado.
+// Verde quando tudo passa; âmbar quando algo pede atenção — nunca impede de entregar, só avisa.
+function conferencias(){
+  const c = calcMes(), m = S.monthly, lista = [];
+  const dif = (a, b) => Math.abs(a - b);
+  // 1) a receita da DRE é a mesma que a soma das linhas de receita da memória (o que vai ao PGDAS)
+  const somaReceita = soma(m.reforma.debitos);
+  lista.push({ok: dif(somaReceita, c.R) <= 1, titulo: 'Receita da DRE bate com as linhas do PGDAS',
+    detalhe: dif(somaReceita, c.R) <= 1
+      ? `Receita declarada de ${brl(c.R)}, igual à soma das linhas de receita.`
+      : `A DRE tem ${brl(c.R)} e as linhas de receita somam ${brl(somaReceita)} — diferença de ${brl(dif(somaReceita, c.R))}.`});
+  // 2) o DAS lançado nas despesas confere com o que a tabela do Simples calcula
+  const temTabela = c.pelaTabela && c.dasCalculado > 0.004, decl = c.simplesDeclarado;
+  lista.push({ok: !temTabela || decl <= 0.004 || dif(decl, c.dasCalculado) <= 1,
+    titulo: 'DAS declarado confere com o calculado',
+    detalhe: !temTabela ? 'Sem receita por tipo lançada, o painel usa o DAS que você declarou.'
+      : decl <= 0.004 ? `Nenhum DAS lançado nas despesas: vale o calculado pela tabela, ${brl(c.dasCalculado)}.`
+      : dif(decl, c.dasCalculado) <= 1 ? `Declarado ${brl(decl)}, calculado ${brl(c.dasCalculado)}.`
+      : `Declarado ${brl(decl)} e calculado ${brl(c.dasCalculado)} — diferença de ${brl(dif(decl, c.dasCalculado))}.`});
+  // 3) crédito de CBS quase zerado diante do débito costuma ser regra de crédito mal marcada
+  const quaseSem = c.debitoTotal > 0.004 && c.creditoTotal < c.debitoTotal * 0.02 && (c.compras > 0.004 || c.baseDespesas > 0.004);
+  lista.push({ok: !quaseSem, titulo: 'Crédito de CBS compatível com as compras',
+    detalhe: quaseSem ? `Crédito de ${brl(c.creditoTotal)} para um débito de ${brl(c.debitoTotal)}: confira a regra de crédito das compras e despesas.`
+      : `Crédito de ${brl(c.creditoTotal)} sobre um débito de ${brl(c.debitoTotal)}.`});
+  // 4) CNPJ do cadastro: um número errado atrapalha a conversa sobre a cadeia de crédito
+  const maus = ['fornecedores', 'clientes'].reduce((n, g) => n + (S.cadeia[g] || []).filter(r => r[0] && !cnpjValido(r[0])).length, 0);
+  if(maus || (S.cadeia.fornecedores || []).length || (S.cadeia.clientes || []).length)
+    lista.push({ok: !maus, titulo: 'CNPJ dos cadastros confere',
+      detalhe: maus ? `${maus} ${maus === 1 ? 'CNPJ não confere' : 'CNPJs não conferem'} no cadastro de fornecedores ou clientes.`
+        : 'Todos os CNPJs cadastrados passam na validação.'});
+  // 5) com banco: o exercício está completo?
+  const ano = banco.ano && !banco.ano.carregando && banco.ano.linhas ? banco.ano : null;
+  if(ano){
+    const falta = mesesFaltando(ano.linhas, ano.ano);
+    lista.push({ok: !falta.length, titulo: `Exercício de ${ano.ano} completo`,
+      detalhe: falta.length ? `Ainda sem competência salva: ${falta.join(', ')}.` : 'Todos os meses do ano têm competência salva.'});
+  }
+  return lista;
+}
+function rSelo(){
+  const lista = conferencias(), pendentes = lista.filter(x => !x.ok).length;
+  const item = c => `<div class="selo-item"><span class="selo-marca ${c.ok ? 'ok' : 'atencao'}">${c.ok ? '✓' : '!'}</span>` +
+    `<span><span class="selo-t">${c.titulo}</span><span class="selo-d">${esc(c.detalhe)}</span></span></div>`;
+  return `<section class="selo ${pendentes ? 'atencao' : 'ok'}" aria-label="Conferência do mês">
+    <button class="selo-b" type="button" data-act="selo" aria-expanded="${ui.selo}">
+      <span class="selo-ponto"></span>
+      <span class="selo-txt"><span class="selo-tit">${pendentes ? 'Conferir antes de entregar' : 'Conferido — pode entregar'}</span>
+      <span class="selo-sub">${pendentes
+        ? `${pendentes} ${pendentes > 1 ? 'pontos pedem atenção' : 'ponto pede atenção'} · ${lista.length - pendentes} ${lista.length - pendentes === 1 ? 'verificação passou' : 'verificações passaram'}`
+        : `Todas as ${lista.length} verificações passaram`}</span></span>
+      <span class="selo-seta">${ui.selo ? 'ocultar ▲' : 'ver tudo ▼'}</span></button>
+    ${ui.selo ? `<div class="selo-lista">${lista.map(item).join('')}</div>` : ''}</section>`;
+}
+// Barra lateral (handoff v2): marca do escritório, empresa aberta, navegação em dois grupos e o rodapé com o
+// estado do salvamento. Recolhida (body.lat-fina) fica só a coluna de pontos, com o nome no title
+function rLateral(){
+  const secoes = [['visao', 'Visão geral'], ['resultado', 'Resultado'], ['regimes', 'Comparar regimes'], ['cliente', 'Resumo do cliente']];
+  // o id de cada seção continua sendo tab-<id>: é por ele que o teclado, os testes e o link do cliente chegam aqui
+  const item = ([id, rot]) => `<button class="lat-item" type="button" id="tab-${id}" data-act="tab" data-id="${id}" title="${rot}"` +
+    `${ui.tab === id ? ' aria-current="page"' : ''}><span class="lat-ponto"></span><span>${rot}</span></button>`;
+  const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
+  // o cartão da empresa É o seletor: o <select> fica por cima, invisível, para o clique abrir a lista do sistema
+  const opcoes = !banco.ativo ? '' : (banco.empresaId ? '' : '<option value="" selected>Nenhuma empresa</option>') +
+    (banco.empresas || []).map(e => `<option value="${e.id}"${e.id === banco.empresaId ? ' selected' : ''}>${esc(e.nome)}</option>`).join('') +
+    `<option value="__nova__">+ Nova empresa…</option>`;
+  const empresa = !banco.ativo ? '' : `<div class="lat-emp"><div class="lat-emp-b"
+      title="${esc((emp && emp.nome) || 'Escolher empresa')}"><span class="lat-emp-t">
+      <span class="lat-emp-n">${esc((emp && emp.nome) || 'Escolher empresa')}</span>
+      <span class="lat-emp-c">${emp && emp.cnpj ? fmtCnpj(emp.cnpj) : ''}</span></span>
+      <span class="lat-emp-seta" aria-hidden="true">▾</span>
+      <select class="lat-emp-sel" data-banco="empresa" aria-label="Empresa">${opcoes}</select></div></div>`;
+  const pe = `<div class="lat-pe">
+    ${banco.ativo ? `<div class="lat-salvo" id="lat-salvo"><span></span></div>` : ''}
+    <div class="lat-acoes menu-wrap">
+      <button type="button" data-act="print">Baixar PDF</button>
+      <button type="button" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">Opções</button>
+      ${ui.menu ? rMenu() : ''}
+    </div></div>`;
+  return `<aside class="lat" aria-label="Navegação">
+    <div class="lat-topo"><img class="logo" data-src="logo" alt="Logo do escritório">
+      <span class="lat-marca" data-o="footer"></span>
+      <button class="lat-x" type="button" data-act="lat-fina" title="${ui.latFina ? 'Abrir menu' : 'Recolher menu'}">${ui.latFina ? '»' : '«'}</button>
+    </div>
+    ${empresa}
+    <nav class="lat-nav" aria-label="Seções do painel">
+      <div class="lat-grupo" data-o="lat.grupoMes"></div>
+      ${secoes.map(item).join('')}
+      <div class="lat-grupo">Exercício</div>
+      ${item(['anual', 'Anual'])}
+    </nav>
+    ${pe}</aside>`;
+}
+// Cabeçalho: quem é a empresa, em que competência, e as ações do mês
+function rCabecalho(){
+  const meses = !banco.ativo ? '' : (banco.meses || []).map(x =>
+    `<option value="${x}"${x === banco.periodo ? ' selected' : ''}>${mesCurto(x)}</option>`).join('') +
+    `<option value="__nova__">+ Novo mês…</option>`;
+  const comp = !banco.ativo ? '' : `<label class="cab-comp"><span class="cap">Competência</span>
+    <select data-banco="periodo" aria-label="Competência"${banco.empresaId ? '' : ' disabled'}>${meses}</select></label>`;
+  const salvar = banco.ativo && banco.sessao && !ui.present
+    ? `<button class="btn prim" type="button" data-act="salvar-banco" id="b-salvar" title="Salvar (Ctrl+S)">Salvar</button>` : '';
+  const telaCheia = ui.present && document.fullscreenEnabled
+    ? `<button class="btn" type="button" data-act="tela-cheia">${document.fullscreenElement ? 'Sair da tela cheia' : 'Tela cheia'}</button>` : '';
+  const modo = ui.client ? '' : `<div class="modo" role="group" aria-label="Modo de uso">
+    <button type="button" data-act="modo" data-p="lancar" aria-pressed="${!ui.present}">Lançar</button>
+    <button type="button" data-act="modo" data-p="apresentar" aria-pressed="${ui.present}">Apresentar</button></div>`;
+  return `<header class="cab"><div class="cab-in">
+    <div class="cab-id"><button class="hamburguer" type="button" data-act="lat-abrir" aria-label="Abrir menu">☰</button>
+      <div><h1 data-o="co"></h1><div class="cab-sub" data-o="ctx"></div>
+        <div class="imp-info so-papel" id="imp-info"></div></div></div>
+    <div class="cab-dir">${modo}${telaCheia}${comp}${salvar}</div>
+  </div></header>`;
 }
 function rMenu(){
   const it = (act, lbl, marca) => `<button role="menuitem" data-act="${act}">${lbl}${marca ? `<span class="chk">${marca}</span>` : ''}</button>`;
@@ -2036,7 +2354,10 @@ function rResultado(){
   h += linha('tot', '( − ) Despesas tributárias', 'm.trib', 'm.tribP');
   if(ui.detalhe) h += lista('monthly.tributarias', m.tributarias, 'm.tr');
   h += linha('res', '( = ) Resultado líquido' + varMes('resultado'), 'm.resultado', 'm.margem');
-  return rSimplesMes() + painel('card', 'resultado', h) + rEstoque() + rReforma() + rComparativo();
+  // na apresentação, a DRE fecha com a leitura em português — é o que o cliente quer ouvir
+  if(ui.present) h += `<div class="como-ler"><span class="cap">Como ler</span>
+    <p data-o="v.comoLer"></p></div>`;
+  return rSimplesMes() + painel('card', 'resultado', h) + rEstoque() + rReforma();
 }
 // Compras do mês: mesma tabela das despesas gerais — regra de crédito, alíquota e crédito de CBS por linha
 function tabelaCompras(){
@@ -2131,6 +2452,50 @@ function rReforma(){
 
 // Os quatro cartões e o "O que observar" saíram a pedido do usuário: os mesmos números já estão na
 // faixa de indicadores do topo e no quadro Tradicional × Híbrido, no fim da aba Resultado.
+// Receita e imposto, mês a mês: doze colunas do ano da competência aberta. A barra inteira é a receita
+// (proporcional ao maior mês) e o pedaço de baixo, o imposto do mês. Mês sem competência salva fica hachurado.
+function rMeses(){
+  const ano = banco.ano, linhas = ano && !ano.carregando ? ano.linhas || [] : null;
+  if(!banco.ativo || !linhas) return '';
+  const porMes = {};
+  linhas.forEach(x => { if(x.resumo) porMes[+x.periodo.slice(5, 7)] = x.resumo; });
+  const maior = Math.max(1, ...Object.values(porMes).map(r => +r.receita || 0));
+  const barras = MESES.map((nome, i) => {
+    const r = porMes[i + 1], curto = nome.slice(0, 3).toLowerCase();
+    if(!r) return `<div class="mb"><div class="mb-col"><span class="mb-vazio" title="${curto}: sem competência salva"></span></div>` +
+      `<span class="mb-rot">${curto}</span></div>`;
+    const rec = +r.receita || 0, imp = (+r.das || 0) + (+r.cbs || 0);
+    const alt = Math.max(2, rec / maior * 100), parte = rec > 0.004 ? Math.min(100, imp / rec * 100) : 0;
+    return `<div class="mb"><div class="mb-col" title="${curto}: receita ${brl(rec)} · imposto ${brl(imp)}">` +
+      `<span class="mb-barra" style="height:${alt}%"><span class="mb-imp" style="height:${parte}%"></span></span></div>` +
+      `<span class="mb-rot${banco.periodo && +banco.periodo.slice(5, 7) === i + 1 ? ' agora' : ''}">${curto}</span></div>`;
+  }).join('');
+  return `<section class="card meses" aria-label="Receita e imposto, mês a mês">
+    <div class="card-h"><div><h2>Receita e imposto, mês a mês</h2>
+      <p class="sub">Barra inteira: a receita do mês. Pedaço de baixo: o que foi para imposto.</p></div></div>
+    <div class="mb-grade">${barras}</div></section>`;
+}
+// Visão geral (v2): o mês em três números, quem sai mais barato e a faixa do Simples
+function rVisao(){
+  const ind = (rot, k, sub, cls, termo) => `<article class="ind ${cls || ''}"><span class="cap">${rot}${termo ? ajuda(termo) : ''}</span>` +
+    `<span class="ind-v" data-o="${k}"></span><span class="ind-s" data-o="${sub}"></span></article>`;
+  return `<section class="inds" id="painel" role="tabpanel" aria-labelledby="tab-visao">
+      ${ind('Imposto do mês', 'm.trib', 'v.impostoSub', '', 'das')}
+      ${ind('CBS a pagar', 'm.cbsRes', 'v.cbsSub', 'brand', 'cbs')}
+      ${ind('Resultado líquido', 'm.resultado', 'v.resultadoSub')}
+    </section>
+    ${rMeses()}
+    <section class="card faixa-sn" aria-label="Faixa do Simples">
+      <div class="faixa-sn-in">
+        <div><span class="cap">Receita dos últimos 12 meses${ajuda('rbt12')}</span><span class="fsn-v" data-o="v.rbt12"></span></div>
+        <div><span class="cap">Faixa e alíquota${ajuda('efetiva')}</span><span class="fsn-v" data-o="r.faixa"></span></div>
+        <div><span class="cap">Anexo</span><span class="fsn-v" data-o="v.anexo"></span></div>
+      </div>
+    </section>`;
+}
+function rRegimes(){
+  return rComparativo();
+}
 function rCliente(){
   return painel('cli', 'cliente', `<div class="cli-blocos">${rCadeia()}${rProdutos()}</div>`);
 }
@@ -2426,8 +2791,8 @@ function rBarra(){
   </div>`;
 }
 function atualizarBarra(){
-  const st = document.getElementById('b-status'), bt = document.getElementById('b-salvar');
-  if(!st || !bt) return;
+  const st = document.querySelector('#lat-salvo span'), bt = document.getElementById('b-salvar');
+  if(!st) return;
   let texto, classe = '';
   if(banco.salvando) texto = 'Salvando…';
   else if(banco.erro){ texto = 'Não salvou — tente de novo'; classe = 'erro'; }
@@ -2435,20 +2800,18 @@ function atualizarBarra(){
   else if(sujo()){ texto = 'Alterações não salvas'; classe = 'sujo'; }
   else { texto = banco.salvoEm ? `Salvo às ${hora(banco.salvoEm)}` : 'Tudo salvo'; classe = 'ok'; }
   if(st.textContent !== texto) st.textContent = texto;
-  st.className = 'bstatus ' + classe;
-  bt.disabled = banco.salvando;
-  const fs = app.querySelector('.fixo-status'), fb = app.querySelector('.fixo-salvar');
-  if(fs){ if(fs.textContent !== texto) fs.textContent = texto; fs.className = 'bstatus fixo-status ' + classe; }
-  if(fb) fb.disabled = banco.salvando;
+  st.parentElement.className = 'lat-salvo ' + classe;
+  st.parentElement.title = texto;
+  if(bt) bt.disabled = banco.salvando;
 }
 
 /* ---------- movimento ---------- */
 // render() refaz a tela inteira, então animar tudo faria a página piscar a cada linha adicionada. Entra com efeito
 // só o que não estava na tela: a aba nova, a seção que abriu, o menu, a linha recém-criada. Na troca de mês ou de
 // empresa (ui.animarTela) o conteúdo todo entra de novo, menos o cabeçalho e a barra de seleção, que não mudaram.
-const SEL_ANIM = '#app > *, .det, .prem, .calc, .menu, .panel, .li, .gr, .cr, .cad-row:not(.gh), .gprod:not(.gh)';
+const SEL_ANIM = '.conteudo > *, .det, .prem, .calc, .menu, .panel, .li, .gr, .cr, .cad-row:not(.gh), .gprod:not(.gh)';
 function chaveAnim(el){
-  if(el.parentElement === app)
+  if(el.parentElement && el.parentElement.classList.contains('conteudo'))
     return 'bloco:' + (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.id || el.classList[0] || el.tagName);
   // linha e seção se reconhecem pelo primeiro campo (ou botão) que carregam: é o que não muda entre um render e outro
   const b = el.querySelector('[data-b]'), a = el.querySelector('[data-act]'), d = a ? a.dataset : {};
@@ -2457,7 +2820,7 @@ function chaveAnim(el){
 function chavesNaTela(){
   const k = new Set();
   app.querySelectorAll(SEL_ANIM).forEach(el => {
-    if(ui.animarTela && el.closest('#app > :not(.top):not(.barra):not(.fixo)')) return;
+    if(ui.animarTela && el.closest('.conteudo > *')) return;
     k.add(chaveAnim(el));
   });
   return k;
@@ -2468,7 +2831,7 @@ function animarNovos(antes){
     // dentro de um bloco que já está entrando, o filho entra junto: animar os dois daria o efeito em dobro
     if(antes.has(chaveAnim(el)) || (el.parentElement !== app && el.parentElement.closest('.entra'))) return;
     el.classList.add('entra');
-    if(el.parentElement === app) el.style.setProperty('--i', n++);
+    if(el.parentElement && el.parentElement.classList.contains('conteudo')) el.style.setProperty('--i', n++);
   });
 }
 // barra compacta: desce quando a barra de seleção sai da tela. Nome e competência vêm dos mesmos data-o do
@@ -2493,9 +2856,8 @@ function marcarRolagemX(){
 }
 addEventListener('scroll', e => { if(e.target instanceof Element && e.target.classList.contains('lp-tri')) marcarRolagemX(); }, true);
 addEventListener('resize', marcarRolagemX);
-function marcarRolagem(){
-  const ref = app.querySelector('.barra') || app.querySelector('.top');
-  document.body.classList.toggle('rolou', !!ref && ref.getBoundingClientRect().bottom < 0);
+function marcarRolagem(){        // o cabeçalho é preso no alto (v2): não há mais barra compacta para descer
+  document.body.classList.remove('rolou');
 }
 addEventListener('scroll', () => { if(!rolagemRAF) rolagemRAF = requestAnimationFrame(() => { rolagemRAF = 0; marcarRolagem(); }); }, {passive: true});
 function ocupado(sim){                      // a espera aparece no próprio conteúdo (ver body.trocando no CSS)
@@ -2505,13 +2867,19 @@ function ocupado(sim){                      // a espera aparece no próprio cont
 function render(){
   document.body.classList.toggle('editando', editavel());
   document.body.classList.toggle('present', ui.present);
+  document.body.classList.toggle('deitado', !!ui.papelDeitado);   // só durante a impressão mês a mês
   if(banco.ativo && (!banco.sessao || banco.carregando)){      // sem login, nenhum dado aparece
     app.innerHTML = rLogin(); document.title = 'Entrar — Painel DRE'; document.body.classList.remove('rolou'); return;
   }
+  // na apresentação a barra recolhe sozinha: a lista de empresas é de outros clientes e não vai para a tela deles
+  document.body.classList.toggle('lat-fina', !!ui.latFina || ui.present);
+  document.body.classList.toggle('lat-aberta', !!ui.latAberta);
   const antes = chavesNaTela();
-  const telas = {resultado: rResultado, cliente: rCliente, anual: rAnual};
-  app.innerHTML = rFixo() + rTopo() + rBarra() + rPersonalizar() + rHeroi() + telas[ui.tab]() +
-    `<footer class="foot"><span data-o="footer"></span><span data-o="comp"></span></footer>`;
+  const telas = {visao: rVisao, resultado: rResultado, regimes: rRegimes, cliente: rCliente, anual: rAnual};
+  app.innerHTML = `<div class="app2"><div class="lat-veu" data-act="lat-fechar"></div>` + rLateral() +
+    `<main class="main">` + rCabecalho() + `<div class="conteudo">` + rPersonalizar() + rSelo() + telas[ui.tab]() +
+    `<footer class="foot"><span data-o="footer"></span><span data-o="comp"></span></footer>` +
+    `</div></main>` + rGlossario() + `</div>`;
   refresh();
   animarNovos(antes);
   marcarRolagem();
@@ -2598,6 +2966,8 @@ function toast(msg){
 }
 const focar = sel => { const el = app.querySelector(sel); if(el) el.focus(); };
 function irPara(tab, foco){ ui.tab = tab; ui.menu = false; ui.armado = false; render(); if(foco) focar('#tab-' + tab); }
+// a Visão geral e a Anual vivem dos meses salvos: depois de trocar de mês ou de empresa, o ano é buscado de novo
+function garantirAnoDaTela(){ if(ui.tab === 'visao' || ui.tab === 'anual') garantirAno(); }
 
 function zerarValores(base, manter){
   // zera valores; mantém categorias, % base, alíquotas, premissas, identidade visual e rótulos.
@@ -3154,7 +3524,7 @@ async function abrirMes(empresaId, periodo, op){
   const cadeia = {fornecedores: [], clientes: []};
   (r.parceiros || []).forEach(p => cadeia[p[0] === 'cliente' ? 'clientes' : 'fornecedores'].push([p[1] || '', p[2] || '', p[3] || '', p[4] || '']));
   const novo = !r.competencia;
-  banco.heranca = null; banco.ano = null;          // o quadro do ano é refeito ao entrar na aba Anual
+  banco.heranca = null; banco.ano = null;          // o quadro do ano é refeito ao entrar na Visão geral ou na Anual
   // o último mês salvo antes deste (pode não ser o mês de calendário anterior: a tela diz qual é).
   // Salvo antes da migração do resumo, vem com os dados e é recalculado aqui
   const ant = r.anterior;
@@ -3341,6 +3711,7 @@ async function salvarBanco(forcar){
     if(renomeou){ emp.nome = nome; banco.empresas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')); }
     if(mesNovo || renomeou){ const foco = document.activeElement && document.activeElement.id; render(); if(foco) focar('#' + foco); }
     else atualizarBarra();
+    banco.ano = null; garantirAnoDaTela();          // o mês salvo muda o ano: o gráfico e o selo pedem os números de novo
     toast('Salvo no banco de dados');
   }catch(e){
     banco.salvando = false;
@@ -3381,7 +3752,7 @@ async function trocar(tipo, valor){
   // sem isto a tela congela até o banco responder, e parece que o clique não pegou
   ocupado(true); ui.animarTela = true;
   try { await comErro(() => tipo === 'empresa' ? abrirEmpresa(valor) : abrirMes(banco.empresaId, valor)); }
-  finally { ocupado(false); ui.animarTela = false; }
+  finally { ocupado(false); ui.animarTela = false; garantirAnoDaTela(); }
 }
 async function novaEmpresa(){
   if(!(await podeSair())){ render(); return; }
@@ -3545,9 +3916,10 @@ app.addEventListener('click', e => {
   if(!b) return;
   const rf = S.monthly.reforma, g = b.dataset.g, i = +b.dataset.i;
   switch(b.dataset.act){
-    case 'tab': irPara(b.dataset.id); if(b.dataset.id === 'anual') garantirAno(); break;
+    case 'tab': irPara(b.dataset.id);
+      if(b.dataset.id === 'anual' || b.dataset.id === 'visao') garantirAno();   // o gráfico do ano e o selo vivem dos meses salvos
+      break;
     // da barra compacta a aba nova começa do topo, e não no meio de onde a outra estava
-    case 'tab-fixo': irPara(b.dataset.id); if(b.dataset.id === 'anual') garantirAno(); scrollTo(0, 0); break;
     // rolagem suave é JavaScript: a regra de movimento reduzido do CSS não chega aqui, então pergunta de novo
     case 'topo': scrollTo({top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); break;
     case 'ano-atualizar': garantirAno(true); break;
@@ -3556,6 +3928,26 @@ app.addEventListener('click', e => {
     case 'lp-cbs': ui.cbsLP = !ui.cbsLP; render(); focar('[data-act="lp-cbs"]'); break;
     case 'lp-icms': ui.icmsLP = !ui.icmsLP; render(); focar('[data-act="lp-icms"]'); break;
     case 'lp-ver': ui.lpMenu = !ui.lpMenu; render(); focar('[data-act="lp-ver"]'); break;
+    case 'termo': ui.termo = b.dataset.k || null; render(); break;
+    case 'selo': ui.selo = !ui.selo; render(); focar('[data-act="selo"]'); break;
+    case 'lat-fina': ui.latFina = !ui.latFina; render(); focar('[data-act="lat-fina"]'); break;
+    case 'lat-abrir': ui.latAberta = true; render(); break;
+    case 'lat-fechar': ui.latAberta = false; render(); break;
+    // o alternador do cabeçalho (v2) faz o mesmo que o item do menu: recolhe a maquinaria ao entrar na
+    // apresentação e devolve a tela como estava ao voltar para o modo de lançamento
+    case 'modo':
+      if((b.dataset.p === 'apresentar') === ui.present) break;
+      ui.present = b.dataset.p === 'apresentar'; ui.menu = false;
+      if(ui.present){
+        ui.antesDeApresentar = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, presumido: ui.presumido,
+                                cadastro: {...ui.cadastro}};
+        Object.assign(ui, {detalhe: false, memoria: false, estoque: false, presumido: false, cadastro: {cadeia: false, produtos: false}});
+      } else {
+        if(ui.antesDeApresentar) Object.assign(ui, ui.antesDeApresentar);
+        ui.antesDeApresentar = null;
+        if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      }
+      render(); break;
     case 'lp-cenario': ui.lpCenario = b.dataset.p; ui.lpMenu = false; render(); focar('[data-act="lp-ver"]'); break;
     case 'lp-detalhe': ui.lpResumo = b.dataset.p === 'resumo'; ui.lpMenu = false; render(); focar('[data-act="lp-ver"]'); break;
     case 'lp-vazias': ui.lpVazias = !ui.lpVazias; render(); focar('[data-act="lp-vazias"]'); break;
@@ -3689,24 +4081,34 @@ app.addEventListener('submit', async e => {
 const IMPRESSAO = {
   resultado: ['Resultado', 'DRE, Simples, estoque, CBS e o quadro dos dois regimes, sem abrir as linhas.',
     'Com as linhas de receita e despesas, as compras, a posição de estoque e a memória de cálculo da CBS.'],
-  anual: ['Anual', 'DRE do exercício com os totais e a leitura do ano.', 'Com as linhas de custos e despesas do exercício e o Lucro Presumido por trimestre.'],
+  anual: ['Anual', 'O ano somado pelos meses salvos e os cartões do Lucro Presumido.',
+    'Com a apuração do Lucro Presumido por trimestre, em resumo.',
+    'A mesma apuração com uma coluna por mês salvo — em folha deitada, que é o que comporta doze colunas.'],
   cliente: ['Resumo do cliente', 'Os gráficos da cadeia de crédito e dos produtos.', 'Com as tabelas de cadastro de fornecedores (ou clientes) e de produtos.'],
 };
 async function imprimir(){
   ui.menu = false; ui.armado = false; render();
-  const [aba, totais, completo] = IMPRESSAO[ui.tab];
+  const [aba, totais, completo, mensal] = IMPRESSAO[ui.tab];
   const aberto = ui.tab === 'cliente' ? ui.cadastro.cadeia || ui.cadastro.produtos
     : ui.detalhe || (ui.tab === 'resultado' && (ui.memoria || ui.estoque)) || (ui.tab === 'anual' && ui.presumido);
-  const {botao} = await modal({titulo: 'Imprimir ou salvar em PDF', texto: `Aba ${aba}, em folha A4. O que deve sair no papel?`,
-    html: `<div class="imp-opcoes"><p><b>Só os totais</b>${esc(totais)}</p><p><b>Com o detalhamento</b>${esc(completo)}</p></div>`,
-    botoes: [['cancelar', 'Cancelar'], ['totais', 'Só os totais', aberto ? '' : 'prim'], ['completo', 'Com o detalhamento', aberto ? 'prim' : '']],
-    padrao: aberto ? 'completo' : 'totais'});
-  if(botao !== 'totais' && botao !== 'completo') return;
-  // no papel a tabela do Presumido sai inteira: filtro da tela não pode virar folha incompleta sem aviso
+  // a aba Anual ganha a terceira escolha quando há tabela do Presumido para imprimir mês a mês
+  const temMensal = !!mensal && ui.tab === 'anual' && !!(banco.presumido && banco.presumido.de === banco.ano);
+  const {botao} = await modal({titulo: 'Imprimir ou salvar em PDF', texto: `Aba ${aba}. O que deve sair no papel?`,
+    html: `<div class="imp-opcoes"><p><b>Só os totais</b>${esc(totais)}</p><p><b>Com o detalhamento</b>${esc(completo)}</p>` +
+      (temMensal ? `<p><b>Mês a mês</b>${esc(mensal)}</p>` : '') + `</div>`,
+    botoes: [['cancelar', 'Cancelar'], ['totais', 'Só os totais', aberto ? '' : 'prim'],
+      ['completo', 'Com o detalhamento', aberto && !ui.lpMes ? 'prim' : '']]
+      .concat(temMensal ? [['mensal', 'Mês a mês', aberto && ui.lpMes ? 'prim' : '']] : []),
+    padrao: !aberto ? 'totais' : ui.lpMes && temMensal ? 'mensal' : 'completo'});
+  if(botao !== 'totais' && botao !== 'completo' && botao !== 'mensal') return;
+  // no papel a tabela do Presumido sai por trimestre e em resumo: doze colunas de mês não cabem em A4 e a
+  // tabela saía cortada. Os dois cenários do Simples ficam, e as colunas sem movimento não voltam
   const antes = {detalhe: ui.detalhe, memoria: ui.memoria, estoque: ui.estoque, presumido: ui.presumido,
-    lpCenario: ui.lpCenario, lpResumo: ui.lpResumo, lpVazias: ui.lpVazias, cadastro: {...ui.cadastro}};
-  ui.lpCenario = 'ambos'; ui.lpResumo = false; ui.lpVazias = true;
-  const tudo = botao === 'completo';
+    lpCenario: ui.lpCenario, lpResumo: ui.lpResumo, lpVazias: ui.lpVazias, lpMes: ui.lpMes,
+    papelDeitado: ui.papelDeitado, cadastro: {...ui.cadastro}};
+  ui.lpCenario = 'ambos'; ui.lpResumo = true; ui.lpVazias = false; ui.lpMes = botao === 'mensal';
+  ui.papelDeitado = botao === 'mensal';          // treze colunas só cabem em folha deitada (ver prepararFolha)
+  const tudo = botao === 'completo' || botao === 'mensal';
   if(ui.tab === 'cliente') ui.cadastro = {cadeia: tudo, produtos: tudo};
   else {
     ui.detalhe = tudo;
@@ -3731,7 +4133,8 @@ function prepararFolha(){
   // da 2ª página em diante, empresa e período no alto; embaixo, o escritório (o rodapé da tela) e a página.
   // As caixas vazias não são enfeite: cada borda com caixa definida cala a data, o título e o endereço que o Chrome
   // imprime quando "Cabeçalhos e rodapés" está ligado no diálogo
-  st.textContent = `@page{@top-left{content:${aspas([S.co, rotulo].filter(Boolean).join(' · '))}; ${caixa}} @top-right{content:""}
+  st.textContent = `@page{size:A4 ${ui.papelDeitado ? 'landscape' : 'portrait'};
+    @top-left{content:${aspas([S.co, rotulo].filter(Boolean).join(' · '))}; ${caixa}} @top-right{content:""}
     @bottom-left{content:${aspas(S.footer)}; ${caixa}}
     @bottom-right{content:"Página " counter(page) " de " counter(pages); ${caixa}}}
   @page:first{@top-left{content:""}}`;
@@ -3769,7 +4172,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'resultado', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, lpCenario: 'ambos', lpResumo: false, lpVazias: false, lpMenu: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, lpCenario: 'ambos', lpResumo: false, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();

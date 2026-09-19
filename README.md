@@ -164,6 +164,41 @@ Sem senha — Revisão → Desproteger Planilha.
 Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
 (`{{LOGO_B64}}`, `{{FONTS_CSS}}`). Barras em HTML/CSS, sem biblioteca.
 
+## Layout v2 (19/09/2026)
+
+Redesenho da casca, a partir do handoff em `design_handoff_painel_dre_v2/` (protótipos em HTML; nenhum
+cálculo mudou). O que entrou:
+
+- **Barra lateral** (`rLateral`, 244px, `.lat`): logo e nome do escritório, a empresa aberta (o cartão **é** o
+  seletor — o `<select>` fica invisível por cima), navegação em dois grupos (Mês · <competência> com Visão geral,
+  Resultado, Comparar regimes e Resumo do cliente; Exercício com Anual) e, no pé, o estado do salvamento com
+  Baixar PDF e Opções. Recolhe para 64px (`ui.latFina`, só os pontos, nome no `title`) e, abaixo de 900px, vira
+  gaveta com véu (`ui.latAberta`, botão ☰ no cabeçalho). **Na apresentação ela recolhe sozinha**: a lista de
+  empresas é de outros clientes.
+- **Cabeçalho preso no alto** (`rCabecalho`): empresa, CNPJ · competência, alternador **Lançar / Apresentar**
+  (o mesmo que o item do menu: recolhe a maquinaria ao entrar e devolve ao sair), seletor de competência,
+  Tela cheia (só apresentando) e Salvar. A barra compacta que descia ao rolar saiu — o cabeçalho já é fixo.
+- **Cinco seções** no lugar de três: a **Visão geral** é nova; o quadro Tradicional × Híbrido ganhou seção
+  própria (**Comparar regimes**); a DRE, o estoque e a memória ficaram no **Resultado**. Os ids `#tab-<id>`
+  continuam os mesmos.
+- **Visão geral**: três indicadores do mês (imposto, CBS a pagar, resultado líquido, com a variação contra o
+  mês anterior), o gráfico **receita e imposto mês a mês** (`rMeses`: barra = receita do mês, pedaço de baixo =
+  imposto; mês sem competência salva vira faixa hachurada) e a faixa do Simples (RBT12, faixa, anexo). Ela vive
+  dos meses salvos, então entrar nela carrega o ano (`garantirAnoDaTela`), e salvar um mês pede os números de novo.
+- **Selo de conferência** (`conferencias`, `rSelo`): faixa acima do conteúdo, verde quando tudo passa e âmbar
+  quando algo pede atenção, expansível item a item. As verificações são as que o painel prova sozinho: receita da
+  DRE × soma das linhas do PGDAS, DAS declarado × calculado, crédito de CBS compatível com as compras, CNPJ dos
+  cadastros e — com banco — exercício completo.
+- **Glossário** (`TERMOS`, `rGlossario`): botão "?" ao lado dos termos (DAS, CBS, alíquota efetiva, RBT12) abre
+  um painel no canto com a explicação em português de quem não é da área.
+- **"Como ler"** no pé da DRE, só na apresentação: de cada R$ 100 de receita, quanto foi para imposto e quanto
+  sobrou, mais a CBS do mês.
+- **Paleta e tipografia do handoff**: fundo `#E9E7E2`, filetes `#EFECE6`/`#E2DFD8`, texto `#16171A`/`#4A4D52`,
+  cantos de 9px (14px nos cartões) e **Instrument Sans** na interface, embutida em base64 como as outras — o
+  painel continua sendo um arquivo só, sem buscar nada na rede.
+- Ficou para depois: as telas de **Comparar regimes** e **Anual** ainda usam o desenho antigo dentro da casca
+  nova, e a DRE no modo Lançar mantém os campos como estão.
+
 - **Cabeçalho em duas linhas** (17/09/2026): em cima, uma faixa só do escritório — logo pequena e nome em
   maiúsculas finas, fechada por um filete; embaixo, a empresa do cliente em destaque e a linha de contexto
   (`DRE · Dezembro 2025 · CNPJ 00.000.000/0001-00` — o CNPJ vem do banco e antes só saía na impressão).
@@ -838,8 +873,20 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
       recusada na tela. No lugar, um controle que mostra o estado ("Mês · Os dois cenários · Completo ▾") e abre um
       menu com as três escolhas, no mesmo componente do menu Opções. A outra forma testada — três seletores curtos
       (PERÍODO / COMPARAR COM / DETALHE) — foi comparada na tela e perdeu.
-    - **No papel sai tudo:** `imprimir()` guarda os três filtros, força a tabela completa e devolve no `afterprint`.
-      Filtro de tela não pode virar folha incompleta sem aviso.
+      - **No papel, por trimestre e em resumo** (19/09/2026): a tabela saía cortada — ela é feita para rolar de lado
+      na tela (colunas do tamanho do conteúdo, `min-width:640px`) e no papel não há para onde rolar; com 8 ou 12
+      colunas de mês, nada cabia em A4. Agora `imprimir()` força **trimestre + resumo**, sem as colunas sem
+      movimento, e devolve tudo no `afterprint`; no CSS da folha a `.gpres` perde a largura mínima, as colunas
+      encolhem (`minmax(0,1fr)`), a fonte cai para 10,5px e as bordas presas deixam de ser `sticky`.
+    - **Mês a mês, em folha deitada** (19/09/2026): a janela de impressão da aba Anual ganhou uma terceira escolha,
+      "Mês a mês", que sai em **paisagem** (`@page{size:A4 landscape}`, montado junto com as caixas de margem em
+      `prepararFolha`) — em pé, treze colunas não cabem de jeito nenhum. Nela a fonte da tabela cai para 8px,
+      os recuos encolhem e **até a coluna do Ano abre mão do "R$"**: são treze colunas e o valor do ano é o mais
+      longo. A opção só aparece quando há tabela do Presumido, e vem marcada quando a tela já está no mês a mês.
+    - **Testes da folha** (seção 3j do banco, a última das que usam banco porque semeia doze meses): com as regras
+      de `@media print` aplicadas e a largura útil do A4 — 186mm em pé, 273mm deitado — nenhuma célula pode ter
+      texto maior que a própria célula. A medição é **célula a célula**, não pela tabela: o número é mono e não
+      quebra linha, então ele vaza por cima da vizinha sem alargar a grade — foi assim que os cortes passaram.
     - Ficou de fora, de propósito: filtro por tributo (a tabela é curta demais para mais um controle) e "simular
       sem o INSS/ICMS", que parece filtro mas muda a conta — isso vive nas premissas, onde fica evidente.
   - Celular: a tabela mostra só a coluna do ano. Impressão "com o detalhamento" abre a apuração.

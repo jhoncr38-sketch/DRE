@@ -19,6 +19,9 @@ MARCA_SUPABASE = "/*SUPABASE_CONFIG*/null"
 # IBM Plex (SIL Open Font License 1.1), só o subconjunto latin do Google Fonts.
 # A Sans é variável: um arquivo cobre todos os pesos.
 TABELA_FONTES = [
+    # Instrument Sans é a fonte de interface do layout v2 (handoff): entra embutida, como as outras — o painel
+    # é um arquivo só e não busca nada na rede
+    ("Instrument Sans", "400 700", "InstrumentSans-latin-var.woff2"),
     ("IBM Plex Sans", "100 700", "IBMPlexSans-latin-var.woff2"),
     ("IBM Plex Mono", "400", "IBMPlexMono-latin-400.woff2"),
     ("IBM Plex Mono", "500", "IBMPlexMono-latin-500.woff2"),
