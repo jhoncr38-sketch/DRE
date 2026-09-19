@@ -585,6 +585,10 @@ Arquivo único, sem CDN, sem build. Logo e fontes embutidas em base64
   - **Cadastro aberto na apresentação** (17/09/2026): "Ver cadastro" (cadeia de crédito e produtos) passou a valer
     também no modo apresentação, só de leitura — sem ele não dava para mostrar a lista de fornecedores ao cliente.
     Ao entrar, os cadastros começam fechados, como o resto da maquinaria.
+  - **A competência continua trocável** (18/09/2026): a barra de seleção sumia inteira na apresentação e não dava
+    para mudar de mês no meio da reunião. Agora ela fica, **só com a competência**: o seletor de empresa sai (a
+    lista é de outros clientes e não deve aparecer na tela de um deles), e o status e o botão Salvar também. No modo
+    local, sem banco, a barra segue oculta — o aviso "nada é salvo" não é assunto do cliente.
   - **Colunas do detalhamento elásticas** (17/09/2026): `.g5` e `.grec` tinham colunas fixas (somavam ~645px) e
     caíam na rolagem lateral em janela menor ou com zoom do navegador; agora encolhem até ~475px.
 - **Comparação com o mês anterior** (16/09/2026): ▲/▼ ao lado da receita e do resultado na DRE e do Simples na

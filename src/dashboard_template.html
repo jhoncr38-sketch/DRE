@@ -528,7 +528,10 @@
   .imp-opcoes{display:flex; flex-direction:column; gap:10px; padding:12px 14px; background:var(--surface-2)}
   .imp-opcoes p{margin:0; font-size:12px; color:var(--muted); line-height:1.5}
   .imp-opcoes b{display:block; font-size:13px; font-weight:600; color:var(--ink)}
-  .present .barra{display:none}
+  /* apresentação: a barra fica, mas só com a competência — trocar de mês em reunião é comum; a lista de
+     empresas é de outros clientes e não deve aparecer na tela do cliente, e salvar não é coisa de apresentação */
+  .present .barra{padding:8px 16px}
+  .present .barra .bsel:first-child, .present .barra .bstatus, .present .barra #b-salvar{display:none}
   @media print{ .barra, #modal{display:none !important} }
 
   /* Resumo do cliente */
@@ -682,7 +685,7 @@
   .fixo-acao{display:flex; align-items:center; gap:12px}
   .fixo-acao .bstatus{margin-left:0}
   .fixo-acao .btn{padding:7px 13px}
-  .present .fixo-acao{display:none}                                /* apresentação não salva, como a barra de seleção */
+  .present .fixo-acao{display:none}                                /* apresentação não salva */
 
   /* Comparação com o último mês salvo, ao lado do rótulo (receita, resultado, DAS) */
   .var{margin-left:8px; font-family:var(--mono); font-size:11px; font-weight:400; letter-spacing:0; color:var(--muted); white-space:nowrap}
@@ -2409,7 +2412,9 @@ function rLogin(){
   </section>`;
 }
 function rBarra(){
-  if(ui.present) return '';
+  // na apresentação a barra fica, só com a competência (ver o CSS de .present .barra): trocar de mês em reunião
+  // é comum. O aviso do modo local, esse sim, não aparece para o cliente
+  if(ui.present && !banco.ativo) return '';
   if(!banco.ativo) return `<div class="barra local">Modo local: nada é salvo no banco de dados. Para salvar, configure o Supabase (README → Banco de dados).</div>`;
   const empresas = banco.empresas.map(e => `<option value="${e.id}"${e.id === banco.empresaId ? ' selected' : ''}>${esc(e.nome)}</option>`).join('');
   const meses = banco.meses.map(p => `<option value="${p}"${p === banco.periodo ? ' selected' : ''}>${mesCurto(p)}</option>`).join('');
