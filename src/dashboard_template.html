@@ -24,6 +24,11 @@
     --lat-ink:#F2F1EE; --lat-mut:#8D9096; --lat-mut-2:#63666B;
     --ok:#1D7A4E;                                 /* CBS crédito: crédito maior que o débito */
     --aviso:#C9A227;                              /* conferência: ponto que pede atenção antes de entregar */
+    /* Fator R: o verde e o azul do modelo do escritório, em tons suaves para assentar no bege (a família rosa
+       e terroso do painel foi testada lado a lado e recusada). O azul ficou um pouco mais fechado de propósito:
+       com os dois igualmente claros, quem tem daltonismo tritan não separava um do outro (ΔE 5); assim são 20.
+       O contraste baixo do preenchimento é coberto pela legenda e pelos rótulos em cima das barras */
+    --frr-fat:#86CCA8; --frr-folha:#4C7FB8; --frr-linha:#1B6B55; --frr-limite:#C2565A;
     /* Faixas de redução da CBS: uma escala, não categorias. Um tom só — o vermelho da marca —, escuro na
        alíquota cheia e clareando conforme a redução cresce, para a leitura ser "quanto mais forte, mais imposto".
        A alíquota zero fica fora da rampa: nenhum imposto não é um vermelho fraco */
@@ -59,6 +64,7 @@
     --canvas:#111214; --surface:#1B1C1F; --surface-2:#232529; --rail:#2B2D32;
     --line:#2C2E33; --line-2:#373A40; --line-3:#4B4F56;
     --ok:#2A8C5C;
+    --frr-fat:#5FB088; --frr-folha:#4C86C4; --frr-linha:#7FD7B2; --frr-limite:#D97377;
     --card-luz:color-mix(in srgb, var(--surface) 93%, #FFFFFF);   /* no escuro a luz clareia o alto, não a base */
     /* a mesma rampa das faixas da CBS, com passos mais cheios: no fundo escuro o branco chega rápido demais */
     --cbs-5:color-mix(in srgb, var(--brand) 84%, #FFFFFF);
@@ -280,6 +286,69 @@
   .ind-v{font-family:var(--mono); font-size:27px; font-weight:600; letter-spacing:-.02em}
   .ind.brand .ind-v{color:var(--brand)}
   .ind-s{font-size:12px; color:var(--ink-3)}
+  /* Fator R: um quadro só — barras de faturamento e folha, linha do Fator R por cima, eixos nos dois lados.
+     As cores das séries são as do modelo aprovado pelo usuário (verde e azul), validadas para daltonismo e
+     repetidas em tons próprios no modo noturno */
+  .frr-jan{display:flex; gap:2px; background:var(--surface-2); border-radius:var(--r-2); padding:2px}
+  .frr-jbt{border:0; background:transparent; border-radius:5px; padding:5px 10px; font:500 12px/1 var(--sans);
+    color:var(--muted); cursor:pointer}
+  .frr-jbt[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(30,26,20,.08)}
+  .frr-leg{display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:0 0 var(--e4)}
+  .frr-leg-b{display:inline-flex; align-items:center; gap:7px; border:0; background:transparent; padding:3px 0;
+    font:500 12px/1 var(--sans); color:var(--ink-2); cursor:pointer}
+  .frr-leg-b:hover{color:var(--ink)}
+  .frr-leg-b.fora{color:var(--disabled)}
+  .frr-leg-b.fora .frr-m{opacity:.3}
+  .frr-m{width:11px; height:11px; border-radius:50%; flex:0 0 11px}
+  .frr-m.fat{background:var(--frr-fat)}
+  .frr-m.folha{background:var(--frr-folha)}
+  .frr-m.linha{width:14px; height:0; border-radius:0; border-top:2px solid var(--frr-linha)}
+  .frr-m.limite{width:14px; height:0; border-radius:0; border-top:2px dashed var(--frr-limite)}
+  .frr-leg-fixo{display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--muted)}
+  .frr-leg-sub{color:var(--muted-2); font-weight:400; margin-left:5px}
+  .frr-quadro{display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:6px 10px; align-items:stretch}
+  .frr-eixo{display:flex; flex-direction:column; justify-content:space-between; font-family:var(--mono);
+    font-size:9.5px; color:var(--muted-2); text-align:right; padding:2px 0}
+  .frr-eixo.dir{text-align:left}
+  .frr-plot{position:relative; height:228px}
+  .frr-grade{position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between}
+  .frr-grade i{display:block; height:1px; background:var(--line)}
+  .frr-barras{position:absolute; inset:0; display:grid; gap:4px; align-items:end}
+  .frr-col{position:relative; height:100%; display:flex; align-items:flex-end; justify-content:center; gap:2px; min-width:0}
+  /* o mês aberto: um filete na base da coluna, não um bloco atrás dela */
+  .frr-col.agora::after{content:''; position:absolute; left:0; right:0; bottom:-3px; height:2px; background:var(--frr-linha)}
+  .frr-col > *{position:relative}
+  .frr-b{position:relative; flex:1 1 0; min-width:0; max-width:22px; border-radius:3px 3px 0 0}
+  .frr-b.fat{background:var(--frr-fat)}
+  .frr-b.folha{background:var(--frr-folha)}
+  .frr-rot{position:absolute; bottom:calc(100% + 3px); left:-8px; right:-8px; text-align:center;
+    font-family:var(--mono); font-size:9px; color:var(--muted); white-space:nowrap}
+  .frr-vazio{align-self:flex-end; width:60%; height:6px; border-radius:2px;
+    background:repeating-linear-gradient(45deg, var(--line-2) 0 3px, transparent 3px 6px)}
+  .frr-sobre{position:absolute; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none}
+  .frr-halo{fill:none; stroke:var(--surface); stroke-width:4; vector-effect:non-scaling-stroke; stroke-linejoin:round; opacity:.85}
+  .frr-pt-halo{fill:none; stroke:var(--surface); stroke-width:6.5; stroke-linecap:round; vector-effect:non-scaling-stroke; opacity:.85}
+  .frr-pt-halo.agora{stroke-width:9}
+  .frr-linha{fill:none; stroke:var(--frr-linha); stroke-width:1.6; vector-effect:non-scaling-stroke; stroke-linejoin:round}
+  .frr-pt{fill:none; stroke:var(--frr-linha); stroke-width:3.4; stroke-linecap:round; vector-effect:non-scaling-stroke;
+    pointer-events:auto}
+  .frr-pt.agora{stroke-width:6.5}
+  .corte{stroke:var(--frr-limite); stroke-width:1.2; stroke-dasharray:4 4; vector-effect:non-scaling-stroke}
+  .frr-pcts{position:absolute; inset:0; pointer-events:none}
+  /* a porcentagem fica em cima das barras: um contorno da cor do cartão segura a leitura sem caixa nem fundo */
+  .frr-pcts span{position:absolute; transform:translate(-50%, -210%); font-family:var(--mono); font-size:9.5px;
+    font-weight:600; color:var(--frr-linha); white-space:nowrap;
+    text-shadow:0 0 3px var(--surface), 0 0 3px var(--surface), 0 0 2px var(--surface), 0 0 2px var(--surface)}
+  .frr-pcts span.agora{background:var(--frr-linha); color:var(--surface); padding:3px 6px; border-radius:5px;
+    transform:translate(-50%, -160%); text-shadow:none}
+  .frr-meses{display:grid; gap:4px; margin-top:6px}
+  .frr-meses span{font-family:var(--mono); font-size:9.5px; color:var(--muted-2); text-align:center}
+  .frr-meses span.agora{color:var(--ink); font-weight:600}
+  .frr-prem{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 18px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line)}
+  .frr-prem label{display:flex; flex-direction:column; gap:2px; font-size:11px; color:var(--muted)}
+  .frr-prem .nota{margin:0; flex:1 1 320px; min-width:0; font-size:12.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
+  .frr-leitura{margin:14px 0 0; font-size:13px; color:var(--ink-3); line-height:1.5; text-wrap:pretty}
+
   /* Receita e imposto, mês a mês */
   .mb-grade{display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:8px; align-items:end; height:176px}
   .mb{display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end; min-width:0}
@@ -1052,7 +1121,8 @@ function defaults(){ return {
   // simulação do Lucro Presumido (aba Anual). Dado da empresa como o anexo: passa de um mês para o outro.
   // atividade '' = pela do anexo (ver ATIVIDADES); irpjOutra/csllOutra só valem na atividade "outra";
   // ICMS é a carga sobre a receita, informada; encargos = 20% patronal + RAT + terceiros
-  presumido: {atividade: '', irpjOutra: 0.32, csllOutra: 0.32, iss: 0.05, icms: 0, icmsCompras: 0, encargos: 0.278, encargosProlabore: 0.20},
+  presumido: {atividade: '', irpjOutra: 0.32, csllOutra: 0.32, iss: 0.05, icms: 0, icmsCompras: 0, encargos: 0.278,
+    encargosProlabore: 0.20, fatorEncargos: 0.08},
   annual: {
     receita: 1187289.06,
     custos: [["Custo de medicamentos, produtos e outros",696475.30],["Produtos vencidos",3160.96]],
@@ -1192,6 +1262,8 @@ function num(s){                                // vírgula = decimal; sem vírg
 const zero = v => Math.abs(v) < 0.005 ? 0 : v;
 const dec = (v, min, max) => zero(v).toLocaleString('pt-BR', {minimumFractionDigits:min, maximumFractionDigits:max});
 const brl = v => 'R$ ' + dec(v, 2, 2);
+// rótulo curto para o topo da barra: o gráfico não comporta "R$ 133.000,00" em cima de cada coluna
+const mil = v => Math.abs(v) >= 1e6 ? dec(v / 1e6, 1, 1) + ' mi' : Math.abs(v) >= 1000 ? dec(v / 1000, 0, 0) + ' mil' : dec(v, 0, 0);
 const brlSinal = v => v < -0.004 ? '− ' + brl(-v) : brl(Math.max(0, v));       // negativo de verdade (prejuízo): "− R$ 1.000,00"
 // CBS débito − crédito em duas colunas: "a pagar" e "crédito". Cada valor vai numa só e a outra fica com traço — sem sinal
 // de menos (crédito não é prejuízo), sem palavra no meio do número e sem cor (testados e recusados pelo usuário)
@@ -1814,6 +1886,14 @@ function saidas(){
     `${P(cm.resultado, cm.R).replace('%', '')} sobraram como resultado. ` +
     (cm.cbsPagar > 0.004 ? `A CBS da reforma, paga por fora, seria ${brl(cm.cbsPagar)} neste mês.`
                          : 'Neste mês o crédito de CBS passou o débito: não haveria CBS a pagar.');
+  const fatR = calcFatorR();
+  O['v.fatorLeitura'] = !fatR || fatR.valor == null ? '' : (() => {
+    const pp = Math.abs(fatR.valor - FATOR_R_CORTE) * 100, comEnc = `folha de ${brl(fatR.somaF)} sobre receita de ${brl(fatR.somaR)}`;
+    const falta = fatR.faltam ? ` ${fatR.faltam} ${fatR.faltam === 1 ? 'mês ainda não foi salvo' : 'meses ainda não foram salvos'}, então o número ainda muda quando eles entrarem.` : '';
+    return fatR.valor >= FATOR_R_CORTE
+      ? `${dec(pp, 1, 1)} ponto${pp >= 2 ? 's' : ''} acima do corte: pelo Fator R a tributação é a do Anexo III (${comEnc}).${falta}`
+      : `${dec(pp, 1, 1)} ponto${pp >= 2 ? 's' : ''} abaixo do corte: a tributação é a do Anexo V. Faltam ${brl(fatR.faltaFolha)} de folha nos doze meses para chegar aos 28% (${comEnc}).${falta}`;
+  })();
   O['v.rbt12'] = brl(+m.rbt12 || 0);
   O['v.anexo'] = S.anexo && ANEXOS[S.anexo] ? `${S.anexo} · ${ANEXOS[S.anexo].nome}` : 'não informado';
   O['v.resultadoSub'] = P(cm.resultado, cm.R) + ' da receita' + varTexto(cm.resultado, vAnt ? +vAnt.resultado || 0 : NaN);
@@ -2024,6 +2104,9 @@ const TERMOS = {
     'regimes diferentes: dois valores de imposto sobre a mesma receita.'],
   rbt12: ['Receita dos últimos 12 meses', 'A soma da receita dos doze meses anteriores (RBT12). É ela que define ' +
     'a faixa do Simples e, com a faixa, a alíquota efetiva do mês.'],
+  fatorR: ['Fator R', 'A folha dos últimos doze meses dividida pela receita do mesmo período. Chegando a 28%, a ' +
+    'empresa de serviço é tributada pelo Anexo III, que é mais barato que o Anexo V. Entram salários, pró-labore ' +
+    'e os encargos sobre eles.'],
   credito: ['Crédito de CBS', 'O que a empresa pagou de CBS nas compras e despesas e pode abater do que deve. ' +
     'Sobrando crédito, ele vai para o mês seguinte em vez de virar dinheiro de volta.'],
 };
@@ -2065,7 +2148,17 @@ function conferencias(){
     lista.push({ok: !maus, titulo: 'CNPJ dos cadastros confere',
       detalhe: maus ? `${maus} ${maus === 1 ? 'CNPJ não confere' : 'CNPJs não conferem'} no cadastro de fornecedores ou clientes.`
         : 'Todos os CNPJs cadastrados passam na validação.'});
-  // 5) com banco: o exercício está completo?
+  // 5) Fator R perto do corte: quem vive de serviço muda de anexo por causa dele
+  const fr = calcFatorR();
+  if(fr && fr.valor != null){
+    const perto = fr.valor >= FATOR_R_CORTE && fr.valor - FATOR_R_CORTE < 0.02;
+    lista.push({ok: fr.valor >= FATOR_R_CORTE && !perto, titulo: 'Fator R com folga para o Anexo III',
+      detalhe: fr.valor < FATOR_R_CORTE
+        ? `Fator R de ${FMT.pct(fr.valor)}: abaixo dos 28%, a tributação é a do Anexo V. Faltam ${brl(fr.faltaFolha)} de folha nos doze meses.`
+        : perto ? `Fator R de ${FMT.pct(fr.valor)}: a menos de 2 pontos do corte — um mês de receita alta derruba para o Anexo V.`
+        : `Fator R de ${FMT.pct(fr.valor)}, com folga sobre os 28%.`});
+  }
+  // 6) com banco: o exercício está completo?
   const ano = banco.ano && !banco.ano.carregando && banco.ano.linhas ? banco.ano : null;
   if(ano){
     const falta = mesesFaltando(ano.linhas, ano.ano);
@@ -2160,6 +2253,7 @@ function rMenu(){
     ${banco.ativo ? '' : it('salvar', 'Salvar (compartilhar no link)')}
     ${it('baixar', 'Baixar HTML')}
     ${banco.ativo && banco.empresaId && (banco.meses || []).includes(banco.periodo) ? it('historico', `Histórico de ${mesCurto(banco.periodo)}`) : ''}
+    ${banco.ativo && banco.empresaId ? it('fator-r', 'Acompanhar o Fator R', fatorRLigado() ? 'ligado' : '') : ''}
     ${banco.ativo && banco.sessao ? it('lixeira', 'Lixeira') : ''}
     <div class="sep" role="separator"></div>
     ${banco.ativo ? '' : it('restaurar', 'Restaurar padrão')}
@@ -2475,6 +2569,128 @@ function rMeses(){
       <p class="sub">Barra inteira: a receita do mês. Pedaço de baixo: o que foi para imposto.</p></div></div>
     <div class="mb-grade">${barras}</div></section>`;
 }
+// Fator R: um quadro só com faturamento e folha em barras, a linha dos doze meses por cima e o corte de 28%.
+// Eixo de reais à esquerda, de porcentagem à direita — são unidades diferentes no mesmo desenho, e é assim que
+// o escritório lê o Fator R: a linha caminhando em relação ao limite, com o movimento da folha e da receita atrás.
+// A legenda liga e desliga cada série; desligando as barras sobra a linha, limpa.
+// A linha vai reta de um mês ao outro e só arredonda os vértices, como no modelo do escritório — a curva cheia
+// (Catmull-Rom) foi testada antes e ondulava demais. Cada canto é cortado a uma fração do segmento e refeito
+// com uma quadrática que passa pelo próprio ponto, então nenhum valor é deslocado.
+const curvaSuave = (pts, f = .22) => {
+  const xy = p2 => `${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+  if(!pts.length) return '';
+  if(pts.length < 3) return `M${xy(pts[0])}` + (pts[1] ? `L${xy(pts[1])}` : '');
+  const entre = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  let d = `M${xy(pts[0])}`;
+  for(let i = 1; i < pts.length - 1; i++){
+    const a = pts[i - 1], b = pts[i], c = pts[i + 1];
+    d += `L${xy(entre(b, a, f))}Q${xy(b)} ${xy(entre(b, c, f))}`;
+  }
+  return d + `L${xy(pts[pts.length - 1])}`;
+};
+const escalaReais = max => {                        // topo redondo com quatro divisões (30 mil, 50 mil, 120 mil…)
+  if(!(max > 0)) return 1;
+  const passo = Math.pow(10, Math.floor(Math.log10(max / 4)));
+  for(const m of [1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if(passo * m * 4 >= max) return passo * m * 4;
+  return passo * 40;
+};
+function rFatorR(){
+  const fr = banco.fatorR;
+  if(!banco.ativo || !fr || fr.semFuncao) return '';
+  const jan = ui.frrJanela === 6 ? 6 : 12;
+  const jbt = n => `<button type="button" class="frr-jbt" data-act="frr-janela" data-n="${n}" aria-pressed="${jan === n}">${n} meses</button>`;
+  const cab = `<div class="card-h"><div><h2>Faturamento, folha e Fator R${ajuda('fatorR')}</h2>
+    <p class="sub">Folha dos últimos 12 meses sobre a receita do mesmo período. A partir de 28%, o Anexo III.</p></div>
+    <div class="frr-jan">${jbt(12)}${jbt(6)}</div></div>`;
+  if(fr.carregando) return `<section class="card frr">${cab}<p class="sub">Somando os doze meses…</p></section>`;
+  const c = calcFatorR();
+  if(!c || c.valor == null) return `<section class="card frr">${cab}
+    <div class="vazio"><strong>Ainda não dá para calcular</strong>
+    <p>O Fator R precisa da receita e da folha dos últimos doze meses salvos.</p></div></section>`;
+  const meses = c.meses.slice(-jan), pontos = c.pontos.slice(-jan);
+  const verFat = ui.frrFat !== false, verFolha = ui.frrFolha !== false, verLinha = ui.frrLinha !== false;
+  const barras = verFat || verFolha;
+
+  // --- escala dos reais (esquerda): topo redondo sobre a maior barra visível
+  const topoR = escalaReais(Math.max(...meses.map(m => Math.max(verFat ? m.receita : 0, verFolha ? m.folhaTotal : 0)), 0));
+  // --- escala das porcentagens (direita): quatro passos redondos, sempre com o corte de 28% dentro
+  const vals = pontos.filter(x => x.valor != null).map(x => x.valor);
+  const piso = (Math.min(FATOR_R_CORTE, ...vals) - .02) * 100, teto = (Math.max(FATOR_R_CORTE, ...vals) + .02) * 100;
+  const passoP = [2, 3, 5, 10, 15, 20, 25, 50].find(x => x * 4 >= teto - piso) || 50;
+  const pMin = Math.max(0, Math.floor(piso / passoP) * passoP) / 100, pMax = pMin + passoP * 4 / 100;
+  const yPct = v => (1 - (v - pMin) / (pMax - pMin)) * 100;   // em % da altura do quadro
+
+  const eixoE = [4, 2, 0].map(k => `<span>${k === 4 ? 'R$ ' : ''}${mil(topoR * k / 4)}</span>`).join('');
+  const eixoD = [4, 2, 0].map(k => `<span>${dec((pMin + (pMax - pMin) * k / 4) * 100, 0, 0)}%</span>`).join('');
+
+  const pico = f => meses.reduce((a, m, k) => f(m) > f(meses[a]) ? k : a, 0);
+  const iFat = pico(m => m.receita), iFolha = pico(m => m.folhaTotal), todosRot = jan <= 6;
+  const barra = (cls, v, most, ult, dono) => {
+    if(!most) return '';
+    const alt = v > 0.004 ? Math.max(1, v / topoR * 100) : 0;
+    const rot = v > 0.004 && (todosRot || ult || dono) ? `<span class="frr-rot">${mil(v)}</span>` : '';
+    return `<span class="frr-b ${cls}" style="height:${alt.toFixed(1)}%">${rot}</span>`;
+  };
+  const cols = meses.map((m, k) => {
+    const ult = k === meses.length - 1;   // o mês aberto: a coluna recebe o mesmo realce das linhas da DRE
+    const dica = `${mesCurto(m.periodo)}` + (m.salvo
+      ? `
+Faturamento ${brl(m.receita)}
+Folha considerada ${brl(m.folhaTotal)}` +
+        `
+  salários ${brl(m.folha)} + pró-labore ${brl(m.prolabore)} + ${FMT.pct(c.enc - 1)} de encargos`
+      : ' · sem competência salva');
+    const dentro = !m.salvo ? '<span class="frr-vazio"></span>'
+      : barras ? barra('fat', m.receita, verFat, ult, k === iFat)
+        // com doze meses o número da folha esbarra no selo do Fator R: fica só no hover e na vista de seis
+        + barra('folha', m.folhaTotal, verFolha, ult && (todosRot || !verFat), k === iFolha && (todosRot || !verFat)) : '';
+    return `<div class="frr-col${ult ? ' agora' : ''}" title="${dica}">${dentro}</div>`;
+  }).join('');
+
+  // --- a linha e os pontos, desenhados por cima das barras no mesmo quadro
+  let svg = '', rotPct = '';
+  if(verLinha){
+    const validos = pontos.map((x, k) => ({periodo: x.periodo, valor: x.valor, i: k})).filter(x => x.valor != null);
+    const x = k => (k + .5) * 100 / jan;
+    const d = curvaSuave(validos.map(v => [x(v.i), yPct(v.valor)]));
+    // o ponto é um traço de comprimento zero com ponta redonda: continua redondo mesmo com o viewBox esticado
+    const ponto = (v, cls) => `<path class="${cls}" d="M${x(v.i).toFixed(2)} ${yPct(v.valor).toFixed(2)}` +
+      `L${x(v.i).toFixed(2)} ${yPct(v.valor).toFixed(2)}">` +
+      (cls.startsWith('frr-pt') ? `<title>${mesCurto(v.periodo)}: ${FMT.pct(v.valor)}</title>` : '') + `</path>`;
+    const marcas = validos.map(v => ponto(v, 'frr-pt-halo' + (v.i === jan - 1 ? ' agora' : ''))).join('') +
+      validos.map(v => ponto(v, 'frr-pt' + (v.i === jan - 1 ? ' agora' : ''))).join('');
+    svg = `<svg class="frr-sobre" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <line class="corte" x1="0" x2="100" y1="${yPct(FATOR_R_CORTE).toFixed(2)}" y2="${yPct(FATOR_R_CORTE).toFixed(2)}"></line>
+      <path class="frr-halo" d="${d}"></path><path class="frr-linha" d="${d}"></path>${marcas}</svg>`;
+    rotPct = `<div class="frr-pcts">${validos.map(v =>
+      `<span class="${v.i === jan - 1 ? 'agora' : ''}" style="left:${x(v.i).toFixed(2)}%; top:${yPct(v.valor).toFixed(2)}%">${FMT.pct(v.valor)}</span>`).join('')}</div>`;
+  }
+
+  const leg = (k, ligado, rotulo) => `<button type="button" class="frr-leg-b${ligado ? '' : ' fora'}"` +
+    ` data-act="frr-serie" data-k="${k}" aria-pressed="${ligado}"><span class="frr-m ${k}"></span><span>${rotulo}</span></button>`;
+  const legenda = `<div class="frr-leg">
+    ${leg('fat', verFat, 'Faturamento')}
+    ${leg('folha', verFolha, `Folha considerada <span class="frr-leg-sub">salários + pró-labore + ${FMT.pct(c.enc - 1)}</span>`)}
+    ${leg('linha', verLinha, 'Fator R (12 meses)')}
+    <span class="frr-leg-fixo"><span class="frr-m limite"></span>Limite 28%</span></div>`;
+  const rotulos = meses.map((m, k) => `<span${k === jan - 1 ? ' class="agora"' : ''}>${mesCurto(m.periodo).slice(0, 3)}</span>`).join('');
+  return `<section class="card frr">${cab}${legenda}
+    <div class="frr-quadro">
+      <div class="frr-eixo">${barras ? eixoE : ''}</div>
+      <div class="frr-plot">
+        <div class="frr-grade"><i></i><i></i><i></i></div>
+        <div class="frr-barras" style="grid-template-columns:repeat(${jan}, minmax(0,1fr))">${cols}</div>
+        ${svg}${rotPct}
+      </div>
+      <div class="frr-eixo dir">${verLinha ? eixoD : ''}</div>
+      <div></div>
+      <div class="frr-meses" style="grid-template-columns:repeat(${jan}, minmax(0,1fr))">${rotulos}</div>
+      <div></div>
+    </div>
+    <div class="frr-prem"><label><span>Encargos sobre a folha</span>${inp('presumido.fatorEncargos', 'pct', 'Encargos sobre a folha no Fator R', 'main')}</label>
+      <p class="nota">Entram salários, pró-labore e os encargos sobre eles. O padrão é 8% (o FGTS): ajuste para o que o escritório considera folha.</p></div>
+    <p class="frr-leitura" data-o="v.fatorLeitura"></p></section>`;
+}
 // Visão geral (v2): o mês em três números, quem sai mais barato e a faixa do Simples
 function rVisao(){
   const ind = (rot, k, sub, cls, termo) => `<article class="ind ${cls || ''}"><span class="cap">${rot}${termo ? ajuda(termo) : ''}</span>` +
@@ -2485,6 +2701,7 @@ function rVisao(){
       ${ind('Resultado líquido', 'm.resultado', 'v.resultadoSub')}
     </section>
     ${rMeses()}
+    ${rFatorR()}
     <section class="card faixa-sn" aria-label="Faixa do Simples">
       <div class="faixa-sn-in">
         <div><span class="cap">Receita dos últimos 12 meses${ajuda('rbt12')}</span><span class="fsn-v" data-o="v.rbt12"></span></div>
@@ -2967,7 +3184,10 @@ function toast(msg){
 const focar = sel => { const el = app.querySelector(sel); if(el) el.focus(); };
 function irPara(tab, foco){ ui.tab = tab; ui.menu = false; ui.armado = false; render(); if(foco) focar('#tab-' + tab); }
 // a Visão geral e a Anual vivem dos meses salvos: depois de trocar de mês ou de empresa, o ano é buscado de novo
-function garantirAnoDaTela(){ if(ui.tab === 'visao' || ui.tab === 'anual') garantirAno(); }
+function garantirAnoDaTela(){
+  if(ui.tab === 'visao' || ui.tab === 'anual') garantirAno();
+  garantirFatorR();                                 // o selo mostra o Fator R em qualquer aba; ele é dos doze meses móveis, não do ano
+}
 
 function zerarValores(base, manter){
   // zera valores; mantém categorias, % base, alíquotas, premissas, identidade visual e rótulos.
@@ -3201,11 +3421,47 @@ async function aposEntrar(){
     banco.msgLogin = 'Seu usuário entrou, mas ainda não faz parte da equipe do painel. Peça para incluí-lo (supabase/scripts/adicionar_membro.sql).';
     return;
   }
-  banco.empresas = await sb('empresas?select=id,nome,cnpj&order=nome.asc');
+  banco.empresas = await listarEmpresas();
   const ultimo = guarda.ler('dre.ultimo') || {};
   const alvo = banco.empresas.find(e => e.id === ultimo.empresaId) || banco.empresas[0];
   if(!alvo){ banco.carregando = false; render(); return novaEmpresa(); }
   await abrirEmpresa(alvo.id, alvo.id === ultimo.empresaId ? ultimo.periodo : null);
+}
+// A coluna fator_r veio depois (migração 20260923). Sem ela o painel não quebra: a marca passa a valer só
+// no navegador de quem ligou, e o aviso aparece na hora de ligar.
+async function listarEmpresas(){
+  try{
+    return await sb('empresas?select=id,nome,cnpj,fator_r&order=nome.asc');
+  }catch(e){
+    if(e.status !== 400 && e.status !== 404) throw e;
+    banco.semColunaFatorR = true;
+    return await sb('empresas?select=id,nome,cnpj&order=nome.asc');
+  }
+}
+// marca do Fator R: no banco quando a coluna existe; senão, no navegador
+const CHAVE_FATOR_R = 'dre.fatorR';
+function fatorRLigado(id){
+  const emp = (banco.empresas || []).find(e => e.id === (id || banco.empresaId));
+  if(!emp) return false;
+  if(!banco.semColunaFatorR && emp.fator_r !== undefined) return !!emp.fator_r;
+  return !!(guarda.ler(CHAVE_FATOR_R) || {})[emp.id];
+}
+async function alternarFatorR(){
+  const emp = (banco.empresas || []).find(e => e.id === banco.empresaId);
+  if(!emp) return;
+  const ligar = !fatorRLigado();
+  if(banco.semColunaFatorR || emp.fator_r === undefined){
+    const marcas = guarda.ler(CHAVE_FATOR_R) || {};
+    marcas[emp.id] = ligar; guarda.gravar(CHAVE_FATOR_R, marcas);
+    toast(ligar ? 'Fator R ligado neste navegador — rode a migração 20260923 para valer para a equipe'
+                : 'Fator R desligado neste navegador');
+  }else{
+    await sb(`empresas?id=eq.${emp.id}`, {metodo: 'PATCH', corpo: {fator_r: ligar}});
+    emp.fator_r = ligar;
+    toast(ligar ? `Fator R ligado para ${emp.nome}` : `Fator R desligado para ${emp.nome}`);
+  }
+  if(ligar) garantirFatorR(true); else banco.fatorR = null;
+  render();
 }
 async function listarMeses(empresaId){
   banco.meses = (await sb(`competencias?select=periodo&empresa_id=eq.${empresaId}&order=periodo.desc`)).map(m => m.periodo);
@@ -3281,6 +3537,91 @@ async function carregarAno(ano){
   banco.ano = {ano, linhas: lista, carregando: false};
   render();
   garantirPresumido();
+}
+
+/* ---------- Fator R: 12 meses móveis de folha e receita ---------- */
+// O corte é 28%: chegando lá, a empresa de serviço do Anexo V passa a ser tributada pelo III, bem mais barato.
+// A conta é da LC 123 (art. 18, §24): folha de salários dos 12 meses (com pró-labore e encargos) ÷ receita dos
+// 12 meses. Os encargos entram por um percentual à parte (padrão 8%, o FGTS), editável: o que vale é o que o
+// escritório considera folha — o painel mostra a conta aberta em vez de decidir sozinho.
+const FATOR_R_CORTE = 0.28;
+const janelaMeses = (ate, n) => {                   // os n períodos que terminam em 'ate' (aaaa-mm-01)
+  const [a, m] = ate.split('-').map(Number), fim = new Date(Date.UTC(a, m - 1, 1)), lista = [];
+  for(let i = n - 1; i >= 0; i--){
+    const d = new Date(Date.UTC(fim.getUTCFullYear(), fim.getUTCMonth() - i, 1));
+    lista.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-01`);
+  }
+  return lista;
+};
+const doze = ate => janelaMeses(ate, 12);
+// o gráfico mostra doze pontos e cada ponto é uma janela de doze meses: são 23 meses de dados ao todo
+const FATOR_R_MESES = 23;
+function garantirFatorR(recarregar){
+  if(!banco.ativo || !banco.empresaId || !banco.periodo) return;
+  if(!fatorRLigado()) { banco.fatorR = null; return; }   // só para as empresas marcadas em Opções
+  const ate = banco.periodo;
+  if(!recarregar && banco.fatorR && banco.fatorR.ate === ate && banco.fatorR.empresa === banco.empresaId) return;
+  banco.fatorR = {ate, empresa: banco.empresaId, carregando: true, meses: []};
+  comErro(() => carregarFatorR(ate));
+}
+async function carregarFatorR(ate){
+  const periodos = janelaMeses(ate, FATOR_R_MESES), alvo = banco.fatorR;
+  let resumos = [];
+  try{
+    resumos = await sb('rpc/resumos', {metodo: 'POST', corpo: {p_empresa_id: banco.empresaId,
+      p_de: periodos[0], p_ate: periodos[periodos.length - 1]}}) || [];
+  }catch(e){
+    if(e.status !== 404 && e.status !== 400) throw e;
+    if(banco.fatorR === alvo){ banco.fatorR = {ate, empresa: banco.empresaId, semFuncao: true, meses: []}; render(); }
+    return;
+  }
+  const folhas = await sb(`competencias?select=periodo,ga:dados->monthly->ga&empresa_id=eq.${banco.empresaId}` +
+    `&periodo=in.(${periodos.join(',')})`) || [];
+  const porPeriodo = {};
+  folhas.forEach(c => {
+    const f = porPeriodo[c.periodo] = {folha: 0, prolabore: 0};
+    (Array.isArray(c.ga) ? c.ga : []).forEach(r => {
+      const cat = categoriaFolha(String(r[0] || '').trim());
+      if(cat) f[cat] += +r[1] || 0;
+    });
+  });
+  // a função só devolve mês salvo, e a receita já vem do resumo ou do próprio estado — mês antigo, sem
+  // resumo gravado, também conta
+  const salvos = {};
+  resumos.forEach(x => { salvos[x.periodo] = +x.receita || 0; });
+  const meses = periodos.map(per => {
+    const f = porPeriodo[per];
+    return {periodo: per, salvo: salvos[per] !== undefined, receita: salvos[per] || 0,
+      folha: f ? f.folha : 0, prolabore: f ? f.prolabore : 0};
+  });
+  if(banco.fatorR !== alvo) return;                 // trocou de mês ou de empresa enquanto buscava
+  banco.fatorR = {ate, empresa: banco.empresaId, carregando: false, meses};
+  render();
+}
+// a conta: o valor de hoje é dos doze meses que terminam na competência aberta; cada ponto do gráfico é o
+// Fator R da janela de doze meses que termina naquele mês — por isso os 23 meses buscados
+function calcFatorR(){
+  const fr = banco.fatorR;
+  if(!fr || fr.carregando || fr.semFuncao || !fr.meses.length) return null;
+  const enc = 1 + (S.presumido && S.presumido.fatorEncargos != null ? +S.presumido.fatorEncargos || 0 : 0.08);
+  const todos = fr.meses.map(m => Object.assign({}, m, {folhaTotal: (m.folha + m.prolabore) * enc}));
+  const meses = todos.slice(-12);                   // os doze que terminam na competência aberta
+  const somaR = meses.reduce((a, x) => a + x.receita, 0);
+  const somaF = meses.reduce((a, x) => a + x.folhaTotal, 0);
+  const faltam = meses.filter(x => !x.salvo).length;
+  const valor = somaR > 0.004 ? somaF / somaR : null;
+  // um ponto por mês do último ano: a janela de doze que termina nele. Abaixo de três meses salvos na janela
+  // a conta diz pouco e o ponto fica de fora — a linha começa onde o histórico começa.
+  const pontos = meses.map((m, i) => {
+    const fim = todos.length - 12 + i;              // índice do mês em 'todos'; a janela são os doze até ele
+    const jan = todos.slice(fim - 11, fim + 1);
+    const salvos = jan.filter(x => x.salvo).length;
+    const r = jan.reduce((a, x) => a + x.receita, 0), f = jan.reduce((a, x) => a + x.folhaTotal, 0);
+    return {periodo: m.periodo, valor: r > 0.004 && salvos >= 3 ? f / r : null, salvo: m.salvo};
+  });
+  const alvo = somaR * FATOR_R_CORTE;               // quanto de folha (com encargos) faria chegar aos 28%
+  return {valor, pontos, meses, somaR, somaF, faltam, enc,
+    faltaFolha: valor != null && valor < FATOR_R_CORTE ? (alvo - somaF) / enc : 0};
 }
 
 /* ---------- Lucro Presumido: estimativa pelos meses salvos ---------- */
@@ -3524,7 +3865,7 @@ async function abrirMes(empresaId, periodo, op){
   const cadeia = {fornecedores: [], clientes: []};
   (r.parceiros || []).forEach(p => cadeia[p[0] === 'cliente' ? 'clientes' : 'fornecedores'].push([p[1] || '', p[2] || '', p[3] || '', p[4] || '']));
   const novo = !r.competencia;
-  banco.heranca = null; banco.ano = null;          // o quadro do ano é refeito ao entrar na Visão geral ou na Anual
+  banco.heranca = null; banco.ano = null; banco.fatorR = null;   // refeitos ao entrar na Visão geral ou na Anual
   // o último mês salvo antes deste (pode não ser o mês de calendário anterior: a tela diz qual é).
   // Salvo antes da migração do resumo, vem com os dados e é recalculado aqui
   const ant = r.anterior;
@@ -3711,7 +4052,7 @@ async function salvarBanco(forcar){
     if(renomeou){ emp.nome = nome; banco.empresas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')); }
     if(mesNovo || renomeou){ const foco = document.activeElement && document.activeElement.id; render(); if(foco) focar('#' + foco); }
     else atualizarBarra();
-    banco.ano = null; garantirAnoDaTela();          // o mês salvo muda o ano: o gráfico e o selo pedem os números de novo
+    banco.fatorR = null; banco.ano = null; garantirAnoDaTela();          // o mês salvo muda o ano: o gráfico e o selo pedem os números de novo
     toast('Salvo no banco de dados');
   }catch(e){
     banco.salvando = false;
@@ -3918,6 +4259,7 @@ app.addEventListener('click', e => {
   switch(b.dataset.act){
     case 'tab': irPara(b.dataset.id);
       if(b.dataset.id === 'anual' || b.dataset.id === 'visao') garantirAno();   // o gráfico do ano e o selo vivem dos meses salvos
+      garantirFatorR();
       break;
     // da barra compacta a aba nova começa do topo, e não no meio de onde a outra estava
     // rolagem suave é JavaScript: a regra de movimento reduzido do CSS não chega aqui, então pergunta de novo
@@ -3929,6 +4271,14 @@ app.addEventListener('click', e => {
     case 'lp-icms': ui.icmsLP = !ui.icmsLP; render(); focar('[data-act="lp-icms"]'); break;
     case 'lp-ver': ui.lpMenu = !ui.lpMenu; render(); focar('[data-act="lp-ver"]'); break;
     case 'termo': ui.termo = b.dataset.k || null; render(); break;
+    // legenda do Fator R: cada série liga e desliga; a última acesa não apaga (gráfico vazio não diz nada)
+    case 'frr-serie': {
+      const ch = {fat: 'frrFat', folha: 'frrFolha', linha: 'frrLinha'}[b.dataset.k];
+      const acesas = ['frrFat', 'frrFolha', 'frrLinha'].filter(x => ui[x] !== false);
+      if(!(acesas.length === 1 && acesas[0] === ch)) ui[ch] = ui[ch] === false;
+      render(); focar(`[data-act="frr-serie"][data-k="${b.dataset.k}"]`); break;
+    }
+    case 'frr-janela': ui.frrJanela = +b.dataset.n; render(); focar(`[data-act="frr-janela"][data-n="${b.dataset.n}"]`); break;
     case 'selo': ui.selo = !ui.selo; render(); focar('[data-act="selo"]'); break;
     case 'lat-fina': ui.latFina = !ui.latFina; render(); focar('[data-act="lat-fina"]'); break;
     case 'lat-abrir': ui.latAberta = true; render(); break;
@@ -3989,6 +4339,7 @@ app.addEventListener('click', e => {
     case 'sair': ui.menu = false; sair(); break;
     case 'senha': ui.menu = false; render(); comErro(alterarSenha); break;
     case 'excluir-mes': ui.menu = false; render(); comErro(excluirMes); break;
+    case 'fator-r': ui.menu = false; render(); comErro(alternarFatorR); break;
     case 'lixeira': ui.menu = false; render(); comErro(abrirLixeira); break;
     case 'historico': ui.menu = false; render(); comErro(abrirHistorico); break;
     // "Restaurar padrão" carrega o exemplo da farmácia: com banco, um salvamento depois gravaria o exemplo na empresa
@@ -4172,7 +4523,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, lpCenario: 'ambos', lpResumo: false, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, frrJanela: 12, frrFat: true, frrFolha: true, frrLinha: true, lpCenario: 'ambos', lpResumo: false, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();

@@ -20,3 +20,7 @@ public/
 # pastas locais da CLI do Supabase
 supabase/.temp/
 supabase/.branches/
+
+# material recebido do escritório com dados de cliente (nome e CNPJ reais): repositório é público
+design_handoff_painel_dre_v2/
+*.zip
