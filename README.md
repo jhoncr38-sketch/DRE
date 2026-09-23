@@ -179,8 +179,9 @@ cálculo mudou). O que entrou:
   (o mesmo que o item do menu: recolhe a maquinaria ao entrar e devolve ao sair), seletor de competência,
   Tela cheia (só apresentando) e Salvar. A barra compacta que descia ao rolar saiu — o cabeçalho já é fixo.
 - **Cinco seções** no lugar de três: a **Visão geral** é nova; o quadro Tradicional × Híbrido ganhou seção
-  própria (**Comparar regimes**); a DRE, o estoque e a memória ficaram no **Resultado**. Os ids `#tab-<id>`
-  continuam os mesmos.
+  própria (**Comparar regimes**); a DRE, o estoque e a memória ficaram no **Lançamento** (a seção se chamava
+  "Resultado" até 23/09/2026 — o nome novo diz o que se faz nela). Os ids `#tab-<id>` continuam os mesmos, e o
+  `resultado` do código também.
 - **Visão geral**: três indicadores do mês (imposto, CBS a pagar, resultado líquido, com a variação contra o
   mês anterior), o gráfico **receita e imposto mês a mês** (`rMeses`: barra = receita do mês, pedaço de baixo =
   imposto; mês sem competência salva vira faixa hachurada) e a faixa do Simples (RBT12, faixa, anexo). Ela vive
@@ -919,7 +920,9 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
       no ano", "Carga do simples tradicional"), para nunca comparar contra um número que não está na tela.
     - **Completo × Resumo** (`ui.lpResumo`): o resumo esconde as linhas de apoio (bases do IRPJ e da CSLL, o
       acréscimo da LC 224 e as duas cargas) e deixa receita, impostos, total e comparação — é o que serve na
-      apresentação ao cliente.
+      apresentação ao cliente. **Abrir o quadro sempre volta para Trimestre + Resumo** (23/09/2026): é o corte
+      que o escritório usa para decidir, e reabrir depois de ter espiado o completo não devia manter o detalhe
+      de conferência ligado.
     - **Os controles cabem em um botão** (`ui.lpMenu`): a linha de sete botões tomava a largura da tabela e foi
       recusada na tela. No lugar, um controle que mostra o estado ("Mês · Os dois cenários · Completo ▾") e abre um
       menu com as três escolhas, no mesmo componente do menu Opções. A outra forma testada — três seletores curtos

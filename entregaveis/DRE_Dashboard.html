@@ -2073,7 +2073,7 @@ const editavel = () => ui.editando && !ui.present;
 const semTags = s => String(s).replace(/<[^>]+>/g, '');
 
 function rTopo(){
-  const abas = [['resultado', 'Resultado'],
+  const abas = [['resultado', 'Lançamento'],
     ['cliente', 'Resumo<span class="tl-long"> do cliente</span>'], ['anual', 'Anual']];
   const botoes = abas.map(([id, lbl]) => (id === 'anual' ? '<span class="rail-sep" aria-hidden="true"></span>' : '') +
     `<button class="tab" role="tab" id="tab-${id}" aria-selected="${ui.tab === id}" aria-controls="painel"` +
@@ -2188,7 +2188,7 @@ function rSelo(){
 // Barra lateral (handoff v2): marca do escritório, empresa aberta, navegação em dois grupos e o rodapé com o
 // estado do salvamento. Recolhida (body.lat-fina) fica só a coluna de pontos, com o nome no title
 function rLateral(){
-  const secoes = [['visao', 'Visão geral'], ['resultado', 'Resultado'], ['regimes', 'Comparar regimes'], ['cliente', 'Resumo do cliente']];
+  const secoes = [['visao', 'Visão geral'], ['resultado', 'Lançamento'], ['regimes', 'Comparar regimes'], ['cliente', 'Resumo do cliente']];
   // o id de cada seção continua sendo tab-<id>: é por ele que o teclado, os testes e o link do cliente chegam aqui
   const item = ([id, rot]) => `<button class="lat-item" type="button" id="tab-${id}" data-act="tab" data-id="${id}" title="${rot}"` +
     `${ui.tab === id ? ' aria-current="page"' : ''}><span class="lat-ponto"></span><span>${rot}</span></button>`;
@@ -2834,7 +2834,7 @@ function rAnoMeses(){
     <div class="ano-acoes">${atualizar}</div></section>`;
   if(!a.linhas.length) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
     <div class="vazio"><strong>Nenhuma competência salva em ${a.ano}</strong>
-    <p>Salve um mês na aba Resultado e ele passa a somar aqui.</p></div>
+    <p>Salve um mês na aba Lançamento e ele passa a somar aqui.</p></div>
     <div class="ano-acoes">${atualizar}</div></section>`;
   return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
     <div class="scroll-x">
@@ -3058,7 +3058,7 @@ function animarNovos(antes){
 // barra compacta: desce quando a barra de seleção sai da tela. Nome e competência vêm dos mesmos data-o do
 // cabeçalho; o status é uma cópia sem aria-live, senão o leitor de tela anunciaria cada salvamento duas vezes
 function rFixo(){
-  const abas = [['resultado', 'Resultado'], ['cliente', 'Resumo<span class="tl-long"> do cliente</span>'], ['anual', 'Anual']]
+  const abas = [['resultado', 'Lançamento'], ['cliente', 'Resumo<span class="tl-long"> do cliente</span>'], ['anual', 'Anual']]
     .map(([id, lbl]) => `<button class="tabf" type="button" data-act="tab-fixo" data-id="${id}"${ui.tab === id ? ' aria-current="page"' : ''}>${lbl}</button>`).join('');
   const salvar = banco.ativo && banco.sessao
     ? `<span class="fixo-acao"><span class="bstatus fixo-status" aria-hidden="true"></span>` +
@@ -4269,7 +4269,9 @@ app.addEventListener('click', e => {
     // rolagem suave é JavaScript: a regra de movimento reduzido do CSS não chega aqui, então pergunta de novo
     case 'topo': scrollTo({top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); break;
     case 'ano-atualizar': garantirAno(true); break;
-    case 'presumido': ui.presumido = !ui.presumido; render(); focar('[data-act="presumido"]'); break;
+    case 'presumido': ui.presumido = !ui.presumido;
+      if(ui.presumido){ ui.lpMes = false; ui.lpResumo = true; }    // abre sempre por trimestre e no resumo
+      render(); focar('[data-act="presumido"]'); break;
     case 'lp-inss': ui.inssBase = !ui.inssBase; render(); focar('[data-act="lp-inss"]'); break;
     case 'lp-cbs': ui.cbsLP = !ui.cbsLP; render(); focar('[data-act="lp-cbs"]'); break;
     case 'lp-icms': ui.icmsLP = !ui.icmsLP; render(); focar('[data-act="lp-icms"]'); break;
@@ -4434,7 +4436,7 @@ app.addEventListener('submit', async e => {
 // Imprimir / PDF: pergunta quanto sai no papel e abre (ou fecha) as seções só durante a impressão — a tela volta
 // como estava. Ctrl+P imprime a tela do jeito que está, com a mesma folha e o mesmo rodapé
 const IMPRESSAO = {
-  resultado: ['Resultado', 'DRE, Simples, estoque, CBS e o quadro dos dois regimes, sem abrir as linhas.',
+  resultado: ['Lançamento', 'DRE, Simples, estoque, CBS e o quadro dos dois regimes, sem abrir as linhas.',
     'Com as linhas de receita e despesas, as compras, a posição de estoque e a memória de cálculo da CBS.'],
   anual: ['Anual', 'O ano somado pelos meses salvos e os cartões do Lucro Presumido.',
     'Com a apuração do Lucro Presumido por trimestre, em resumo.',
@@ -4527,7 +4529,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, frrJanela: 12, frrFat: true, frrFolha: true, frrLinha: true, lpCenario: 'ambos', lpResumo: false, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', cadastro: {cadeia: false, produtos: false}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, frrJanela: 12, frrFat: true, frrFolha: true, frrLinha: true, lpCenario: 'ambos', lpResumo: true, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
