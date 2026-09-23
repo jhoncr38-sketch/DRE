@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>DRE · Evolução mensal e Fator R</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F1EC;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1C1B19}
+a{color:#2F6B4F}a:hover{color:#1F4A36}
+button:focus-visible,input:focus-visible{outline:2px solid #2F6B4F;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1340px; box-sizing: border-box; padding: 40px; display: flex; flex-direction: column; gap: 24px; background: #F3F1EC; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #1C1B19;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B665E;">Empresa Exemplo · DRE jun/2026</div>
+      <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -0.01em;">Evolução dos últimos meses</h1>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 13px; color: #6B665E;">Período</span>
+      <div style="display: flex; padding: 4px; background: #E8E4DC; border-radius: 10px; gap: 4px;">
+        <button onClick="{{set6}}" aria-pressed="{{is6}}" style="height: 36px; padding: 0 16px; border: 0; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; cursor: pointer; background: {{btn6Bg}}; color: #1C1B19; box-shadow: {{btn6Shadow}};">6 meses</button>
+        <button onClick="{{set12}}" aria-pressed="{{is12}}" style="height: 36px; padding: 0 16px; border: 0; border-radius: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; cursor: pointer; background: {{btn12Bg}}; color: #1C1B19; box-shadow: {{btn12Shadow}};">12 meses</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD 1: Receita e imposto -->
+  <div style="background: #FFFFFF; border: 1px solid #E4E0D8; border-radius: 16px; padding: 28px; display: flex; gap: 32px;">
+    <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Receita e imposto, mês a mês</h2>
+          <p style="margin: 0; font-size: 13px; color: #6B665E;">Clique num mês para ver o detalhe ao lado.</p>
+        </div>
+        <div style="display: flex; gap: 16px; font-size: 12px; color: #4A463F; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #3E8E6A;"></span>Fica com a empresa</div>
+          <div style="display: flex; align-items: center; gap: 6px;"><span style="width: 10px; height: 10px; border-radius: 2px; background: #B5452F;"></span>Imposto (Simples)</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <div style="width: 52px; height: 250px; position: relative; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6B665E;">
+          <sc-for list="{{ticksA}}" as="t" hint-placeholder-count="5">
+            <div style="position: absolute; right: 0; bottom: {{t.bottom}}px; transform: translateY(50%);">{{t.label}}</div>
+          </sc-for>
+        </div>
+        <div style="flex-grow: 1; min-width: 0; height: 250px; position: relative;">
+          <sc-for list="{{ticksA}}" as="t" hint-placeholder-count="5">
+            <div style="position: absolute; left: 0; right: 0; bottom: {{t.bottom}}px; border-top: {{t.line}};"></div>
+          </sc-for>
+          <div style="position: absolute; inset: 0; display: flex; gap: 8px;">
+            <sc-for list="{{bars}}" as="b" hint-placeholder-count="12">
+              <button onClick="{{b.pick}}" aria-label="{{b.aria}}" aria-pressed="{{b.selected}}" style="flex: 1 1 0; min-width: 0; height: 100%; padding: 0; border: 0; border-radius: 8px 8px 0 0; background: {{b.colBg}}; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px;">
+                <sc-if value="{{b.has}}" hint-placeholder-val="{{true}}">
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 1px; font-family: 'IBM Plex Mono', monospace;">
+                    <span style="font-size: 12px; font-weight: 600; color: {{b.valColor}};">{{b.value}}</span>
+                    <span style="font-size: 10px; color: #8A4535;">{{b.pct}} imp.</span>
+                  </div>
+                  <div style="width: 64%; max-width: 48px; display: flex; flex-direction: column;">
+                    <div style="height: {{b.sobraH}}px; background: {{b.sobraColor}}; border-radius: 4px 4px 0 0;"></div>
+                    <div style="height: {{b.impH}}px; background: {{b.impColor}};"></div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{b.empty}}" hint-placeholder-val="{{false}}">
+                  <div style="width: 64%; max-width: 48px; height: 18px; border: 1px dashed #C9C3B8; border-bottom: 0; border-radius: 4px 4px 0 0;"></div>
+                </sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; margin-top: -12px;">
+        <div style="width: 52px;"></div>
+        <div style="flex-grow: 1; display: flex; gap: 8px; border-top: 1px solid #1C1B19; padding-top: 8px;">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="12">
+            <div style="flex: 1 1 0; min-width: 0; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: {{b.labelColor}}; font-weight: {{b.labelWeight}};">{{b.label}}<div style="font-size: 10px; color: #8C877E; font-weight: 400;">{{b.year}}</div></div>
+          </sc-for>
+        </div>
+      </div>
+      <sc-if value="{{is12}}" hint-placeholder-val="{{true}}">
+        <p style="margin: 0; font-size: 12px; color: #6B665E; display: flex; align-items: center; gap: 8px;"><span style="width: 14px; height: 10px; border: 1px dashed #A8A195; border-bottom: 0; display: inline-block;"></span>jul–dez/2025 sem lançamento: contam como zero na receita dos 12 meses.</p>
+      </sc-if>
+    </div>
+
+    <div style="width: 300px; flex-shrink: 0; border-left: 1px solid #ECE8E0; padding-left: 28px; display: flex; flex-direction: column; gap: 18px;">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B665E;">Mês selecionado</div>
+        <div style="font-size: 22px; font-weight: 600;">{{det.title}}</div>
+      </div>
+      <sc-if value="{{det.has}}" hint-placeholder-val="{{true}}">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <div style="font-size: 13px; color: #6B665E;">Receita</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 600;">{{det.rec}}</div>
+          <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: {{det.deltaColor}};">{{det.delta}}</div>
+        </div>
+        <div style="display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #ECE8E0;">
+          <div style="width: {{det.sobraPct}}%; background: #3E8E6A;"></div>
+          <div style="width: {{det.impPct}}%; background: #B5452F;"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+          <div style="display: flex; justify-content: space-between;"><span style="color: #4A463F;">Imposto</span><span style="font-family: 'IBM Plex Mono', monospace; color: #A63D28; font-weight: 600;">{{det.imp}} · {{det.aliq}}</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #4A463F;">Fica com a empresa</span><span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600;">{{det.sobra}}</span></div>
+          <div style="height: 1px; background: #ECE8E0;"></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #4A463F;">Folha considerada</span><span style="font-family: 'IBM Plex Mono', monospace;">{{det.folha}}</span></div>
+          <div style="display: flex; justify-content: space-between;"><span style="color: #4A463F;">Fator R (12 meses)</span><span style="font-family: 'IBM Plex Mono', monospace;">{{det.fr}}</span></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{det.empty}}" hint-placeholder-val="{{false}}">
+        <p style="margin: 0; font-size: 14px; color: #6B665E; line-height: 1.5;">Nenhum lançamento salvo neste mês. Ele entra como R$ 0,00 na receita e na folha dos 12 meses.</p>
+      </sc-if>
+    </div>
+  </div>
+
+  <!-- CARD 2: Fator R -->
+  <div style="background: #FFFFFF; border: 1px solid #E4E0D8; border-radius: 16px; padding: 28px; display: flex; gap: 32px;">
+    <div style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 600;">Fator R</h2>
+          <p style="margin: 0; font-size: 13px; color: #6B665E;">Folha dos últimos 12 meses ÷ receita do mesmo período. De 28% para cima, a tributação cai para o Anexo III.</p>
+        </div>
+        <div style="display: flex; gap: 16px; font-size: 12px; color: #4A463F; align-items: center; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 6px;"><span style="width: 16px; height: 2px; background: #1C1B19;"></span>Fator R</div>
+          <div style="display: flex; align-items: center; gap: 6px;"><span style="width: 16px; border-top: 2px dashed #B5452F;"></span>Corte 28%</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <div style="width: 52px; height: 200px; position: relative; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6B665E;">
+          <sc-for list="{{ticksR}}" as="t" hint-placeholder-count="4">
+            <div style="position: absolute; right: 0; top: {{t.top}}px; transform: translateY(-50%);">{{t.label}}</div>
+          </sc-for>
+        </div>
+        <div style="flex-grow: 1; min-width: 0; height: 200px; position: relative;">
+          <div style="position: absolute; left: 0; right: 0; top: 0; height: {{zoneH}}px; background: #EEF6F1;"></div>
+          <div style="position: absolute; right: 8px; top: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #2F6B4F;">Anexo III</div>
+          <div style="position: absolute; right: 8px; top: {{anexoVTop}}px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8A4535;">Anexo V</div>
+          <sc-for list="{{ticksR}}" as="t" hint-placeholder-count="4">
+            <div style="position: absolute; left: 0; right: 0; top: {{t.top}}px; border-top: 1px solid #F0EDE7;"></div>
+          </sc-for>
+          <div style="position: absolute; left: 0; right: 0; top: {{zoneH}}px; border-top: 2px dashed #B5452F;"></div>
+          <svg viewBox="0 0 1000 200" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;" aria-hidden="true">
+            <polyline points="{{linePts}}" fill="none" stroke="#1C1B19" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"></polyline>
+          </svg>
+          <sc-for list="{{frPts}}" as="p" hint-placeholder-count="4">
+            <div style="position: absolute; left: {{p.left}}%; top: {{p.top}}px; transform: translate(-50%, -50%); width: {{p.size}}px; height: {{p.size}}px; border-radius: 50%; background: {{p.fill}}; border: 2px solid #1C1B19; box-sizing: border-box;"></div>
+            <div style="position: absolute; left: {{p.left}}%; top: {{p.labelTop}}px; transform: translateX(-50%); font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: {{p.labelBg}}; color: {{p.labelColor}}; white-space: nowrap;">{{p.label}}</div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: -8px;">
+        <div style="width: 52px; font-size: 11px; color: #3B6FB6; text-align: right; font-family: 'IBM Plex Mono', monospace; padding-top: 30px;">folha</div>
+        <div style="flex-grow: 1; display: flex; gap: 8px; border-top: 1px solid #1C1B19; padding-top: 8px;">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="12">
+            <div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: {{b.labelColor}}; font-weight: {{b.labelWeight}};">{{b.label}}</div>
+              <div style="height: 36px; width: 100%; display: flex; align-items: flex-end; justify-content: center;">
+                <div style="width: 40%; max-width: 28px; height: {{b.folhaH}}px; background: {{b.folhaColor}}; border-radius: 3px 3px 0 0;"></div>
+              </div>
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3B6FB6;">{{b.folhaLabel}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="width: 300px; flex-shrink: 0; border-left: 1px solid #ECE8E0; padding-left: 28px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B665E;">Fator R em jun/2026</div>
+      <div style="display: flex; align-items: baseline; gap: 10px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 40px; font-weight: 600; letter-spacing: -0.02em;">16,09%</span>
+        <span style="font-size: 13px; color: #8A4535; font-weight: 500;">Anexo V</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <div style="position: relative; height: 12px; border-radius: 6px; background: #ECE8E0;">
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 57.5%; border-radius: 6px; background: #1C1B19;"></div>
+          <div style="position: absolute; left: 80%; top: -4px; bottom: -4px; width: 2px; background: #B5452F;"></div>
+        </div>
+        <div style="position: relative; height: 16px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #6B665E;">
+          <span style="position: absolute; left: 0;">0%</span>
+          <span style="position: absolute; left: 80%; transform: translateX(-50%); color: #A63D28; font-weight: 600;">28%</span>
+          <span style="position: absolute; right: 0;">35%</span>
+        </div>
+      </div>
+      <div style="background: #F7F5F0; border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px;">
+        <div style="font-weight: 600;">Faltam 11,9 pontos para o Anexo III</div>
+        <div style="display: flex; justify-content: space-between;"><span style="color: #4A463F;">Folha necessária</span><span style="font-family: 'IBM Plex Mono', monospace;">R$ 139.357,61</span></div>
+        <div style="display: flex; justify-content: space-between;"><span style="color: #4A463F;">Folha atual</span><span style="font-family: 'IBM Plex Mono', monospace;">R$ 80.100,64</span></div>
+        <div style="display: flex; justify-content: space-between; font-weight: 600;"><span>Diferença</span><span style="font-family: 'IBM Plex Mono', monospace;">R$ 59.256,97</span></div>
+        <div style="font-size: 12px; color: #6B665E; line-height: 1.45;">Em salários e pró-labore (antes dos encargos): R$ 54.867,57.</div>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <label for="encargos" style="font-size: 13px; color: #4A463F;">Encargos sobre a folha</label>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <input id="encargos" type="text" inputmode="decimal" defaultValue="8,00" style="width: 64px; height: 36px; box-sizing: border-box; padding: 0 10px; border: 1px solid #D6D1C7; border-radius: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; text-align: right; color: #1C1B19; background: #FFFFFF;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 14px;">%</span>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: #6B665E; line-height: 1.5;">6 meses ainda não foram salvos. O Fator R muda quando eles entrarem.</p>
+    </div>
+  </div>
+
+  <!-- Rodapé -->
+  <div style="background: #FFFFFF; border: 1px solid #E4E0D8; border-radius: 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));">
+    <div style="padding: 20px 28px; display: flex; flex-direction: column; gap: 6px;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B665E;">Receita dos últimos 12 meses</div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600;">R$ 844.131,15</div>
+    </div>
+    <div style="padding: 20px 28px; display: flex; flex-direction: column; gap: 6px; border-left: 1px solid #ECE8E0;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B665E;">Faixa e alíquota</div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600;">4ª faixa · 8,03% efetiva</div>
+    </div>
+    <div style="padding: 20px 28px; display: flex; flex-direction: column; gap: 6px; border-left: 1px solid #ECE8E0;">
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #6B665E;">Anexo</div>
+      <div style="font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 600;">I · Comércio</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1340}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 11, period: 12 };
+  }
+  renderVals() {
+    var DATA = [
+      { m: 'jul', full: 'julho', y: '2025', rec: null },
+      { m: 'ago', full: 'agosto', y: '2025', rec: null },
+      { m: 'set', full: 'setembro', y: '2025', rec: null },
+      { m: 'out', full: 'outubro', y: '2025', rec: null },
+      { m: 'nov', full: 'novembro', y: '2025', rec: null },
+      { m: 'dez', full: 'dezembro', y: '2025', rec: null },
+      { m: 'jan', full: 'janeiro', y: '2026', rec: 88400, imp: 7072, folha: 12800, fr: null },
+      { m: 'fev', full: 'fevereiro', y: '2026', rec: 80100, imp: 6408, folha: 12600, fr: null },
+      { m: 'mar', full: 'março', y: '2026', rec: 66300, imp: 5304, folha: 12200, fr: 16.00 },
+      { m: 'abr', full: 'abril', y: '2026', rec: 53600, imp: 4288, folha: 14900, fr: 18.20 },
+      { m: 'mai', full: 'maio', y: '2026', rec: 155000, imp: 12121.83, folha: 13100, fr: 11.85 },
+      { m: 'jun', full: 'junho', y: '2026', rec: 54300, imp: 4360.21, folha: 14500, fr: 16.09 }
+    ];
+    var self = this;
+    var st = this.state;
+    var brl = function (v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); };
+    var mil = function (v) { return (v / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' mil'; };
+    var pct = function (v, d) { return v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d }) + '%'; };
+
+    var offset = st.period === 6 ? 6 : 0;
+    var list = DATA.slice(offset);
+    var n = list.length;
+    var MAX = 160000, PH = 200;
+    var FMAX = 20000, FH = 36;
+    var RMAX = 32, RH = 200;
+
+    var bars = list.map(function (d, i) {
+      var gi = i + offset;
+      var sel = gi === st.sel;
+      var has = d.rec != null;
+      var recH = has ? Math.round(d.rec / MAX * PH) : 0;
+      var impH = has ? Math.max(3, Math.round(d.imp / MAX * PH)) : 0;
+      return {
+        label: d.m, year: "'" + d.y.slice(2), has: has, empty: !has, selected: sel,
+        value: has ? mil(d.rec) : '',
+        pct: has ? pct(d.imp / d.rec * 100, 1) : '',
+        sobraH: recH - impH, impH: impH,
+        sobraColor: sel ? '#3E8E6A' : '#B9DBC8',
+        impColor: sel ? '#B5452F' : '#E0A698',
+        valColor: sel ? '#1C1B19' : '#6B665E',
+        colBg: sel ? '#F4F1EA' : 'transparent',
+        labelColor: sel ? '#1C1B19' : '#6B665E',
+        labelWeight: sel ? '600' : '400',
+        folhaH: has ? Math.round(d.folha / FMAX * FH) : 0,
+        folhaColor: sel ? '#3B6FB6' : '#A9C1E3',
+        folhaLabel: has ? mil(d.folha) : '—',
+        aria: d.full + ' de ' + d.y + (has ? ': receita ' + brl(d.rec) + ', imposto ' + brl(d.imp) : ': sem lançamento'),
+        pick: function () { self.setState({ sel: gi }); }
+      };
+    });
+
+    var ticksA = [0, 40000, 80000, 120000, 160000].map(function (v) {
+      return { label: v === 0 ? '0' : (v / 1000) + ' mil', bottom: Math.round(v / MAX * PH), line: v === 0 ? '0' : '1px solid #F0EDE7' };
+    });
+    var ticksR = [30, 20, 10, 0].map(function (v) {
+      return { label: v + '%', top: Math.round((1 - v / RMAX) * RH) };
+    });
+
+    var frPts = [];
+    var poly = [];
+    list.forEach(function (d, i) {
+      if (d.fr == null) return;
+      var gi = i + offset;
+      var sel = gi === st.sel;
+      var top = (1 - d.fr / RMAX) * RH;
+      var leftPct = (i + 0.5) / n * 100;
+      poly.push((leftPct * 10).toFixed(1) + ',' + top.toFixed(1));
+      frPts.push({
+        left: leftPct.toFixed(3), top: top.toFixed(1),
+        labelTop: (top - 34).toFixed(1),
+        size: sel ? 14 : 10,
+        fill: sel ? '#1C1B19' : '#FFFFFF',
+        label: pct(d.fr, 2),
+        labelBg: sel ? '#1C1B19' : 'transparent',
+        labelColor: sel ? '#FFFFFF' : '#1C1B19'
+      });
+    });
+
+    var d = DATA[st.sel];
+    var prev = DATA[st.sel - 1];
+    var det = { title: d.full + '/' + d.y, has: d.rec != null, empty: d.rec == null };
+    if (d.rec != null) {
+      var ip = d.imp / d.rec * 100;
+      det.rec = brl(d.rec);
+      det.imp = brl(d.imp);
+      det.aliq = pct(ip, 1);
+      det.sobra = brl(d.rec - d.imp);
+      det.sobraPct = (100 - ip).toFixed(2);
+      det.impPct = ip.toFixed(2);
+      det.folha = brl(d.folha);
+      det.fr = d.fr != null ? pct(d.fr, 2) : '—';
+      if (prev && prev.rec != null) {
+        var ch = (d.rec - prev.rec) / prev.rec * 100;
+        det.delta = (ch >= 0 ? '▲ ' : '▼ ') + pct(Math.abs(ch), 1) + ' vs ' + prev.m + '/' + prev.y;
+        det.deltaColor = ch >= 0 ? '#2F6B4F' : '#A63D28';
+      } else {
+        det.delta = 'sem mês anterior para comparar';
+        det.deltaColor = '#6B665E';
+      }
+    }
+
+    var zoneH = Math.round((1 - 28 / RMAX) * RH);
+    return {
+      bars: bars, ticksA: ticksA, ticksR: ticksR, frPts: frPts, linePts: poly.join(' '), det: det,
+      zoneH: zoneH, anexoVTop: zoneH + 8,
+      is6: st.period === 6, is12: st.period === 12,
+      btn6Bg: st.period === 6 ? '#FFFFFF' : 'transparent',
+      btn12Bg: st.period === 12 ? '#FFFFFF' : 'transparent',
+      btn6Shadow: st.period === 6 ? '0 1px 2px rgba(28,27,25,0.12)' : 'none',
+      btn12Shadow: st.period === 12 ? '0 1px 2px rgba(28,27,25,0.12)' : 'none',
+      set6: function () { self.setState({ period: 6, sel: st.sel < 6 ? 11 : st.sel }); },
+      set12: function () { self.setState({ period: 12 }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

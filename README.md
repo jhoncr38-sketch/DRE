@@ -182,60 +182,61 @@ cálculo mudou). O que entrou:
   própria (**Comparar regimes**); a DRE, o estoque e a memória ficaram no **Lançamento** (a seção se chamava
   "Resultado" até 23/09/2026 — o nome novo diz o que se faz nela). Os ids `#tab-<id>` continuam os mesmos, e o
   `resultado` do código também.
-- **Visão geral**: três indicadores do mês (imposto, CBS a pagar, resultado líquido, com a variação contra o
-  mês anterior), o gráfico **receita e imposto mês a mês** (`rMeses`: barra = receita do mês, pedaço de baixo =
-  imposto; mês sem competência salva vira faixa hachurada) e a faixa do Simples (RBT12, faixa, anexo). Ela vive
-  dos meses salvos, então entrar nela carrega o ano (`garantirAnoDaTela`), e salvar um mês pede os números de novo.
-- **Fator R** (19/09/2026, `garantirFatorR`/`carregarFatorR`/`calcFatorR`/`rFatorR`, na Visão geral): a linha dos
-  faturamento e da folha mês a mês com a linha do Fator R e o corte de 28% por cima, mais a leitura em português
-  do que isso muda no anexo. **Só aparece para a empresa marcada** em Opções → *Acompanhar o Fator R*: é decisão do escritório
-  sobre o cliente, não do mês, então a marca fica na empresa (coluna `empresas.fator_r`, migração
-  `20260923120000`). Sem a migração o painel não quebra — a marca passa a valer só no navegador de quem ligou
-  (`localStorage`, chave `dre.fatorR`) e o aviso aparece no próprio toast.
-  - **De onde vêm os números:** duas consultas. `rpc/resumos` no intervalo (a função já devolve a receita do
-    resumo ou, no mês antigo sem resumo, do próprio estado salvo — por isso o mês só precisa estar **salvo**) e
-    `competencias?select=periodo,ga:dados->monthly->ga` para a folha, somada por `categoriaFolha` (salário e
-    pró-labore). São buscados **23 meses**, não 12: cada ponto do gráfico é a janela de doze que termina nele, e
-    doze pontos pedem 23 meses de histórico (`FATOR_R_MESES`, `janelaMeses(ate, n)`).
-  - **Encargos:** entram por um percentual à parte (`presumido.fatorEncargos`, padrão 8% — o FGTS), editável no
-    próprio cartão. O painel mostra a conta aberta em vez de decidir sozinho o que é folha.
-  - **Ponto vazio:** a janela com menos de três meses salvos não vira ponto. A linha começa onde o histórico
-    começa, em vez de desenhar uma queda que é só falta de lançamento.
-  - **O gráfico** (23/09/2026) é **um quadro só**, no formato que o escritório pediu: faturamento e folha em
-    barras lado a lado por mês, a linha do Fator R por cima, reais à esquerda, porcentagem à direita e o limite
-    de 28% tracejado. A primeira versão separava a linha num painel embaixo (um eixo por unidade, como manda a
-    cartilha de visualização); o usuário comparou as duas na tela e escolheu esta.
-    - **Séries ligáveis:** a legenda liga e desliga faturamento, folha e linha (`ui.frrFat`, `ui.frrFolha`,
-      `ui.frrLinha`); a última acesa não apaga, porque quadro vazio não diz nada. Desligando as barras sobra a
-      linha sozinha, e o eixo de reais some junto.
-    - **12 ou 6 meses** (`ui.frrJanela`): a vista encurta, o Fator R continua sendo o dos doze meses móveis —
-      é a definição da LC 123, não uma média do que está na tela.
-    - **Rótulo só onde cabe:** com doze meses, o valor em reais aparece na maior barra de faturamento e na do
-      mês aberto; com seis meses, em todas as barras. O `title` da coluna abre a conta inteira — faturamento,
-      folha considerada e, embaixo, salários + pró-labore + o percentual de encargos —, que é a pergunta que
-      mais apareceu ("de onde saiu esse valor de folha?"). A legenda também traz a composição em cinza.
-    - **Escalas redondas:** `escalaReais()` sobe o topo até um número redondo com quatro divisões; a régua de
-      porcentagem usa o menor passo de 5, 10, 15, 20, 25 ou 50 pontos que caiba o intervalo **com os 28% dentro**.
-    - **Cores:** verde `#86CCA8` (faturamento), azul `#4C7FB8` (folha), verde escuro `#1B6B55` (linha) e
-      `#C2565A` (limite), com tons próprios no modo noturno (`--frr-fat`, `--frr-folha`, `--frr-linha`,
-      `--frr-limite`). Três cortes foram comparados na tela; este é o escolhido. O azul é **de propósito** mais
-      fechado que o verde: com os dois igualmente claros, o `validate_palette.js` acusou ΔE 5 no daltonismo
-      tritan (indistinguíveis) — assim são 20. A família do painel (rosa do gráfico de receita + terroso da
-      cadeia, linha em grafite) também foi montada e comparada, e foi recusada.
-    - **A linha** é fina (1,6px): vai reta de um mês ao outro e só arredonda os vértices (`curvaSuave()` corta
-      22% de cada segmento no canto e refaz com uma quadrática que passa pelo próprio ponto, então nenhum valor
-      é deslocado). Duas versões anteriores foram recusadas: a polilinha de 2px com pontos de 6px ("grosseira")
-      e a Catmull-Rom cheia, que ondulava demais. Por baixo vai um halo da cor do cartão (4px na linha, 6,5px
-      nos pontos), senão ela some dentro das barras.
-    - **A porcentagem aparece em todos os pontos**, com um contorno da cor do cartão (`text-shadow` repetido)
-      para não precisar de caixa nem fundo em cima das barras; a do mês aberto vai num selo cheio.
-    - **Barras em HTML, linha em SVG** por cima, os dois na mesma caixa: o canto arredondado, a hachura do mês
-      sem competência e o `title` por coluna saem de graça, e a linha aproveita o `viewBox` de 0–100 com
-      `vector-effect:non-scaling-stroke` (o ponto é um traço de comprimento zero com ponta redonda; um `<circle>`
-      viraria elipse com `preserveAspectRatio="none"`).
-  - Entra também como item do **selo** (âmbar abaixo dos 28% ou a menos de 2 pontos do corte) e como termo do
-    glossário. Como o selo aparece em todas as abas, o Fator R é buscado junto com o ano.
-- **Selo de conferência** (`conferencias`, `rSelo`): faixa acima do conteúdo, verde quando tudo passa e âmbar
+- **Visão geral**: os dois gráficos descritos abaixo e a faixa do Simples (RBT12, faixa, anexo). Ela vive dos
+  meses salvos, então entrar nela carrega os números (`garantirAnoDaTela`), e salvar um mês pede tudo de novo.
+  Em 23/09/2026 saíram daqui, a pedido do escritório, **os três indicadores do mês** (imposto, CBS, resultado —
+  que já estão na DRE) e **o selo de conferência**, que continua nas outras quatro telas: a Visão geral virou a
+  tela dos gráficos. Como o `id="painel"` (o `role="tabpanel"` das abas) morava nos indicadores, ele passou a ser
+  injetado no primeiro cartão que a tela renderizar.
+- **Gráficos da Visão geral** (redesenho de 23/09/2026, a partir de `docs/redesign-graficos/`): dois cartões
+  que dividem a mesma casca — desenho à esquerda, painel de detalhe à direita, e um **seletor de período
+  (6 ou 12 meses)** no primeiro que vale para os dois (`ui.janela`).
+  - **De onde vêm os números:** os dois vivem dos **doze meses móveis** que terminam na competência aberta, não
+    do ano civil (`banco.hist`, `garantirHist`/`carregarHist`). São duas consultas: `rpc/resumos` no intervalo
+    (receita e, quando o mês tem resumo gravado, DAS e CBS) e uma nas competências, trazendo as despesas gerais
+    (`ga`) e as tributárias. Da primeira sai a folha (`categoriaFolha`: salário, funcionário, ordenado,
+    pró-labore); da segunda saem os **encargos lançados** — qualquer linha com INSS ou FGTS no nome (`RE_ENCARGO`).
+    Busca **23 meses**: cada ponto do Fator R é a janela de doze que termina nele, e doze pontos pedem 23 meses
+    de histórico (`HIST_MESES`, `janelaMeses(ate, n)`). O ano civil (`banco.ano`) continua existindo à parte,
+    para a aba Anual e para o item "exercício completo" do selo.
+  - **Folha considerada = o que está lançado** (23/09/2026): salários + pró-labore + as linhas de INSS e FGTS do
+    mês. O campo "Encargos sobre a folha" (um percentual, padrão 8%) **saiu** — o escritório preferiu somar o
+    lançamento a estimar por alíquota, e `presumido.fatorEncargos` sumiu do estado. O painel mostra a composição
+    aberta (quanto veio da folha, quanto veio de INSS e FGTS) e avisa quando há mês com folha lançada **sem**
+    INSS nem FGTS, porque isso derruba o Fator R sem que seja a realidade da empresa.
+  - **Receita e imposto, mês a mês** (`rMeses`): barra empilhada — embaixo o imposto, em cima o que fica com a
+    empresa, e a altura toda é a receita. O painel do mês traz receita, variação contra o mês anterior, a barra
+    de proporção, o imposto e o Fator R do mês; "fica com a empresa" e "folha considerada" saíram dele a pedido
+    do escritório (a divisão já está na barra, e a folha está no cartão do Fator R). O eixo tem topo redondo calculado (`escalaEixo`), nunca fixo. Mês sem
+    competência salva vira contorno tracejado, com a nota de que conta como zero nos doze meses. Cada coluna é um
+    `<button>` com `aria-pressed`: clicar escolhe o mês (`ui.mesSel`) e o painel ao lado abre receita, variação
+    contra o mês anterior, a divisão imposto × empresa, folha considerada e o Fator R daquele mês.
+  - **Fator R** (`rFatorR`): só a linha, com escala própria (mínimo 0–32%), a faixa do **Anexo III** sombreada
+    acima do corte de 28% e a folha do mês em mini-barras azuis embaixo, alinhadas coluna a coluna com o gráfico
+    de cima. As barras de faturamento saíram daqui — estavam repetindo o cartão anterior — e o eixo duplo também.
+    O painel ao lado traz o número grande, um medidor 0–35% com a marca dos 28%, a folha necessária, a de hoje e
+    a diferença até lá, a composição da folha considerada e o aviso de meses não salvos.
+  - **Só aparece para a empresa marcada** em Opções → *Acompanhar o Fator R* (coluna `empresas.fator_r`, migração
+    `20260923120000`; sem a migração a marca vale só no navegador de quem ligou, com aviso no toast). Por padrão,
+    desligado. O gráfico de receita não depende da marca.
+  - **Rótulos:** o valor em cima de cada barra; a alíquota do mês (`8,9% imp.`) só na vista de seis meses e no mês
+    escolhido, senão os números se encostam. No Fator R, a porcentagem sai um ponto sim, um não com doze meses —
+    todos com seis — e o mês aberto sempre, num selo cheio.
+  - **Cores** (`--g-rec`, `--g-imp`, `--g-folha`, `--g-zona`, `--frr-linha`): verde no que fica com a empresa,
+    vermelho no imposto, azul na folha e um verde bem claro na faixa do Anexo III, com tons próprios no modo
+    noturno. A série fica clara quando o mês não está escolhido e cheia quando está.
+  - **Abaixo de 900px** o painel lateral desce para baixo do gráfico.
+  - O Fator R entra também como item do **selo** (âmbar abaixo dos 28% ou a menos de 2 pontos do corte) e como
+    termo do glossário.
+- **CBS a pagar com crédito maior que o débito**: o cartão da Visão geral trocava só o valor e mantinha o rótulo
+  "CBS a pagar" em vermelho. Agora o rótulo vem de `m.cbsRotulo` ("CBS Crédito"), o número fica verde e o subtítulo
+  diz que o saldo vai para o mês seguinte.
+- **Renovação de sessão**: o Supabase gira o refresh token a cada uso, então duas consultas que vencem ao mesmo
+  tempo não podem renovar cada uma por si — a segunda chegava com um token queimado e derrubava a sessão.
+  `tokenValido()` agora compartilha a mesma promessa de renovação (teste: três consultas vencidas renovam uma vez
+  só). O problema só apareceu quando os doze meses passaram a ser buscados em toda troca de aba.
+- **Selo de conferência** (`conferencias`, `rSelo`): faixa acima do conteúdo em **todas as telas menos a Visão
+  geral**, verde quando tudo passa e âmbar
   quando algo pede atenção, expansível item a item. As verificações são as que o painel prova sozinho: receita da
   DRE × soma das linhas do PGDAS, DAS declarado × calculado, crédito de CBS compatível com as compras, CNPJ dos
   cadastros, Fator R com folga para o Anexo III e — com banco — exercício completo.
@@ -813,6 +814,14 @@ Funções chamadas pelo painel (`/rest/v1/rpc/...`), com RLS valendo dentro dela
   (gatilho no banco; o painel continua usando `DELETE`). A cadeia de crédito, que é da empresa, não é tocada.
   Depois abre o mês salvo mais recente — e, se não sobrou nenhum, o mês atual **sem gravar**.
 - **Proteção dos dados** (16/09/2026):
+  - **Opções → Copiar empresa…** (23/09/2026, `copiarEmpresa`): cria uma empresa nova igual à aberta — categorias,
+    alíquotas, premissas, cadeia de crédito, produtos e **todos os meses salvos**. O mês da tela vai pelo
+    `salvar_painel` de sempre (é ele que grava a cadeia e o catálogo, que são por empresa); os demais são copiados
+    direto da tabela `competencias`, com o nome novo trocado dentro de cada estado (`dados.co`). A original não é
+    tocada. Serve para separar uma empresa em duas ou testar um cenário sem mexer no cliente.
+  - **Opções → Excluir empresa…** (23/09/2026, `excluirEmpresa`): apaga a empresa para toda a equipe, com
+    parceiros e produtos (`on delete cascade`). Os meses caem na **lixeira** pelo gatilho do banco e ficam 30 dias,
+    mas restaurar só depois de recriar a empresa — por isso a janela exige **o nome digitado**, não um "ok".
   - **Opções → Lixeira:** meses excluídos nos últimos 30 dias, de todas as empresas, com data, autor e receita;
     "Restaurar" devolve o mês como estava (desativado se já houver mês salvo no período).
   - **Opções → Histórico de *mês*:** versões anteriores dos valores do mês e das listas de fornecedores, clientes e

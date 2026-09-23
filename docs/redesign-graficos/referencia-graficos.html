@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DRE · Evolução mensal e Fator R (referência)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== Tokens ===== */
+:root{
+  --bg:#F3F1EC; --card:#FFFFFF; --border:#E4E0D8; --divider:#ECE8E0; --grid:#F0EDE7;
+  --ink:#1C1B19; --ink-2:#4A463F; --muted:#6B665E; --faint:#8C877E;
+  --green:#3E8E6A; --green-soft:#B9DBC8; --green-ink:#2F6B4F; --zone:#EEF6F1;
+  --tax:#B5452F; --tax-soft:#E0A698; --tax-ink:#A63D28; --tax-text:#8A4535;
+  --blue:#3B6FB6; --blue-soft:#A9C1E3;
+  --sel-col:#F4F1EA; --panel:#F7F5F0;
+  --sans:'IBM Plex Sans',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink)}
+button,input{font:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid var(--green-ink);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding:40px;display:flex;flex-direction:column;gap:24px}
+.mono{font-family:var(--mono)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Cabeçalho */
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.head h1{margin:4px 0 0;font-size:28px;font-weight:600;letter-spacing:-.01em}
+.seg{display:flex;padding:4px;background:#E8E4DC;border-radius:10px;gap:4px}
+.seg button{height:36px;padding:0 16px;border:0;border-radius:7px;font-family:var(--mono);font-size:13px;cursor:pointer;background:transparent;color:var(--ink)}
+.seg button[aria-pressed="true"]{background:#fff;box-shadow:0 1px 2px rgba(28,27,25,.12)}
+
+/* Card com gráfico + painel lateral */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;display:flex;gap:32px}
+.chart{flex:1;min-width:0;display:flex;flex-direction:column;gap:20px}
+.side{width:300px;flex-shrink:0;border-left:1px solid var(--divider);padding-left:28px;display:flex;flex-direction:column;gap:16px}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.chart-head h2{margin:0;font-size:18px;font-weight:600}
+.chart-head p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--ink-2);align-items:center;flex-shrink:0}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+
+.plot-row{display:flex;gap:12px}
+.yaxis{width:52px;position:relative;font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0}
+.yaxis div{position:absolute;right:0}
+.plot{flex:1;min-width:0;position:relative}
+.gline{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+.cols{position:absolute;inset:0;display:flex;gap:8px}
+.xrow{display:flex;gap:12px}
+.xrow .cells{flex:1;display:flex;gap:8px;border-top:1px solid var(--ink);padding-top:8px}
+
+/* Barras de receita */
+.col{flex:1 1 0;min-width:0;height:100%;padding:0;border:0;border-radius:8px 8px 0 0;background:transparent;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+.col[aria-pressed="true"]{background:var(--sel-col)}
+.col .val{display:flex;flex-direction:column;align-items:center;gap:1px;font-family:var(--mono)}
+.col .val b{font-size:12px;font-weight:600;color:var(--muted)}
+.col .val small{font-size:10px;color:var(--tax-text)}
+.col[aria-pressed="true"] .val b{color:var(--ink)}
+.stack{width:64%;max-width:48px;display:flex;flex-direction:column}
+.stack .sobra{background:var(--green-soft);border-radius:4px 4px 0 0}
+.stack .imp{background:var(--tax-soft)}
+.col[aria-pressed="true"] .sobra{background:var(--green)}
+.col[aria-pressed="true"] .imp{background:var(--tax)}
+.stub{width:64%;max-width:48px;height:18px;border:1px dashed #C9C3B8;border-bottom:0;border-radius:4px 4px 0 0}
+.xl{flex:1 1 0;min-width:0;text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.xl small{display:block;font-size:10px;color:var(--faint)}
+.xl.on{color:var(--ink);font-weight:600}
+.note{margin:0;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+
+/* Painel do mês */
+.det-title{font-size:22px;font-weight:600;margin-top:2px}
+.big{font-family:var(--mono);font-size:24px;font-weight:600}
+.split{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--divider)}
+.rows{display:flex;flex-direction:column;gap:10px;font-size:13px}
+.rows > div{display:flex;justify-content:space-between;gap:12px}
+.rows > div span:first-child{color:var(--ink-2)}
+.rows .v{font-family:var(--mono)}
+.hr{height:1px;background:var(--divider)}
+
+/* Fator R */
+.zone{position:absolute;left:0;right:0;top:0;background:var(--zone)}
+.cut{position:absolute;left:0;right:0;border-top:2px dashed var(--tax)}
+.tag{position:absolute;right:8px;font-family:var(--mono);font-size:11px}
+.pt{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:#fff;border:2px solid var(--ink)}
+.pt.on{background:var(--ink)}
+.pl{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:12px;font-weight:600;padding:2px 6px;border-radius:4px;white-space:nowrap}
+.pl.on{background:var(--ink);color:#fff}
+.fcell{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.fbar-wrap{height:36px;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.fbar{width:40%;max-width:28px;background:var(--blue-soft);border-radius:3px 3px 0 0}
+.fbar.on{background:var(--blue)}
+.fval{font-family:var(--mono);font-size:10px;color:var(--blue)}
+
+.meter{position:relative;height:12px;border-radius:6px;background:var(--divider)}
+.meter .fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--ink)}
+.meter .mark{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--tax)}
+.scale{position:relative;height:16px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.scale span{position:absolute}
+.box{background:var(--panel);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.enc{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.enc label{font-size:13px;color:var(--ink-2)}
+.enc input{width:64px;height:36px;padding:0 10px;border:1px solid #D6D1C7;border-radius:8px;font-family:var(--mono);font-size:14px;text-align:right;color:var(--ink);background:#fff}
+
+.foot{background:var(--card);border:1px solid var(--border);border-radius:16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.foot > div{padding:20px 28px;display:flex;flex-direction:column;gap:6px}
+.foot > div + div{border-left:1px solid var(--divider)}
+.foot .mono{font-size:20px;font-weight:600}
+
+@media (max-width:900px){
+  .wrap{padding:20px}
+  .card{flex-direction:column}
+  .side{width:auto;border-left:0;border-top:1px solid var(--divider);padding-left:0;padding-top:20px}
+  .chart-head{flex-direction:column}
+  .foot{grid-template-columns:1fr}
+  .foot > div + div{border-left:0;border-top:1px solid var(--divider)}
+  .col .val small{display:none}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header class="head">
+    <div>
+      <div class="eyebrow">Empresa Exemplo · DRE jun/2026</div>
+      <h1>Evolução dos últimos meses</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:13px;color:var(--muted)">Período</span>
+      <div class="seg" role="group" aria-label="Período">
+        <button type="button" data-period="6" aria-pressed="false">6 meses</button>
+        <button type="button" data-period="12" aria-pressed="true">12 meses</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Receita e imposto -->
+  <section class="card" aria-labelledby="t-rec">
+    <div class="chart">
+      <div class="chart-head">
+        <div>
+          <h2 id="t-rec">Receita e imposto, mês a mês</h2>
+          <p>Clique num mês para ver o detalhe ao lado.</p>
+        </div>
+        <div class="legend">
+          <span><i class="sw" style="background:var(--green)"></i>Fica com a empresa</span>
+          <span><i class="sw" style="background:var(--tax)"></i>Imposto (Simples)</span>
+        </div>
+      </div>
+      <div class="plot-row">
+        <div class="yaxis" id="yA" style="height:250px"></div>
+        <div class="plot" id="plotA" style="height:250px"></div>
+      </div>
+      <div class="xrow" style="margin-top:-12px">
+        <div style="width:52px"></div>
+        <div class="cells" id="xA"></div>
+      </div>
+      <p class="note" id="noteEmpty"><span style="width:14px;height:10px;border:1px dashed #A8A195;border-bottom:0;display:inline-block"></span>jul–dez/2025 sem lançamento: contam como zero na receita dos 12 meses.</p>
+    </div>
+    <aside class="side" id="det" aria-live="polite"></aside>
+  </section>
+
+  <!-- Fator R -->
+  <section class="card" aria-labelledby="t-fr">
+    <div class="chart">
+      <div class="chart-head">
+        <div>
+          <h2 id="t-fr">Fator R</h2>
+          <p>Folha dos últimos 12 meses ÷ receita do mesmo período. De 28% para cima, a tributação cai para o Anexo III.</p>
+        </div>
+        <div class="legend">
+          <span><i style="width:16px;height:2px;background:var(--ink);display:inline-block"></i>Fator R</span>
+          <span><i style="width:16px;border-top:2px dashed var(--tax);display:inline-block"></i>Corte 28%</span>
+        </div>
+      </div>
+      <div class="plot-row">
+        <div class="yaxis" id="yR" style="height:200px"></div>
+        <div class="plot" id="plotR" style="height:200px"></div>
+      </div>
+      <div class="xrow" style="margin-top:-8px">
+        <div style="width:52px;font-size:11px;color:var(--blue);text-align:right;font-family:var(--mono);padding-top:30px">folha</div>
+        <div class="cells" id="xR"></div>
+      </div>
+    </div>
+    <aside class="side" id="frSide"></aside>
+  </section>
+
+  <section class="foot">
+    <div><div class="eyebrow">Receita dos últimos 12 meses</div><div class="mono" id="fRbt"></div></div>
+    <div><div class="eyebrow">Faixa e alíquota</div><div class="mono" id="fFaixa"></div></div>
+    <div><div class="eyebrow">Anexo</div><div class="mono" id="fAnexo"></div></div>
+  </section>
+</main>
+
+<script>
+/* ============================================================
+   DADOS — substitua pelo retorno real da API.
+   Valores mensais abaixo foram estimados a partir do print.
+   rec = receita, imp = imposto do Simples, folha = folha
+   considerada (com encargos), fr = Fator R acumulado 12m (%).
+   Meses sem lançamento: rec = null.
+   ============================================================ */
+const DRE = {
+  competencia: { mes: 'jun', ano: 2026 },
+  rbt12: 844131.15,
+  faixa: '4ª faixa', aliquotaEfetiva: 8.03,
+  anexo: 'I · Comércio',
+  fatorR: {
+    atual: 16.09, corte: 28,
+    receita12m: 497705.76, folha12m: 80100.64,
+    encargosPct: 8.00, mesesNaoSalvos: 6
+  },
+  meses: [
+    { m:'jul', full:'julho',     y:2025, rec:null },
+    { m:'ago', full:'agosto',    y:2025, rec:null },
+    { m:'set', full:'setembro',  y:2025, rec:null },
+    { m:'out', full:'outubro',   y:2025, rec:null },
+    { m:'nov', full:'novembro',  y:2025, rec:null },
+    { m:'dez', full:'dezembro',  y:2025, rec:null },
+    { m:'jan', full:'janeiro',   y:2026, rec:88400,  imp:7072,     folha:12800, fr:null },
+    { m:'fev', full:'fevereiro', y:2026, rec:80100,  imp:6408,     folha:12600, fr:null },
+    { m:'mar', full:'março',     y:2026, rec:66300,  imp:5304,     folha:12200, fr:16.00 },
+    { m:'abr', full:'abril',     y:2026, rec:53600,  imp:4288,     folha:14900, fr:18.20 },
+    { m:'mai', full:'maio',      y:2026, rec:155000, imp:12121.83, folha:13100, fr:11.85 },
+    { m:'jun', full:'junho',     y:2026, rec:54300,  imp:4360.21,  folha:14500, fr:16.09 }
+  ]
+};
+
+/* ===== Formatação ===== */
+const brl = v => v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const mil = v => (v/1000).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}) + ' mil';
+const pct = (v,d=2) => v.toLocaleString('pt-BR',{minimumFractionDigits:d,maximumFractionDigits:d}) + '%';
+
+/* Escala "bonita" para o eixo: evita o bug do topo fixo em 100 mil */
+function niceMax(v, steps=4){
+  const raw = v/steps, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = [1,2,2.5,5,10].find(k => k*p >= raw);
+  return n*p*steps;
+}
+
+const state = { period: 12, sel: DRE.meses.length - 1 };
+const PH = 200, FH = 36, RH = 200;
+
+function render(){
+  const offset = state.period === 6 ? DRE.meses.length - 6 : 0;
+  const list = DRE.meses.slice(offset);
+  const n = list.length;
+  const MAX = niceMax(Math.max(...list.filter(d=>d.rec!=null).map(d=>d.rec)));
+  const FMAX = Math.max(...list.filter(d=>d.rec!=null).map(d=>d.folha)) * 1.1;
+  const RMAX = Math.max(32, Math.ceil((Math.max(DRE.fatorR.corte, ...list.map(d=>d.fr||0)) + 4)/2)*2);
+
+  // período
+  document.querySelectorAll('.seg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.period === state.period)));
+  document.getElementById('noteEmpty').hidden = !list.some(d => d.rec == null);
+
+  // eixo Y receita
+  const ticks = [0,1,2,3,4].map(i => MAX*i/4);
+  document.getElementById('yA').innerHTML = ticks.map(v =>
+    `<div style="bottom:${v/MAX*PH}px;transform:translateY(50%)">${v===0?'0':(v/1000)+' mil'}</div>`).join('');
+
+  // barras receita
+  const plotA = document.getElementById('plotA');
+  plotA.innerHTML = ticks.slice(1).map(v => `<div class="gline" style="bottom:${v/MAX*PH}px"></div>`).join('') +
+    `<div class="cols">${list.map((d,i) => {
+      const gi = i + offset, on = gi === state.sel;
+      if (d.rec == null) return `<button type="button" class="col" data-i="${gi}" aria-pressed="${on}" aria-label="${d.full} de ${d.y}: sem lançamento"><div class="stub"></div></button>`;
+      const recH = Math.round(d.rec/MAX*PH), impH = Math.max(3, Math.round(d.imp/MAX*PH));
+      return `<button type="button" class="col" data-i="${gi}" aria-pressed="${on}" aria-label="${d.full} de ${d.y}: receita ${brl(d.rec)}, imposto ${brl(d.imp)}">
+        <div class="val"><b>${mil(d.rec)}</b><small>${pct(d.imp/d.rec*100,1)} imp.</small></div>
+        <div class="stack"><div class="sobra" style="height:${recH-impH}px"></div><div class="imp" style="height:${impH}px"></div></div>
+      </button>`;
+    }).join('')}</div>`;
+  plotA.querySelectorAll('.col').forEach(b => b.onclick = () => { state.sel = +b.dataset.i; render(); });
+
+  document.getElementById('xA').innerHTML = list.map((d,i) =>
+    `<div class="xl ${i+offset===state.sel?'on':''}">${d.m}<small>'${String(d.y).slice(2)}</small></div>`).join('');
+
+  // painel do mês
+  const d = DRE.meses[state.sel], prev = DRE.meses[state.sel-1];
+  let html = `<div><div class="eyebrow">Mês selecionado</div><div class="det-title">${d.full}/${d.y}</div></div>`;
+  if (d.rec == null){
+    html += `<p style="margin:0;font-size:14px;color:var(--muted);line-height:1.5">Nenhum lançamento salvo neste mês. Ele entra como R$ 0,00 na receita e na folha dos 12 meses.</p>`;
+  } else {
+    const ip = d.imp/d.rec*100;
+    let delta = 'sem mês anterior para comparar', dc = 'var(--muted)';
+    if (prev && prev.rec != null){
+      const ch = (d.rec-prev.rec)/prev.rec*100;
+      delta = `${ch>=0?'▲':'▼'} ${pct(Math.abs(ch),1)} vs ${prev.m}/${prev.y}`;
+      dc = ch>=0 ? 'var(--green-ink)' : 'var(--tax-ink)';
+    }
+    html += `
+      <div><div style="font-size:13px;color:var(--muted)">Receita</div><div class="big">${brl(d.rec)}</div>
+      <div class="mono" style="font-size:12px;color:${dc}">${delta}</div></div>
+      <div class="split"><div style="width:${100-ip}%;background:var(--green)"></div><div style="width:${ip}%;background:var(--tax)"></div></div>
+      <div class="rows">
+        <div><span>Imposto</span><span class="v" style="color:var(--tax-ink);font-weight:600">${brl(d.imp)} · ${pct(ip,1)}</span></div>
+        <div><span>Fica com a empresa</span><span class="v" style="font-weight:600">${brl(d.rec-d.imp)}</span></div>
+        <div class="hr"></div>
+        <div><span>Folha considerada</span><span class="v">${brl(d.folha)}</span></div>
+        <div><span>Fator R (12 meses)</span><span class="v">${d.fr!=null?pct(d.fr):'—'}</span></div>
+      </div>`;
+  }
+  document.getElementById('det').innerHTML = html;
+
+  // Fator R — gráfico
+  const yR = v => (1 - v/RMAX) * RH;
+  const cut = DRE.fatorR.corte, zoneH = yR(cut);
+  const rTicks = [30,20,10,0].filter(v => v <= RMAX);
+  document.getElementById('yR').innerHTML = rTicks.map(v => `<div style="top:${yR(v)}px;transform:translateY(-50%)">${v}%</div>`).join('');
+  const pts = list.map((d,i) => ({ d, i, gi:i+offset })).filter(p => p.d.fr != null);
+  const poly = pts.map(p => `${((p.i+.5)/n*1000).toFixed(1)},${yR(p.d.fr).toFixed(1)}`).join(' ');
+  document.getElementById('plotR').innerHTML = `
+    <div class="zone" style="height:${zoneH}px"></div>
+    <div class="tag" style="top:6px;color:var(--green-ink)">Anexo III</div>
+    <div class="tag" style="top:${zoneH+8}px;color:var(--tax-text)">Anexo V</div>
+    ${rTicks.map(v => `<div class="gline" style="top:${yR(v)}px"></div>`).join('')}
+    <div class="cut" style="top:${zoneH}px"></div>
+    <svg viewBox="0 0 1000 ${RH}" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible" aria-hidden="true">
+      <polyline points="${poly}" fill="none" stroke="#1C1B19" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+    </svg>
+    ${pts.map(p => {
+      const on = p.gi === state.sel, s = on ? 14 : 10, left = (p.i+.5)/n*100, top = yR(p.d.fr);
+      return `<div class="pt ${on?'on':''}" style="left:${left}%;top:${top}px;width:${s}px;height:${s}px"></div>
+              <div class="pl ${on?'on':''}" style="left:${left}%;top:${top-34}px">${pct(p.d.fr)}</div>`;
+    }).join('')}`;
+
+  document.getElementById('xR').innerHTML = list.map((d,i) => {
+    const on = i+offset === state.sel, has = d.rec != null;
+    return `<div class="fcell"><div class="xl ${on?'on':''}" style="flex:none">${d.m}</div>
+      <div class="fbar-wrap"><div class="fbar ${on?'on':''}" style="height:${has?Math.round(d.folha/FMAX*FH):0}px"></div></div>
+      <div class="fval">${has?mil(d.folha):'—'}</div></div>`;
+  }).join('');
+
+  // Fator R — painel
+  const f = DRE.fatorR;
+  const scaleMax = 35;
+  const necessaria = f.receita12m * f.corte/100;
+  const falta = Math.max(0, necessaria - f.folha12m);
+  const faltaSemEnc = falta / (1 + f.encargosPct/100);
+  const acima = f.atual >= f.corte;
+  document.getElementById('frSide').innerHTML = `
+    <div class="eyebrow">Fator R em ${DRE.competencia.mes}/${DRE.competencia.ano}</div>
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <span class="mono" style="font-size:40px;font-weight:600;letter-spacing:-.02em">${pct(f.atual)}</span>
+      <span style="font-size:13px;font-weight:500;color:${acima?'var(--green-ink)':'var(--tax-text)'}">${acima?'Anexo III':'Anexo V'}</span>
+    </div>
+    <div>
+      <div class="meter" role="meter" aria-valuemin="0" aria-valuemax="${scaleMax}" aria-valuenow="${f.atual}" aria-label="Fator R">
+        <div class="fill" style="width:${Math.min(100,f.atual/scaleMax*100)}%"></div>
+        <div class="mark" style="left:${f.corte/scaleMax*100}%"></div>
+      </div>
+      <div class="scale" style="margin-top:6px"><span style="left:0">0%</span>
+        <span style="left:${f.corte/scaleMax*100}%;transform:translateX(-50%);color:var(--tax-ink);font-weight:600">${f.corte}%</span>
+        <span style="right:0">${scaleMax}%</span></div>
+    </div>
+    <div class="box">
+      ${acima
+        ? `<div style="font-weight:600">Acima do corte: tributação pelo Anexo III</div>`
+        : `<div style="font-weight:600">Faltam ${(f.corte-f.atual).toLocaleString('pt-BR',{maximumFractionDigits:1})} pontos para o Anexo III</div>
+           <div class="rows" style="gap:8px">
+             <div><span>Folha necessária</span><span class="v">${brl(necessaria)}</span></div>
+             <div><span>Folha atual</span><span class="v">${brl(f.folha12m)}</span></div>
+             <div style="font-weight:600"><span style="color:var(--ink)">Diferença</span><span class="v">${brl(falta)}</span></div>
+           </div>
+           <div style="font-size:12px;color:var(--muted);line-height:1.45">Em salários e pró-labore (antes dos encargos): ${brl(faltaSemEnc)}.</div>`}
+    </div>
+    <div class="enc">
+      <label for="encargos">Encargos sobre a folha</label>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input id="encargos" type="text" inputmode="decimal" value="${f.encargosPct.toLocaleString('pt-BR',{minimumFractionDigits:2})}">
+        <span class="mono" style="font-size:14px">%</span>
+      </div>
+    </div>
+    ${f.mesesNaoSalvos ? `<p style="margin:0;font-size:12px;color:var(--muted);line-height:1.5">${f.mesesNaoSalvos} meses ainda não foram salvos. O Fator R muda quando eles entrarem.</p>` : ''}`;
+  const enc = document.getElementById('encargos');
+  enc.onchange = () => {
+    const v = parseFloat(enc.value.replace(',', '.'));
+    if (!isNaN(v)) { f.encargosPct = v; render(); }
+  };
+
+  document.getElementById('fRbt').textContent = brl(DRE.rbt12);
+  document.getElementById('fFaixa').textContent = `${DRE.faixa} · ${pct(DRE.aliquotaEfetiva)} efetiva`;
+  document.getElementById('fAnexo').textContent = DRE.anexo;
+}
+
+document.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+  state.period = +b.dataset.period;
+  const first = DRE.meses.length - state.period;
+  if (state.sel < first) state.sel = DRE.meses.length - 1;
+  render();
+});
+render();
+</script>
+</body>
+</html>
