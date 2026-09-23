@@ -730,6 +730,52 @@ atende ramos diferentes — não pode haver "medicamento" hardcoded.
 
 ---
 
+## Leitura de documentos (API da Claude)
+
+Uma função na Vercel (`api/claude.js`) lê documentos e devolve os campos em JSON. A primeira aplicação é
+**Opções → Conferir PGDAS (PDF)…**: manda a declaração, e o painel mostra lado a lado o que ela diz e o que está
+lançado no mês aberto — competência, CNPJ, receita do período, DAS e RBT12 —, marcando o que não bate. Diferença
+de até R$ 1 passa (centavo de arredondamento não é divergência).
+
+### Como ligar
+
+1. **Chave da API:** console.anthropic.com → API Keys → crie uma chave para este projeto.
+2. **Vercel → Settings → Environment Variables:** `ANTHROPIC_API_KEY` (Production e Preview). `SUPABASE_URL` e
+   `SUPABASE_ANON_KEY` já estão lá desde a instalação do banco — a função usa as mesmas para conferir a sessão.
+3. Redeploy. Sem a chave, a função responde 503 e o item some do menu (`leituraDisponivel()`), sem quebrar nada.
+
+### Como está protegido
+
+- **A chave nunca vai para o painel.** O HTML é público; a chave vive só na função, em variável de ambiente.
+- **Só a equipe chama.** A função exige o token da sessão do Supabase, confere em `/auth/v1/user` e só responde a
+  quem enxerga a tabela `membros` (RLS). Sem isso, qualquer um na internet gastaria a cota do escritório.
+- **Limites de entrada:** só POST, só PDF/PNG/JPG/WEBP, no máximo 3 MB (um PGDAS tem ~100 KB).
+- **Erro da API não vaza detalhe:** 429 vira "está ocupada, tente de novo"; 401/403 da chave vira "confira a chave
+  e o saldo", com o detalhe só no log da Vercel.
+- **A IA não grava no banco.** Ela devolve o que leu; quem corrige é a pessoa, pelo lançamento de sempre — assim a
+  trilha de versões continua valendo.
+- **O que sai daqui:** o arquivo enviado vai para a API da Anthropic. É dado fiscal de cliente saindo do ambiente
+  do escritório: confira os termos da sua conta (retenção, uso para treino) e o que o contrato com o cliente diz
+  sobre subprocessadores antes de usar em produção.
+
+### Como é a leitura
+
+`tool_choice` obriga a resposta a vir no formato do `input_schema` (`pgdas_extraido`) — nada de texto solto para
+o painel interpretar. O sistema manda copiar o que está no documento, sem calcular nem completar: campo ausente
+volta `null`. Modelo: `claude-opus-5` com `effort: low` (extração não pede raciocínio longo). Para gastar menos,
+trocar a constante `MODELO` por `claude-sonnet-5` basta — custa menos da metade ($2/$10 por milhão de tokens
+contra $5/$25) e dá conta de uma declaração de duas páginas.
+
+### Testes
+
+- `node scratchpad/teste_api_claude.mjs` — a função com o `fetch` dublado: sem chave (503), só POST, ação
+  desconhecida, formato, tamanho, sem sessão, sessão inválida, fora da equipe (403), caminho feliz, o PDF indo
+  como `document`, 429 e chave errada.
+- Seção **3l** da suíte do banco — o painel de ponta a ponta com a função simulada no mock: declaração que bate,
+  declaração de outro mês e de outra empresa (cada divergência com o seu recado), erro da função virando aviso.
+
+---
+
 ## Banco de dados (Supabase)
 
 Tudo o que é preenchido no painel fica salvo **por empresa e por mês**. Só a equipe acessa,
