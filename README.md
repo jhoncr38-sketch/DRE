@@ -226,6 +226,14 @@ cálculo mudou). O que entrou:
     vermelho no imposto, azul na folha e um verde bem claro na faixa do Anexo III, com tons próprios no modo
     noturno. A série fica clara quando o mês não está escolhido e cheia quando está.
   - **Abaixo de 900px** o painel lateral desce para baixo do gráfico.
+  - **A quem o corte se aplica** (`linhasFatorR`, `rAlcanceFatorR`, `moverAnexoFatorR`): o Fator R é da empresa —
+    folha ÷ receita **total** dos doze meses —, mas o efeito é por atividade: só a receita do Anexo V migra para o
+    III. Numa empresa mista, comércio e indústria não mudam. O painel olha as linhas de receita do mês e diz
+    quanto está em jogo ("R$ 21.000,00 (17,4% do mês) em linhas do Anexo V passam a ser tributados pelo Anexo III;
+    os outros R$ 100.000,00 são de outros anexos e não mudam"), e oferece o botão que **troca o anexo dessas
+    linhas** — para o III quando está acima do corte, para o V quando está abaixo. Se nenhuma linha tem anexo
+    próprio, quem muda é o anexo da empresa, que é onde o dado mora nesse caso. Mexe só na tela: quem grava é o
+    Salvar. Sem linha nos anexos III ou V, o cartão diz que o Fator R não muda o DAS daquele mês.
   - O Fator R entra também como item do **selo** (âmbar abaixo dos 28% ou a menos de 2 pontos do corte) e como
     termo do glossário.
 - **CBS a pagar com crédito maior que o débito**: o cartão da Visão geral trocava só o valor e mantinha o rótulo
@@ -733,9 +741,30 @@ atende ramos diferentes — não pode haver "medicamento" hardcoded.
 ## Leitura de documentos (API da Claude)
 
 Uma função na Vercel (`api/claude.js`) lê documentos e devolve os campos em JSON. A primeira aplicação é
-**Opções → Conferir PGDAS (PDF)…**: manda a declaração, e o painel mostra lado a lado o que ela diz e o que está
+**Opções → Conferir PGDAS (PDF)…** — e o mesmo atalho fica ao lado de *+ adicionar receita*, no bloco de receita
+da DRE ("preencher pela declaração"), que é onde o lançamento acontece: manda a declaração, e o painel mostra lado a lado o que ela diz e o que está
 lançado no mês aberto — competência, CNPJ, receita do período, DAS e RBT12 —, marcando o que não bate. Diferença
 de até R$ 1 passa (centavo de arredondamento não é divergência).
+
+**Preencher o mês** (`camposPgdas`, `aplicarPgdas`): cada campo divergente ganha uma caixa *usar*, e o botão joga
+os marcados na tela — receita na primeira linha de receita, DAS na linha "Simples Nacional" das despesas
+tributárias (criada se não existir), RBT12 no campo, e o anexo quando a declaração traz um só e ele difere.
+Duas travas: o botão **só aparece** quando a competência e o CNPJ da declaração batem com o mês aberto (senão a
+janela diz que o preenchimento está bloqueado), e **nada é gravado** — o painel fica com alterações não salvas e
+quem grava é o Salvar de sempre, com a trilha de versões de sempre.
+
+**A receita entra segregada por atividade e por situação.** A declaração separa o que foi vendido em cada anexo
+e, dentro dele, o que tem substituição tributária de ICMS, tributação monofásica de PIS/Cofins ou ISS retido — e
+é assim que o painel lança: uma linha de receita por atividade declarada, com a descrição, o valor, o **anexo** e
+a **situação no DAS** de cada uma (`atividadesPgdas` mapeia `icms_st`/`monofasico`/`iss_retido` para os códigos
+`st`, `mono`, `stmono` e `iss`, os mesmos que `aliqSituacao` usa para descontar a parcela certa da efetiva) — as linhas de receita do mês são substituídas por essas. A alíquota e o tipo da CBS vêm
+da primeira linha que já existia, para não perder a premissa do mês. A tela mostra antes o que vai ser criado
+(`em 2 linhas: Revenda de mercadorias I R$ 121.000,00 · Prestação de serviços III R$ 5.000,00`), e é isso que faz
+o painel calcular a alíquota efetiva de cada anexo separadamente.
+
+Só quando a declaração **não** separa atividades e o mês tem mais de uma linha aparece um seletor de destino,
+com o efeito escrito em cada opção (`Medicamentos: R$ 68.000,00 → R$ 88.000,00`): a linha escolhida absorve a
+diferença para o total fechar, e as outras não são tocadas.
 
 ### Como ligar
 
@@ -772,7 +801,9 @@ contra $5/$25) e dá conta de uma declaração de duas páginas.
   desconhecida, formato, tamanho, sem sessão, sessão inválida, fora da equipe (403), caminho feliz, o PDF indo
   como `document`, 429 e chave errada.
 - Seção **3l** da suíte do banco — o painel de ponta a ponta com a função simulada no mock: declaração que bate,
-  declaração de outro mês e de outra empresa (cada divergência com o seu recado), erro da função virando aviso.
+  declaração de outro mês e de outra empresa (cada divergência com o seu recado), o preenchimento aplicando os
+  quatro campos e deixando a tela suja, o bloqueio quando a declaração é de outro mês, e o erro da função virando
+  aviso.
 
 ---
 

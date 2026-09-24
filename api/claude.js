@@ -43,7 +43,13 @@ const FERRAMENTA_PGDAS = {
             descricao: {type: ['string', 'null']},
             anexo: {type: ['string', 'null'], description: 'I, II, III, IV ou V.'},
             receita: {type: ['number', 'null'], description: 'Receita da atividade no período, em reais.'},
-            aliquota_efetiva: {type: ['number', 'null'], description: 'Alíquota efetiva em porcentagem, como 8.03.'}
+            aliquota_efetiva: {type: ['number', 'null'], description: 'Alíquota efetiva em porcentagem, como 8.03.'},
+            icms_st: {type: ['boolean', 'null'],
+              description: 'true quando esta receita está declarada com substituição tributária de ICMS (ICMS-ST).'},
+            monofasico: {type: ['boolean', 'null'],
+              description: 'true quando esta receita está declarada com tributação monofásica ou substituição de PIS/Cofins.'},
+            iss_retido: {type: ['boolean', 'null'],
+              description: 'true quando o ISS desta receita foi retido na fonte pelo tomador.'}
           }
         }
       },
@@ -65,7 +71,10 @@ const INSTRUCAO_PGDAS =
   'Você lê declarações do PGDAS-D (Simples Nacional) e devolve os campos pedidos. Regras: copie o que está no ' +
   'documento, sem calcular nada e sem completar o que não estiver escrito; campo ausente vai como null. Valores ' +
   'em reais como número (1234.56), sem separador de milhar e sem símbolo. Alíquotas em porcentagem (8.03 para ' +
-  '8,03%). Se o documento não for um PGDAS, devolva tudo null e diga isso em observacoes.';
+  '8,03%). Nas atividades, separe uma linha para cada combinação de atividade e situação tributária que a ' +
+  'declaração mostrar, e marque icms_st, monofasico e iss_retido conforme o que estiver escrito (substituição ' +
+  'tributária de ICMS, tributação monofásica ou substituição de PIS/Cofins, ISS retido na fonte); sem menção, ' +
+  'deixe false. Se o documento não for um PGDAS, devolva tudo null e diga isso em observacoes.';
 
 const ACOES = {
   pgdas: {ferramenta: FERRAMENTA_PGDAS, instrucao: INSTRUCAO_PGDAS, tokens: 2000,

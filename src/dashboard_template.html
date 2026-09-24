@@ -263,26 +263,43 @@
   .como-ler .cap{color:var(--muted-2)}
   .como-ler p{margin:4px 0 0; font-size:14px; color:var(--ink-2); line-height:1.5; text-wrap:pretty}
 
-  /* PGDAS × lançado: uma linha por campo, com o que a declaração diz e o que está no painel */
-  .modal-caixa:has(.pg){width:min(660px,100%)}   /* a comparação tem quatro colunas: a janela padrão aperta */
-  .pg{display:flex; flex-direction:column; gap:2px; text-align:left}
-  .pg .sub{margin:0 0 8px}
-  .pg-cab, .pg-linha{display:grid; grid-template-columns:18px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr); gap:10px; align-items:baseline}
-  .pg-cab{font-size:11px; color:var(--muted-2); text-transform:uppercase; letter-spacing:.06em; padding-bottom:4px;
-    border-bottom:1px solid var(--line)}
-  .pg-linha{padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
-  .pg-marca{width:16px; height:16px; border-radius:5px; display:flex; align-items:center; justify-content:center;
-    font-size:10px; font-weight:700; background:#E8F3ED; color:var(--ok)}
+  /* PGDAS × lançado: contexto, tabela do que tem número e, embaixo, o que dá para preencher */
+  .modal-caixa:has(.pg){width:min(660px,100%)}
+  .pg{display:flex; flex-direction:column; text-align:left}
+  .pg-ctx{margin:0; font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+  .pg-ctx.alerta{color:var(--g-imp); font-weight:600}
+  .pg .sub{margin:2px 0 12px}
+  .pg-cab, .pg-linha{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.75fr);
+    gap:12px; align-items:baseline}
+  .pg-cab{font-size:10px; color:var(--muted-3); text-transform:uppercase; letter-spacing:.06em;
+    padding-bottom:5px; border-bottom:1px solid var(--line-2)}
+  .pg-cab span:not(:first-child), .pg-doc, .pg-painel, .pg-dif{text-align:right}
+  .pg-linha{padding:8px 0; border-bottom:1px solid var(--line); font-size:13px}
+  .pg-rot{display:flex; align-items:center; gap:8px; color:var(--ink-2)}
+  .pg-marca{width:14px; height:14px; flex:0 0 14px; border-radius:4px; display:inline-flex; align-items:center;
+    justify-content:center; font-size:9px; font-weight:700; font-style:normal; background:#E8F3ED; color:var(--ok)}
   .pg-linha.difere .pg-marca{background:#FBF2DE; color:#96701A}
-  .pg-rot{color:var(--ink-3)}
   .pg-doc, .pg-painel{font-family:var(--mono); font-size:12.5px}
-  .pg-linha.difere .pg-doc, .pg-linha.difere .pg-painel{font-weight:600}
-  .cmp-onde{font-family:var(--sans); font-size:11px; color:var(--muted)}
-  .pg-nota{grid-column:2 / -1; font-size:12px; color:var(--muted); text-wrap:pretty}
-  .pg-ativ{margin-top:12px; display:flex; flex-direction:column; gap:6px; font-size:12.5px}
-  .pg-ativ > div{display:flex; justify-content:space-between; gap:12px}
-  .pg-ativ .v{font-family:var(--mono)}
-  .pg .nota{margin:10px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
+  .pg-onde{display:block; font-family:var(--sans); font-size:10px; color:var(--muted-3); line-height:1.3}
+  .pg-dif{font-family:var(--mono); font-size:12.5px; color:var(--muted-3)}
+  .pg-linha.difere .pg-dif{color:var(--g-imp); font-weight:600}
+  .pg-bloco{margin-top:16px; display:flex; flex-direction:column; gap:6px}
+  .pg-bloco .cap{color:var(--muted-2)}
+  .pg-bloco .cap small{margin-left:8px; text-transform:none; letter-spacing:0; font-size:11px; color:var(--muted-3)}
+  .pg-ativ{display:flex; justify-content:space-between; gap:12px; font-size:12.5px; color:var(--ink-3)}
+  .pg-ativ .v{font-family:var(--mono); white-space:nowrap}
+  .pg-bloco.aplicar{margin-top:18px; padding-top:14px; border-top:1px solid var(--line-2); gap:0}
+  .pg-item{display:grid; grid-template-columns:16px minmax(0,1fr) auto; grid-template-areas:"c r v" ". d d";
+    gap:3px 10px; align-items:center; padding:7px 0; font-size:13px; cursor:pointer}
+  .pg-item + .pg-item{border-top:1px solid var(--line)}
+  .pg-item input{accent-color:var(--ink); width:14px; height:14px; margin:0; grid-area:c}
+  .pg-item-rot{color:var(--ink-2); grid-area:r}
+  .pg-item-v{font-family:var(--mono); font-size:12.5px; font-weight:600; grid-area:v; text-align:right}
+  .pg-dest{grid-area:d; justify-self:stretch; font:inherit; font-size:11.5px; padding:4px 6px; color:var(--ink);
+    border:1px solid var(--line-2); border-radius:6px; background:var(--surface); margin-top:2px}
+  .pg-dest-txt{grid-area:d; justify-self:start; font-size:11.5px; color:var(--muted); text-wrap:pretty}
+  .pg-dest-txt b{font-weight:600; color:var(--ink-3)}
+  .pg .nota{margin:12px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
 
   /* Selo de conferência: filete verde quando está tudo certo, âmbar quando algo pede atenção */
   .selo{background:var(--surface); border:1px solid var(--line-2); border-left:4px solid var(--ok); border-radius:12px; overflow:hidden}
@@ -405,6 +422,8 @@
   .frr-box{background:var(--surface-2); border-radius:var(--r); padding:14px 16px; display:flex; flex-direction:column;
     gap:9px; font-size:12.5px}
   .frr-box .forte{font-weight:600}
+  .frr-acao{display:flex; flex-direction:column; align-items:flex-start; gap:8px; margin-top:10px}
+  .frr-acao .btn{font-size:12px; padding:7px 12px}
   .frr-box .nota, .graf-lado .nota{margin:0; font-size:11.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
   .graf-lado .nota.aviso{color:var(--g-imp)}
   @media (max-width:900px){
@@ -532,6 +551,7 @@
   .chip-sel option{text-transform:none; letter-spacing:0; font-family:var(--sans); font-size:13px; color:var(--ink)}
   .x{border:0; background:transparent; color:var(--muted-2); cursor:pointer; font-size:15px; line-height:1; padding:0 4px}
   .add{border:0; background:transparent; color:var(--muted); font-size:12px; padding:8px 0 2px; cursor:pointer}
+  .add-linha{display:flex; align-items:baseline; gap:18px; flex-wrap:wrap}
   .add:hover{color:var(--ink); text-decoration:underline}
   .present .row-ctl, .present .add{display:none !important}
   .sum{display:flex; justify-content:space-between; gap:12px; padding:10px 0; font-size:14px}
@@ -2414,7 +2434,11 @@ function detReceita(){
       <span class="cr-v" data-o="m.deb.${i}.val"></span></div>`;
   });
   return h + `</div>
-    <button class="add" data-act="add" data-g="debitos">+ adicionar receita</button>
+    <div class="add-linha">
+      <button class="add" data-act="add" data-g="debitos">+ adicionar receita</button>
+      ${leituraDisponivel() && banco.empresaId && !ui.present
+        ? `<button class="add" data-act="pgdas">preencher pela declaração (PGDAS)</button>` : ''}
+    </div>
   </div>`;
 }
 // o DAS declarado é a linha do Simples nas despesas tributárias (a mesma que o cálculo usa): editável aqui também
@@ -2744,7 +2768,50 @@ function rFatorR(){
       <aside class="graf-lado">${rLadoFatorR(c)}</aside>
     </div></section>`;
 }
+// O Fator R é da empresa (folha ÷ receita total dos 12 meses), mas o efeito é por atividade: só a receita do
+// Anexo V migra para o III quando o corte é atingido. Comércio e indústria não mudam. Isto olha as linhas de
+// receita do mês aberto e diz quais estão em jogo.
+function linhasFatorR(){
+  const deb = S.monthly.reforma.debitos || [];
+  const total = deb.reduce((a, r) => a + (+r[1] || 0), 0);
+  const grupo = alvo => deb.map((r, i) => ({i, v: +r[1] || 0, proprio: !!ANEXOS[r[6]]}))
+    .filter((x, i) => anexoLinha(deb[i]) === alvo);
+  const emV = grupo('V'), emIII = grupo('III');
+  const soma = g => g.reduce((a, x) => a + x.v, 0);
+  return {total, emV, emIII, somaV: soma(emV), somaIII: soma(emIII)};
+}
+// troca o anexo das linhas afetadas. Se nenhuma linha tem anexo próprio, quem muda é o anexo da empresa — é lá
+// que o dado mora quando a receita é toda da mesma atividade.
+function moverAnexoFatorR(para){
+  const de = para === 'III' ? 'V' : 'III', L = linhasFatorR(), grupo = de === 'V' ? L.emV : L.emIII;
+  if(!grupo.length) return;
+  if(!grupo.some(x => x.proprio) && anexoEmpresa() === de) S.anexo = para;
+  else grupo.forEach(x => { S.monthly.reforma.debitos[x.i][6] = para; });
+  render();
+  toast(`${grupo.length === 1 ? 'Linha passada' : `${grupo.length} linhas passadas`} para o Anexo ${para} — confira e salve`);
+}
 // painel do Fator R: onde está, quanto falta de folha e com que premissa
+// a quem o corte se aplica neste mês, e o que fazer com isso
+function rAlcanceFatorR(acima){
+  const L = linhasFatorR(), pct = v => L.total > 0.004 ? ` (${dec(v / L.total * 100, 1, 1)}% do mês)` : '';
+  if(!L.emV.length && !L.emIII.length)
+    return `<p class="nota">Nenhuma linha de receita deste mês está nos anexos III ou V: o Fator R não muda o
+      DAS que a empresa paga hoje.</p>`;
+  const resto = L.total - L.somaV - L.somaIII;
+  const sobra = resto > 0.004 ? ` Os outros ${brl(resto)} são de outros anexos e não mudam.` : '';
+  if(acima && L.emV.length)
+    return `<div class="frr-acao"><p class="nota">Acima do corte, ${brl(L.somaV)}${pct(L.somaV)} em linhas do
+      Anexo V passam a ser tributados pelo Anexo III.${sobra}</p>
+      <button class="btn" type="button" data-act="frr-anexo" data-para="III">Passar ${L.emV.length === 1 ? 'a linha' : `as ${L.emV.length} linhas`} para o Anexo III</button></div>`;
+  if(!acima && L.emIII.length)
+    return `<div class="frr-acao"><p class="nota aviso">Abaixo do corte, ${brl(L.somaIII)}${pct(L.somaIII)} em
+      linhas do Anexo III só valem se a atividade não depender do Fator R — se depender, a tributação é a do
+      Anexo V.${sobra}</p>
+      <button class="btn" type="button" data-act="frr-anexo" data-para="V">Passar ${L.emIII.length === 1 ? 'a linha' : `as ${L.emIII.length} linhas`} para o Anexo V</button></div>`;
+  const alvo = acima ? L.somaIII : L.somaV, quantas = acima ? L.emIII.length : L.emV.length;
+  return `<p class="nota">${brl(alvo)}${pct(alvo)} em ${quantas === 1 ? 'uma linha' : `${quantas} linhas`} do
+    Anexo ${acima ? 'III' : 'V'} — já é o tratamento que o Fator R indica.${sobra}</p>`;
+}
 function rLadoFatorR(c){
   const acima = c.valor >= FATOR_R_CORTE, escala = 0.35;
   const anexoVale = ['III', 'IV', 'V'].includes(anexoEmpresa());
@@ -2772,6 +2839,7 @@ function rLadoFatorR(c){
            </div>
 `}
     </div>
+    ${rAlcanceFatorR(acima)}
     <p class="nota">Folha considerada: salários e pró-labore das despesas gerais (${brl(c.somaF - c.somaEnc)}) mais as
       linhas de INSS e FGTS das despesas tributárias (${brl(c.somaEnc)}), nos doze meses.</p>
     ${c.semEncargo ? `<p class="nota aviso">${c.semEncargo} ${c.semEncargo === 1 ? 'mês tem folha lançada sem INSS nem FGTS' : 'meses têm folha lançada sem INSS nem FGTS'}: confira, porque isso derruba o Fator R.</p>` : ''}
@@ -3455,7 +3523,7 @@ async function sb(caminho, o){
 async function comErro(fn){
   try { return await fn(); }
   catch(e){
-    if(e.status === 401){ banco.msgLogin = 'Sua sessão expirou. Entre de novo.'; render(); }
+    if(e.status === 401){ if(!banco.aposLogin) banco.msgLogin = 'Sua sessão expirou. Entre de novo.'; render(); }
     else toast('Erro no banco de dados: ' + e.message);
   }
 }
@@ -3501,7 +3569,7 @@ async function carregarDoBanco(){
   banco.carregando = true; render();
   try { await aposEntrar(); }
   catch(e){
-    if(e.status === 401){ guardarSessao(null); banco.msgLogin = 'Sua sessão expirou. Entre de novo.'; }
+    if(e.status === 401){ guardarSessao(null); if(!banco.aposLogin) banco.msgLogin = 'Sua sessão expirou. Entre de novo.'; }
     else toast('Não foi possível carregar do banco de dados: ' + e.message);
   }
   finally { banco.carregando = false; render(); }
@@ -4203,13 +4271,14 @@ async function trocar(tipo, valor){
 // original. O mês aberto vai pelo salvar_painel (é ele que grava a cadeia e o catálogo); os demais são copiados
 // direto da tabela, com o nome trocado dentro de cada estado.
 // Leitura de documentos: só existe no painel publicado (a chave da API vive na função da Vercel, nunca aqui)
-const leituraDisponivel = () => banco.ativo && !!banco.sessao && /^https?:$/.test(location.protocol);
-const escolherArquivo = aceita => new Promise(resolve => {
+function leituraDisponivel(){ return banco.ativo && !!banco.sessao && /^https?:$/.test(location.protocol); }
+// declaradas como function para o teste e a página de demonstração poderem trocá-las
+function escolherArquivo(aceita){ return new Promise(resolve => {
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = aceita; inp.style.display = 'none';
   inp.onchange = () => { resolve(inp.files && inp.files[0]); inp.remove(); };
   document.body.appendChild(inp); inp.click();
-});
+}); }
 const lerBase64 = arquivo => new Promise((resolve, reject) => {
   const fr = new FileReader();
   fr.onload = () => resolve(String(fr.result).split(',')[1] || '');
@@ -4229,56 +4298,155 @@ async function pedirLeitura(acao, arquivo){
 }
 // Compara o que o PGDAS declara com o que está lançado no mês aberto. Diferença de até R$ 1 passa (centavo de
 // arredondamento não é divergência).
+// atividades declaradas que dão para virar linha de receita: precisam de valor e de nome
+function atividadesPgdas(d){
+  return (d.atividades || []).filter(a => a && +a.receita > 0.004).map(a => {
+    const st = !!a.icms_st, mono = !!a.monofasico;
+    const sit = st && mono ? 'stmono' : st ? 'st' : mono ? 'mono' : a.iss_retido ? 'iss' : '';
+    return {descricao: String(a.descricao || 'Receita declarada').trim(),
+            anexo: ANEXOS[a.anexo] ? a.anexo : '', receita: +a.receita, sit,
+            sitNome: (SITUACOES.find(x => x[0] === sit) || ['', ''])[1]};
+  });
+}
+// O que a declaração pode preencher no mês aberto. Devolve a lista de campos aplicáveis (cada um com o valor e
+// o motivo, quando não dá) — o mesmo cálculo serve para desenhar as caixas e para aplicar depois.
+function camposPgdas(d){
+  const c = calcMes(), campos = [];
+  const debitos = S.monthly.reforma.debitos || [];
+  const ativs = atividadesPgdas(d);
+  if(d.receita_bruta_pa != null){
+    // a receita do mês é a soma das linhas: a linha escolhida absorve a diferença para o total bater com a
+    // declaração. Com uma linha só, ela recebe o total — a conta é a mesma.
+    const soma = debitos.reduce((a, r) => a + (+r[1] || 0), 0);
+    const opcoes = debitos.map((r, i) => ({v: String(i), nome: r[0] || `linha ${i + 1}`, hoje: +r[1] || 0,
+                                           fica: d.receita_bruta_pa - (soma - (+r[1] || 0))}));
+    campos.push({k: 'receita', rot: 'Receita do período', valor: d.receita_bruta_pa, impede: '',
+      // com atividades declaradas a receita entra segregada — uma linha por atividade, cada uma no seu anexo.
+      // O seletor só sobra quando a declaração não separa nada e o mês tem mais de uma linha.
+      segregar: ativs.length ? ativs : null,
+      opcoes: !ativs.length && opcoes.length > 1 ? opcoes : null,
+      padrao: ativs.length ? 'seg' : (opcoes[0] ? opcoes[0].v : '0')});
+  }
+  if(d.das_total != null) campos.push({k: 'das', rot: 'DAS', valor: d.das_total, impede: ''});
+  if(d.rbt12 != null) campos.push({k: 'rbt12', rot: 'Receita dos últimos 12 meses', valor: d.rbt12, impede: ''});
+  const anexos = [...new Set(ativs.map(a => a.anexo).filter(Boolean))];
+  if(anexos.length === 1 && anexos[0] !== S.anexo)
+    campos.push({k: 'anexo', rot: 'Anexo', valor: anexos[0], impede: '', texto: true});
+  return campos;
+}
+// Aplica no estado da tela o que foi marcado. Não salva: o painel fica "com alterações não salvas" e a pessoa
+// confere antes de gravar.
+function aplicarPgdas(d, marcados, linhaReceita){
+  const feitos = [];
+  const campos = camposPgdas(d).filter(x => !x.impede && marcados.includes(x.k));
+  campos.forEach(x => {
+    if(x.k === 'receita'){
+      const deb = S.monthly.reforma.debitos, destino = linhaReceita != null ? String(linhaReceita) : String(x.padrao);
+      if(destino === 'seg'){
+        // uma linha por atividade, com o anexo de cada uma. A alíquota e o tipo da CBS saem da primeira linha
+        // que já existia, para não perder a premissa do mês
+        const modelo = deb[0] || ['', 0, S.monthly.reforma.aliqGeral || 0, 'geral'];
+        S.monthly.reforma.debitos = atividadesPgdas(d).map(a =>
+          [a.descricao, a.receita, modelo[2] || 0, modelo[3] || 'geral', '', a.sit, a.anexo || '']);
+        feitos.push('receita segregada por atividade'); sincronizarReceita();
+        return;                                       // o rótulo já foi anotado
+      }
+      if(!deb.length) deb.push(['Receita PGDAS', 0, S.monthly.reforma.aliqGeral || 0, 'geral', 'pgdas']);
+      const i = Math.min(Math.max(0, +destino || 0), deb.length - 1);
+      const soma = deb.reduce((a, r) => a + (+r[1] || 0), 0);
+      deb[i][1] = x.valor - (soma - (+deb[i][1] || 0));   // a linha escolhida fecha o total
+      sincronizarReceita();
+    }
+    if(x.k === 'das'){
+      const trib = S.monthly.tributarias, atual = linhaSimples(trib);
+      if(atual) atual[1] = x.valor; else trib.push(['Simples Nacional', x.valor]);
+    }
+    if(x.k === 'rbt12') S.monthly.rbt12 = x.valor;
+    if(x.k === 'anexo') S.anexo = x.valor;
+    feitos.push(x.rot.toLowerCase());
+  });
+  if(feitos.length){ render(); toast(`Preenchido: ${feitos.join(', ')} — confira e salve`); }
+  return feitos.length;
+}
 function rComparaPgdas(d){
   const c = calcMes(), emp = banco.empresas.find(e => e.id === banco.empresaId) || {};
   const perto = (a, b) => Math.abs((+a || 0) - (+b || 0)) <= 1;
-  const linhas = [];
-  const linha = (rot, doDoc, doPainel, ok, nota) => linhas.push({rot, doDoc, doPainel, ok, nota});
   const mesDoc = d.competencia ? String(d.competencia).slice(0, 7) : null;
   const mesTela = (banco.periodo || '').slice(0, 7);
-  linha('Competência', mesDoc ? rotuloMes(mesDoc + '-01') : '—', mesTela ? rotuloMes(mesTela + '-01') : '—',
-        !!mesDoc && mesDoc === mesTela, mesDoc && mesDoc !== mesTela ? 'A declaração é de outro mês — abra a competência certa antes de comparar.' : '');
-  if(d.cnpj || emp.cnpj)
-    linha('CNPJ', d.cnpj ? fmtCnpj(d.cnpj) : '—', emp.cnpj ? fmtCnpj(emp.cnpj) : '—',
-          !!d.cnpj && !!emp.cnpj && limpaCnpj(d.cnpj) === limpaCnpj(emp.cnpj),
-          d.cnpj && emp.cnpj && limpaCnpj(d.cnpj) !== limpaCnpj(emp.cnpj) ? 'A declaração é de outra empresa.' : '');
-  linha('Receita do período', d.receita_bruta_pa != null ? brl(d.receita_bruta_pa) : '—', brl(c.R),
-        d.receita_bruta_pa != null && perto(d.receita_bruta_pa, c.R),
-        d.receita_bruta_pa != null && !perto(d.receita_bruta_pa, c.R)
-          ? `Diferença de ${brl(Math.abs(d.receita_bruta_pa - c.R))} entre a declaração e a receita da DRE.` : '');
+  const mesmoMes = !!mesDoc && mesDoc === mesTela;
+  const mesmaEmpresa = !d.cnpj || !emp.cnpj || limpaCnpj(d.cnpj) === limpaCnpj(emp.cnpj);
+
+  // competência e CNPJ não precisam de linha na tabela: viram o contexto do documento, com aviso quando divergem
+  const contexto = [mesDoc ? rotuloMes(mesDoc + '-01') : 'sem competência', d.cnpj ? fmtCnpj(d.cnpj) : null]
+    .filter(Boolean).join(' · ');
+  const alerta = !mesmoMes ? `é de outro mês — a tela está em ${mesTela ? rotuloMes(mesTela + '-01') : '—'}`
+    : !mesmaEmpresa ? 'é de outra empresa' : '';
+
+  // --- a tabela: só o que tem número
+  const linhas = [];
+  const linha = (rot, doDoc, doPainel, ok, dif) => linhas.push({rot, doDoc, doPainel, ok, dif: dif || '—'});
+  const okReceita = d.receita_bruta_pa != null && perto(d.receita_bruta_pa, c.R);
+  linha('Receita', d.receita_bruta_pa != null ? brl(d.receita_bruta_pa) : '—', brl(c.R), okReceita,
+        d.receita_bruta_pa == null ? 'não veio' : okReceita ? '' : brl(Math.abs(d.receita_bruta_pa - c.R)));
   const dasLancado = c.simplesDeclarado > 0.004 ? c.simplesDeclarado : c.dasCalculado;
-  const ondeDas = c.simplesDeclarado > 0.004 ? 'lançado nas despesas' : 'calculado pela tabela';
-  linha('DAS', d.das_total != null ? brl(d.das_total) : '—', `${brl(dasLancado)} <span class="cmp-onde">(${ondeDas})</span>`,
-        d.das_total != null && perto(d.das_total, dasLancado),
-        d.das_total != null && !perto(d.das_total, dasLancado)
-          ? `Diferença de ${brl(Math.abs(d.das_total - dasLancado))}.` : '');
-  if(d.rbt12 != null || +S.monthly.rbt12)
-    linha('Receita dos últimos 12 meses', d.rbt12 != null ? brl(d.rbt12) : '—', brl(+S.monthly.rbt12 || 0),
-          d.rbt12 != null && perto(d.rbt12, +S.monthly.rbt12 || 0),
-          d.rbt12 != null && !perto(d.rbt12, +S.monthly.rbt12 || 0)
-            ? 'O RBT12 define a faixa e a alíquota: confira qual está certo.' : '');
-  const pendentes = linhas.filter(x => !x.ok).length;
-  const corpo = linhas.map(x => `<div class="pg-linha${x.ok ? '' : ' difere'}">
-      <span class="pg-marca">${x.ok ? '✓' : '!'}</span>
-      <span class="pg-rot">${x.rot}</span>
+  const okDas = d.das_total != null && perto(d.das_total, dasLancado);
+  linha('DAS', d.das_total != null ? brl(d.das_total) : '—',
+        `${brl(dasLancado)} <span class="pg-onde">${c.simplesDeclarado > 0.004 ? 'lançado' : 'calculado'}</span>`, okDas,
+        d.das_total == null ? 'não veio' : okDas ? '' : brl(Math.abs(d.das_total - dasLancado)));
+  const rbtTela = +S.monthly.rbt12 || 0;
+  if(d.rbt12 != null || rbtTela){
+    const okRbt = d.rbt12 != null && perto(d.rbt12, rbtTela);
+    linha('Receita 12 meses', d.rbt12 != null ? brl(d.rbt12) : '—', brl(rbtTela), okRbt,
+          d.rbt12 == null ? 'não veio' : okRbt ? '' : brl(Math.abs(d.rbt12 - rbtTela)));
+  }
+  const pendentes = linhas.filter(x => !x.ok).length + (alerta ? 1 : 0);
+  const tabela = linhas.map(x => `<div class="pg-linha${x.ok ? '' : ' difere'}">
+      <span class="pg-rot"><i class="pg-marca">${x.ok ? '✓' : '!'}</i>${x.rot}</span>
       <span class="pg-doc">${x.doDoc}</span>
       <span class="pg-painel">${x.doPainel}</span>
-      ${x.nota ? `<span class="pg-nota">${esc(x.nota)}</span>` : ''}
+      <span class="pg-dif">${x.dif}</span>
     </div>`).join('');
+
   const ativs = (d.atividades || []).filter(a => a && (a.descricao || a.receita != null));
+  const atividades = ativs.length ? `<div class="pg-bloco">
+      <span class="cap">Atividades declaradas</span>
+      ${ativs.map(a => `<div class="pg-ativ"><span>${esc(a.descricao || '—')}${a.anexo ? ` · Anexo ${esc(a.anexo)}` : ''}</span>` +
+        `<span class="v">${a.receita != null ? brl(a.receita) : '—'}${a.aliquota_efetiva != null ? ` · ${dec(a.aliquota_efetiva, 2, 2)}%` : ''}</span></div>`).join('')}
+    </div>` : '';
+
+  // --- preencher: caixa, campo, valor. O destino só aparece quando há escolha a fazer (linha de receita).
+  const campos = mesmoMes && mesmaEmpresa ? camposPgdas(d) : [];
+  const itens = campos.map(campo => {
+    const valor = campo.k === 'anexo' ? `Anexo ${esc(campo.valor)} (hoje ${esc(S.anexo || '—')})` : brl(campo.valor);
+    const seletor = campo.segregar
+      ? `<span class="pg-dest-txt">${campo.segregar.length === 1 ? 'em 1 linha' : `em ${campo.segregar.length} linhas`}: ` +
+        campo.segregar.map(a => `${esc(a.descricao)}${a.anexo ? ` <b>${esc(a.anexo)}</b>` : ''}` +
+          `${a.sit ? ` <b>${esc(a.sitNome)}</b>` : ''} ${brl(a.receita)}`).join(' · ') + `</span>`
+      : campo.opcoes
+      ? `<select class="pg-dest" name="pg_linha" aria-label="Onde entra a receita">${campo.opcoes.map(o =>
+          `<option value="${o.v}"${o.fica < 0 ? ' disabled' : ''}${o.v === String(campo.padrao) ? ' selected' : ''}>` +
+          `${esc(o.nome)}: ${brl(o.hoje)} → ${o.fica < 0 ? 'negativa' : brl(o.fica)}</option>`).join('')}</select>`
+      : '';
+    return `<label class="pg-item"><input type="checkbox" name="pg_${campo.k}" checked>
+      <span class="pg-item-rot">${campo.rot}</span><span class="pg-item-v">${valor}</span>${seletor}</label>`;
+  }).join('');
+  const aplicar = campos.length ? `<div class="pg-bloco aplicar">
+      <span class="cap">Preencher o mês <small>nada é gravado até você salvar</small></span>${itens}</div>` : '';
+
   return `<div class="pg">
+    <p class="pg-ctx${alerta ? ' alerta' : ''}">${esc(contexto)}${alerta ? ` — ${esc(alerta)}` : ''}</p>
     <p class="sub">${pendentes ? `${pendentes} ${pendentes === 1 ? 'ponto não bate' : 'pontos não batem'} com o que está lançado.`
                                : 'Tudo o que dá para comparar bate com o que está lançado.'}</p>
-    <div class="pg-cab"><span></span><span></span><span>Na declaração</span><span>No painel</span></div>
-    ${corpo}
-    ${ativs.length ? `<div class="pg-ativ"><span class="cap">Atividades declaradas</span>${ativs.map(a =>
-        `<div><span>${esc(a.descricao || '—')}${a.anexo ? ` · Anexo ${esc(a.anexo)}` : ''}</span>` +
-        `<span class="v">${a.receita != null ? brl(a.receita) : '—'}${a.aliquota_efetiva != null ? ` · ${dec(a.aliquota_efetiva, 2, 2)}%` : ''}</span></div>`).join('')}</div>` : ''}
+    <div class="pg-cab"><span></span><span>Declaração</span><span>Painel</span><span>Diferença</span></div>
+    ${tabela}
+    ${atividades}
+    ${aplicar}
     ${d.observacoes ? `<p class="nota">${esc(d.observacoes)}</p>` : ''}
-    <p class="nota">Leitura feita pela API da Claude a partir do arquivo enviado. Nada foi gravado: corrija no
-      lançamento, se for o caso.</p>
   </div>`;
 }
+// o que o formulário da janela devolve: as caixas marcadas viram a lista de campos (pg_linha é o seletor)
+const marcadosPgdas = valores => Object.keys(valores || {})
+  .filter(k => k.startsWith('pg_') && k !== 'pg_linha').map(k => k.slice(3));
 async function conferirPgdas(){
   if(!leituraDisponivel()) return toast('A leitura de documentos só funciona no painel publicado, com sessão aberta.');
   const arquivo = await escolherArquivo('.pdf,.png,.jpg,.jpeg,.webp');
@@ -4288,8 +4456,20 @@ async function conferirPgdas(){
   try { dados = await pedirLeitura('pgdas', arquivo); }
   catch(e){ ocupado(false); render(); return toast('Não deu para ler: ' + e.message); }
   ocupado(false);
-  await modal({titulo: 'PGDAS × o que está lançado', html: rComparaPgdas(dados),
-               botoes: [['fechar', 'Fechar', 'prim']], padrao: 'fechar'});
+  const temCampos = () => {
+    const mesDoc = dados.competencia ? String(dados.competencia).slice(0, 7) : null;
+    const emp = banco.empresas.find(e => e.id === banco.empresaId) || {};
+    const mesmaEmpresa = !dados.cnpj || !emp.cnpj || limpaCnpj(dados.cnpj) === limpaCnpj(emp.cnpj);
+    return mesDoc === (banco.periodo || '').slice(0, 7) && mesmaEmpresa && camposPgdas(dados).some(x => !x.impede);
+  };
+  const r = await modal({titulo: 'PGDAS × o que está lançado', html: rComparaPgdas(dados),
+    botoes: temCampos() ? [['fechar', 'Fechar'], ['preencher', 'Preencher o mês', 'prim']]
+                        : [['fechar', 'Fechar', 'prim']],
+    padrao: 'fechar'});
+  if(r.botao === 'preencher'){
+    if(!aplicarPgdas(dados, marcadosPgdas(r.valores), r.valores.pg_linha)) toast('Nada marcado para preencher');
+    return;
+  }
   render();
 }
 async function copiarEmpresa(){
@@ -4564,6 +4744,7 @@ app.addEventListener('click', e => {
     case 'lp-ver': ui.lpMenu = !ui.lpMenu; render(); focar('[data-act="lp-ver"]'); break;
     case 'termo': ui.termo = b.dataset.k || null; render(); break;
     // o período vale para os dois gráficos da Visão geral
+    case 'frr-anexo': moverAnexoFatorR(b.dataset.para); break;
     case 'janela': ui.janela = +b.dataset.n; render(); focar(`[data-act="janela"][data-n="${b.dataset.n}"]`); break;
     case 'mes-sel': ui.mesSel = b.dataset.p; render(); focar(`[data-act="mes-sel"][data-p="${b.dataset.p}"]`); break;
     case 'selo': ui.selo = !ui.selo; render(); focar('[data-act="selo"]'); break;
