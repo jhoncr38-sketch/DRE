@@ -741,8 +741,9 @@ atende ramos diferentes — não pode haver "medicamento" hardcoded.
 ## Leitura de documentos (API da Claude)
 
 Uma função na Vercel (`api/claude.js`) lê documentos e devolve os campos em JSON. A primeira aplicação é
-**Opções → Conferir PGDAS (PDF)…** — e o mesmo atalho fica ao lado de *+ adicionar receita*, no bloco de receita
-da DRE ("preencher pela declaração"), que é onde o lançamento acontece: manda a declaração, e o painel mostra lado a lado o que ela diz e o que está
+**preencher pela declaração (PGDAS)**, ao lado de *+ adicionar receita* no bloco de receita da DRE — onde o
+lançamento acontece. (O mesmo item existiu em Opções por um dia e saiu em 24/09/2026: dois caminhos para a mesma
+coisa só confundem.) manda a declaração, e o painel mostra lado a lado o que ela diz e o que está
 lançado no mês aberto — competência, CNPJ, receita do período, DAS e RBT12 —, marcando o que não bate. Diferença
 de até R$ 1 passa (centavo de arredondamento não é divergência).
 

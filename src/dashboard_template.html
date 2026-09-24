@@ -2323,7 +2323,6 @@ function rMenu(){
     ${banco.ativo && banco.empresaId && (banco.meses || []).includes(banco.periodo) ? it('historico', `Histórico de ${mesCurto(banco.periodo)}`) : ''}
     ${banco.ativo && banco.empresaId ? it('fator-r', 'Acompanhar o Fator R', fatorRLigado() ? 'ligado' : '') : ''}
     ${banco.ativo && banco.empresaId ? it('copiar-empresa', 'Copiar empresa…') : ''}
-    ${leituraDisponivel() && banco.empresaId ? it('pgdas', 'Conferir PGDAS (PDF)…') : ''}
     ${banco.ativo && banco.sessao ? it('lixeira', 'Lixeira') : ''}
     <div class="sep" role="separator"></div>
     ${banco.ativo ? '' : it('restaurar', 'Restaurar padrão')}
