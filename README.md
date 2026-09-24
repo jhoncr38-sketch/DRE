@@ -760,17 +760,43 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   (`IssRetido`/`tpRetISSQN`), guardado na leitura. Layout municipal próprio (São Paulo, por exemplo) continua
   caindo em "arquivos não reconhecidos", que a janela conta.
 - **Relevância:** cada parceiro com a sua participação e uma barra; a nota embaixo diz quantos respondem por 80%
-  do movimento, quanto vem de fornecedor do Simples (sem crédito cheio) e quanto foi para consumidor final.
-- **Trazer para a cadeia de crédito:** completa o cadastro sem duplicar — casa pelo CNPJ, preenche só o que
-  estiver em branco e sugere o crédito pelo regime (Simples → parcial, normal → sim). Como sempre, fica na tela
-  até você salvar.
-- **O que fica depois** (`rNotasMes`): o resumo não morre com a janela. Os valores vão para `monthly.notas` — ou
-  seja, viajam com o mês — e viram o bloco **"Quem pesa nas compras e nas vendas"** no Resumo do cliente, com os
-  oito maiores de cada lado, a barra de participação e as mesmas leituras. Aparece na apresentação ao cliente
-  (lá sem o botão de limpar) e some quando não há notas lidas naquele mês.
+  do movimento, quanto vem de fornecedor do Simples (sem crédito cheio) e quanto foi para consumidor final. A
+  janela mostra os seis maiores de cada lado e os quatro itens que mais pesam — a lista inteira fica no bloco da
+  tela. Em tela baixa ela **rola por dentro**, com os botões colados no rodapé (regra `:has(.nf)`/`:has(.pg)`, que
+  vale também para a janela do PGDAS): antes os botões ficavam abaixo da dobra e não dava para clicar.
+- **Os itens também entram** (`itensNfe`, `juntarItens`, `listaItens`): de cada `det/prod` saem descrição, NCM e
+  valor; da NFS-e sai a discriminação do serviço (`xDescServ`/`Discriminacao`) e o NBS quando o layout traz
+  `cNBS`. **A chave do agrupamento é o NCM, não a descrição** — é a única coisa que não muda quando o mesmo
+  produto vem de fornecedores diferentes ("DIPIRONA MONOIDRATADA 500MG CX C/20" e "DIPIRONA SODICA 500MG C/20"
+  são um item só). Sem NCM, agrupa pela descrição normalizada (sem acento, sem pontuação). Cada item mostra de
+  quantos parceiros veio e quantas descrições juntou, e a nota embaixo diz quantas linhas de nota viraram quantos
+  itens.
+- **Trazer para o cadastro:** um botão só, que completa os dois lados sem duplicar. Na **cadeia**, casa pelo CNPJ,
+  preenche o que estiver em branco e sugere o crédito pelo regime (Simples → parcial, normal → sim). No
+  **catálogo de produtos** (`levarParaCatalogo`), casa pelo NCM (ou pelo NBS, ou pela descrição), cria um item por
+  NCM e completa o NCM/NBS do que já estava cadastrado. O nome vem da nota de **venda** quando existe — a
+  descrição da própria empresa é melhor que a do fornecedor. Entram os 150 que mais pesam. Como sempre, fica na
+  tela até você salvar.
+- **O que fica depois** (`rNotasMes`): o resumo não morre com a janela. Os valores vão para `monthly.notas` e
+  `monthly.itens` — ou seja, viajam com o mês — e viram um bloco no Resumo do cliente com duas abas:
+  **Parceiros** ("Quem pesa nas compras e nas vendas", oito maiores de cada lado) e **Produtos e serviços** ("O
+  que a empresa compra e vende", dez maiores de cada lado, com NCM e a contagem de fornecedores/descrições). A
+  lista guardada no mês é cortada nos 250 maiores; o `resumo` guarda o total de linhas, itens e valor, para as contas
+  continuarem certas. Aparece na apresentação ao cliente (lá sem o botão de limpar) e some quando não há notas
+  lidas naquele mês.
+- **As duas telas se encontram** (`pesoCatalogo`, `mapaCatalogo`): no bloco das notas, cada item mostra embaixo do
+  NCM a **redução da CBS e a alíquota** do produto cadastrado (verde só quando há redução — é a favor da empresa);
+  na tabela de **Produtos e serviços**, embaixo do nome, entra **quanto o item movimentou no mês**: o valor, uma
+  barra proporcional ao **maior item** (numa tabela longa o que interessa é comparar um produto com o outro; a
+  fatia do total deixaria todas as barras minúsculas) e, ao lado, a **fatia do mês** em percentual — que é a mesma
+  leitura do número no bloco das notas. Usa as vendas quando o mês tem notas de saída (é o que a empresa fatura) e as
+  compras quando só há entradas — o cabeçalho da coluna diz qual. O movimento fica *dentro* da célula do nome de
+  propósito: como coluna, ele empurrava a alíquota reduzida para fora da tela.
 
 Testes: seção `nf)` da suíte do painel — leitura dos campos, separação por CNPJ com descarte de nota de
-terceiros, o peso e a curva de 80%, a cadeia recebendo sem duplicar e o arquivo que não é NF-e sendo ignorado.
+terceiros, o peso e a curva de 80%, a cadeia recebendo sem duplicar, o mesmo NCM de dois fornecedores virando um
+item só (com as três descrições contadas), o catálogo recebendo um item por NCM e o arquivo que não é NF-e sendo
+ignorado.
 
 ---
 
