@@ -303,6 +303,26 @@
     border:1px solid var(--line-2); border-radius:6px; background:var(--surface); margin-top:2px}
   .pg-dest-txt{grid-area:d; justify-self:start; font-size:11.5px; color:var(--muted); text-wrap:pretty}
   .pg-dest-txt b{font-weight:600; color:var(--ink-3)}
+  /* Notas do mês (XML): quem pesa em cada lado */
+  .modal-caixa:has(.nf){width:min(680px,100%)}
+  .nf{display:flex; flex-direction:column; text-align:left}
+  .nf .sub{margin:0 0 12px}
+  .nf-bloco{margin-bottom:18px}
+  .nf-cab{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding-bottom:6px;
+    border-bottom:1px solid var(--line-2)}
+  .nf-total{font-family:var(--mono); font-size:13px; font-weight:600}
+  .nf-lista{display:flex; flex-direction:column}
+  .nf-linha{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,.9fr) auto 44px; gap:10px;
+    align-items:center; padding:7px 0; border-bottom:1px solid var(--line); font-size:12.5px}
+  .nf-nome{color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .nf-nome small{color:var(--muted-2); font-size:11px}
+  .nf-barra{height:6px; border-radius:3px; background:var(--line)}
+  .nf-barra i{display:block; height:100%; border-radius:3px; background:var(--g-rec)}
+  .nf-v{font-family:var(--mono); text-align:right}
+  .nf-p{font-family:var(--mono); text-align:right; color:var(--muted-2)}
+  .nf .nota{margin:8px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
+  .nf-mes .nf-bloco:last-child{margin-bottom:0}
+  .nf-mes .nf-cab{margin-top:4px}
   .pg .nota{margin:12px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
 
   /* Selo de conferência: filete verde quando está tudo certo, âmbar quando algo pede atenção */
@@ -1243,6 +1263,8 @@ function defaults(){ return {
       saldoCredorAnterior: 0
     },
     // posição de estoque e pagamentos: [descrição, valor]
+    // notas do mês lidas do XML: [documento, nome, valor, quantas notas, regime (compras) ou 'consumidor' (vendas)]
+    notas: {compras: [], vendas: []},
     estoque: [["Inventário 25/11/2025 — custo total",211166.93],["Inventário 25/11/2025 — preço total",569370.33],
               ["Estoque atualizado 26/11/2025 — custo total",177250.29],["Estoque atualizado 26/11/2025 — preço total",453222.22],
               ["Pagamento a fornecedor até dezembro",506100.89]],
@@ -2867,8 +2889,42 @@ function rFaixaSimples(){
 function rRegimes(){
   return rComparativo();
 }
+// Notas do mês: quem pesa nas compras e nas vendas. Só aparece depois de importar os XML do mês.
+function rNotasMes(){
+  const n = (S.monthly.notas || {}), compras = n.compras || [], vendas = n.vendas || [];
+  if(!compras.length && !vendas.length) return '';
+  const bloco = (titulo, linhas, ehCompra) => {
+    if(!linhas.length) return '';
+    const lista = linhas.map(r => ({nome: r[1] || 'sem identificação', valor: +r[2] || 0, qtd: +r[3] || 0,
+                                    marca: r[4] || ''})).sort((a, b) => b.valor - a.valor);
+    const {total, oitenta} = pesoNotas(lista);
+    const semCredito = ehCompra ? lista.filter(x => /simples/i.test(x.marca)) : [];
+    const consumidor = ehCompra ? [] : lista.filter(x => x.marca === 'consumidor');
+    const soma = g => g.reduce((a, x) => a + x.valor, 0);
+    const mostra = lista.slice(0, 8);
+    return `<div class="nf-bloco">
+      <div class="nf-cab"><span class="cap">${titulo}</span><span class="nf-total">${brl(total)}</span></div>
+      <div class="nf-lista">${mostra.map(x => `<div class="nf-linha">
+        <span class="nf-nome">${esc(x.nome)}${x.marca && ehCompra ? ` <small>${esc(x.marca)}</small>` : ''}${x.marca === 'consumidor' ? ' <small>consumidor final</small>' : ''}</span>
+        <span class="nf-barra"><i style="width:${(x.parte * 100).toFixed(1)}%"></i></span>
+        <span class="nf-v">${brl(x.valor)}</span><span class="nf-p">${dec(x.parte * 100, 1, 1)}%</span>
+      </div>`).join('')}</div>
+      ${lista.length > mostra.length ? `<p class="nota">e mais ${lista.length - mostra.length} com participação menor.</p>` : ''}
+      <p class="nota">${oitenta === 1 ? 'Um parceiro responde' : `${oitenta} parceiros respondem`} por 80% do movimento.
+        ${ehCompra && soma(semCredito) > 0.004 ? `${brl(soma(semCredito))} (${dec(soma(semCredito) / total * 100, 1, 1)}%) vêm de fornecedores do Simples, que não dão crédito cheio de CBS.` : ''}
+        ${!ehCompra && soma(consumidor) > 0.004 ? `${brl(soma(consumidor))} (${dec(soma(consumidor) / total * 100, 1, 1)}%) foram para consumidor final, que não aproveita o crédito.` : ''}</p>
+    </div>`;
+  };
+  return `<section class="card nf nf-mes" aria-label="Notas do mês">
+    <div class="card-h"><div><h2>Quem pesa nas compras e nas vendas</h2>
+      <p class="sub">Pelas notas fiscais do mês, lidas do XML.</p></div>
+      ${ui.present ? '' : `<button class="btn" data-act="notas-limpar">limpar</button>`}</div>
+    ${bloco('Compras — fornecedores', compras, true)}
+    ${bloco('Vendas — clientes', vendas, false)}
+  </section>`;
+}
 function rCliente(){
-  return painel('cli', 'cliente', `<div class="cli-blocos">${rCadeia()}${rProdutos()}</div>`);
+  return painel('cli', 'cliente', `<div class="cli-blocos">${rCadeia()}${rProdutos()}</div>`) + rNotasMes();
 }
 const REGIMES = ['Simples Nacional', 'Simples Nacional – IBS/CBS por fora', 'MEI', 'Lucro Presumido', 'Lucro Real', 'Pessoa física', 'Imune / isento', 'Outro'];
 function rCadeia(){
@@ -2917,6 +2973,7 @@ function rCadeia(){
       <div class="cad-h-txt"><h3>Cadeia de crédito</h3><p data-o="cad.resumo"></p></div>
       <div class="cad-ctl">
         <div class="cad-alt" role="group" aria-label="Mostrar">${botao('fornecedores', 'Fornecedores')}${botao('clientes', 'Clientes')}</div>
+        ${ui.present ? '' : `<button class="btn" data-act="notas-xml">importar notas (XML)</button>`}
         ${lst.length ? btnCadastro('cadeia') : ''}
       </div>
     </div>
@@ -4273,9 +4330,69 @@ async function trocar(tipo, valor){
 // produtos e TODOS os meses salvos. Serve para separar uma empresa em duas ou testar um cenário sem tocar na
 // original. O mês aberto vai pelo salvar_painel (é ele que grava a cadeia e o catálogo); os demais são copiados
 // direto da tabela, com o nome trocado dentro de cada estado.
+/* ---------- Notas fiscais (XML): quem são os fornecedores e os clientes do mês ---------- */
+// O XML da NF-e é estruturado: o navegador lê sozinho, sem servidor e sem IA, e nada sai daqui. De cada nota
+// interessam o emitente, o destinatário, o valor e o regime do emitente (CRT: 1 e 2 são Simples, 3 é normal).
+const tagXml = (el, nome) => { const l = el && el.getElementsByTagNameNS('*', nome); return l && l.length ? l[0] : null; };
+const txtXml = (el, nome) => { const t = tagXml(el, nome); return t ? String(t.textContent || '').trim() : ''; };
+const REGIME_CRT = {'1': 'Simples Nacional', '2': 'Simples Nacional', '3': 'Lucro Presumido'};
+function lerNfe(texto){
+  const doc = new DOMParser().parseFromString(texto, 'application/xml');
+  if(doc.getElementsByTagName('parsererror').length) return null;
+  const inf = tagXml(doc, 'infNFe'); if(!inf) return null;
+  const emit = tagXml(inf, 'emit'), dest = tagXml(inf, 'dest'), ide = tagXml(inf, 'ide');
+  const tot = tagXml(inf, 'ICMSTot');
+  if(!emit || !ide) return null;
+  return {
+    chave: (inf.getAttribute('Id') || '').replace(/\D/g, ''),
+    emitente: {cnpj: limpaCnpj(txtXml(emit, 'CNPJ')), nome: txtXml(emit, 'xNome'), crt: txtXml(emit, 'CRT')},
+    destino: dest ? {cnpj: limpaCnpj(txtXml(dest, 'CNPJ')), cpf: txtXml(dest, 'CPF'), nome: txtXml(dest, 'xNome'),
+                     ie: txtXml(dest, 'indIEDest')} : null,
+    valor: +String(txtXml(tot, 'vNF') || 0).replace(',', '.') || 0,
+    emissao: (txtXml(ide, 'dhEmi') || txtXml(ide, 'dEmi') || '').slice(0, 10),
+    natureza: txtXml(ide, 'natOp')
+  };
+}
+// Junta as notas por parceiro. O lado é decidido pelo CNPJ da empresa: nota emitida por ela é venda, nota
+// recebida é compra. Sem o CNPJ da empresa cadastrado, cai no tpNF da própria nota.
+function agruparNotas(notas, cnpjEmpresa){
+  const compras = new Map(), vendas = new Map(), fora = [];
+  const meu = limpaCnpj(cnpjEmpresa || '');
+  notas.forEach(n => {
+    const daEmpresa = meu && n.emitente.cnpj === meu;
+    const paraEmpresa = meu && n.destino && n.destino.cnpj === meu;
+    let lado = daEmpresa ? 'venda' : paraEmpresa ? 'compra' : '';
+    if(!lado){ fora.push(n); return; }                 // nota de outra empresa: fica de fora, e o painel avisa
+    const mapa = lado === 'venda' ? vendas : compras;
+    const p = lado === 'venda' ? (n.destino || {}) : n.emitente;
+    const doc = p.cnpj || p.cpf || '';
+    const chave = doc || (p.nome || 'sem identificação').toUpperCase();
+    const item = mapa.get(chave) || {doc, pf: !p.cnpj && !!p.cpf, nome: p.nome || 'sem identificação',
+      valor: 0, notas: 0, regime: lado === 'compra' ? (REGIME_CRT[n.emitente.crt] || '') : '',
+      consumidor: lado === 'venda' && (!p.cnpj || p.ie === '9')};
+    item.valor += n.valor; item.notas += 1;
+    mapa.set(chave, item);
+  });
+  const lista = mapa => [...mapa.values()].sort((a, b) => b.valor - a.valor);
+  return {compras: lista(compras), vendas: lista(vendas), fora};
+}
+// peso de cada parceiro e quantos respondem por 80% do movimento (a conversa é sempre sobre esses)
+function pesoNotas(lista){
+  const total = lista.reduce((a, x) => a + x.valor, 0);
+  let acum = 0, oitenta = 0;
+  lista.forEach((x, i) => { x.parte = total > 0.004 ? x.valor / total : 0; acum += x.valor;
+    if(!oitenta && total > 0.004 && acum / total >= 0.8) oitenta = i + 1; });
+  return {total, oitenta: oitenta || lista.length};
+}
 // Leitura de documentos: só existe no painel publicado (a chave da API vive na função da Vercel, nunca aqui)
 function leituraDisponivel(){ return banco.ativo && !!banco.sessao && /^https?:$/.test(location.protocol); }
 // declaradas como function para o teste e a página de demonstração poderem trocá-las
+function escolherArquivos(aceita){ return new Promise(resolve => {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = aceita; inp.multiple = true; inp.style.display = 'none';
+  inp.onchange = () => { resolve([...(inp.files || [])]); inp.remove(); };
+  document.body.appendChild(inp); inp.click();
+}); }
 function escolherArquivo(aceita){ return new Promise(resolve => {
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = aceita; inp.style.display = 'none';
@@ -4474,6 +4591,78 @@ async function conferirPgdas(){
     return;
   }
   render();
+}
+// Importar as notas: lê os arquivos escolhidos, mostra o que encontrou e deixa levar para a cadeia de crédito
+async function importarNotas(){
+  const arquivos = await escolherArquivos('.xml');
+  if(!arquivos || !arquivos.length){ render(); return; }
+  ocupado(true);
+  const notas = [], ruins = [];
+  for(const f of arquivos){
+    try { const n = lerNfe(await f.text()); if(n) notas.push(n); else ruins.push(f.name); }
+    catch(e){ ruins.push(f.name); }
+  }
+  ocupado(false);
+  if(!notas.length){ render(); return toast('Nenhuma NF-e reconhecida nos arquivos escolhidos'); }
+  const emp = banco.empresas.find(e => e.id === banco.empresaId) || {};
+  const r = agruparNotas(notas, emp.cnpj || '');
+  S.monthly.notas = {compras: r.compras.map(x => [x.doc, x.nome, x.valor, x.notas, x.regime]),
+                     vendas: r.vendas.map(x => [x.doc, x.nome, x.valor, x.notas, x.consumidor ? 'consumidor' : ''])};
+  const resp = await modal({titulo: 'Notas do mês', html: rNotas(r, notas.length, ruins),
+    botoes: [['fechar', 'Fechar'], ['cadeia', 'Trazer para a cadeia de crédito', 'prim']], padrao: 'fechar'});
+  if(resp.botao === 'cadeia') levarParaCadeia(r);
+  else { ui.tab = 'cliente'; render(); }     // o resumo fica no Resumo do cliente, abaixo da cadeia
+}
+function rNotas(r, quantas, ruins){
+  const bloco = (titulo, lista, ehCompra) => {
+    if(!lista.length) return '';
+    const {total, oitenta} = pesoNotas(lista);
+    const semCredito = ehCompra ? lista.filter(x => /simples/i.test(x.regime)) : [];
+    const somaSem = semCredito.reduce((a, x) => a + x.valor, 0);
+    const consumidor = !ehCompra ? lista.filter(x => x.consumidor) : [];
+    const somaCons = consumidor.reduce((a, x) => a + x.valor, 0);
+    return `<div class="nf-bloco">
+      <div class="nf-cab"><span class="cap">${titulo}</span><span class="nf-total">${brl(total)}</span></div>
+      <div class="nf-lista">${lista.slice(0, 12).map(x => `<div class="nf-linha">
+        <span class="nf-nome">${esc(x.nome)}${x.regime ? ` <small>${esc(x.regime)}</small>` : ''}${x.consumidor ? ' <small>consumidor final</small>' : ''}</span>
+        <span class="nf-barra"><i style="width:${(x.parte * 100).toFixed(1)}%"></i></span>
+        <span class="nf-v">${brl(x.valor)}</span><span class="nf-p">${dec(x.parte * 100, 1, 1)}%</span>
+      </div>`).join('')}</div>
+      ${lista.length > 12 ? `<p class="nota">e mais ${lista.length - 12} com participação menor.</p>` : ''}
+      <p class="nota">${oitenta === 1 ? 'Um parceiro responde' : `${oitenta} parceiros respondem`} por 80% do movimento.
+        ${ehCompra && somaSem > 0.004 ? `${brl(somaSem)} (${dec(somaSem / total * 100, 1, 1)}%) vêm de fornecedores do Simples, que não dão crédito cheio de CBS.` : ''}
+        ${!ehCompra && somaCons > 0.004 ? `${brl(somaCons)} (${dec(somaCons / total * 100, 1, 1)}%) foram para consumidor final, que não aproveita o crédito.` : ''}</p>
+    </div>`;
+  };
+  return `<div class="nf">
+    <p class="sub">${quantas} ${quantas === 1 ? 'nota lida' : 'notas lidas'}${ruins.length ? ` · ${ruins.length} ${ruins.length === 1 ? 'arquivo não era NF-e' : 'arquivos não eram NF-e'}` : ''}${r.fora.length ? ` · ${r.fora.length} de outra empresa, fora da conta` : ''}.</p>
+    ${bloco('Compras — fornecedores', r.compras, true)}
+    ${bloco('Vendas — clientes', r.vendas, false)}
+    <p class="nota">Os arquivos são lidos aqui no navegador: nenhuma nota sai do seu computador.</p>
+  </div>`;
+}
+// leva os parceiros para o cadastro, sem apagar o que já está lá
+function levarParaCadeia(r){
+  const juntar = (grupo, itens, ehCompra) => {
+    const lst = S.cadeia[grupo] = S.cadeia[grupo] || [];
+    let novos = 0, tocados = 0;
+    itens.forEach(x => {
+      if(!x.doc) return;                               // sem CNPJ não dá para casar com o cadastro
+      const atual = lst.find(l => limpaCnpj(l[0]) === limpaCnpj(x.doc));
+      const credito = ehCompra ? (/simples/i.test(x.regime) ? 'parcial' : x.regime ? 'sim' : '') : '';
+      if(atual){
+        if(!atual[1] && x.nome) atual[1] = x.nome;
+        if(!atual[2] && x.regime) atual[2] = x.regime;
+        if(!atual[3] && credito) atual[3] = credito;
+        tocados++;
+      } else { lst.push([x.doc, x.nome, x.regime || '', credito]); novos++; }
+    });
+    return {novos, tocados};
+  };
+  const f = juntar('fornecedores', r.compras, true), c = juntar('clientes', r.vendas, false);
+  ui.tab = 'cliente'; render();
+  toast(`Cadeia atualizada: ${f.novos + c.novos} ${f.novos + c.novos === 1 ? 'novo' : 'novos'}, ` +
+        `${f.tocados + c.tocados} já cadastrados — confira e salve`);
 }
 async function copiarEmpresa(){
   if(!banco.ativo || !banco.empresaId) return;
@@ -4812,6 +5001,8 @@ app.addEventListener('click', e => {
     case 'excluir-mes': ui.menu = false; render(); comErro(excluirMes); break;
     case 'fator-r': ui.menu = false; render(); comErro(alternarFatorR); break;
     case 'pgdas': ui.menu = false; render(); comErro(conferirPgdas); break;
+    case 'notas-xml': comErro(importarNotas); break;
+    case 'notas-limpar': S.monthly.notas = {compras: [], vendas: []}; render(); break;
     case 'copiar-empresa': ui.menu = false; render(); comErro(copiarEmpresa); break;
     case 'excluir-empresa': ui.menu = false; render(); comErro(excluirEmpresa); break;
     case 'lixeira': ui.menu = false; render(); comErro(abrirLixeira); break;

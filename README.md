@@ -738,6 +738,34 @@ atende ramos diferentes — não pode haver "medicamento" hardcoded.
 
 ---
 
+## Notas fiscais (XML)
+
+**Resumo do cliente → cadeia de crédito → importar notas (XML)** (o botão fica no cabeçalho do bloco, ao lado do
+alternador Fornecedores/Clientes — nasceu dentro do estado vazio e sumia assim que havia um cadastro): o navegador lê os XMLs de NF-e escolhidos,
+separa compras e vendas e mostra o peso de cada parceiro. **Nada sai do computador** — XML é estruturado, então
+não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `importarNotas`).
+
+- **Qual lado é qual:** decidido pelo CNPJ da empresa. Nota emitida por ela é venda; recebida, compra; nota entre
+  terceiros fica de fora e a janela diz quantas foram.
+- **O que sai de cada nota:** emitente (CNPJ, nome e CRT), destinatário (CNPJ ou CPF, nome, `indIEDest`), valor
+  total e data. O **CRT do emitente** dá o regime do fornecedor (1 e 2 = Simples, 3 = normal) — é o que decide o
+  crédito de CBS. Do lado das vendas, CPF ou `indIEDest = 9` marca **consumidor final**, que não aproveita
+  crédito.
+- **Relevância:** cada parceiro com a sua participação e uma barra; a nota embaixo diz quantos respondem por 80%
+  do movimento, quanto vem de fornecedor do Simples (sem crédito cheio) e quanto foi para consumidor final.
+- **Trazer para a cadeia de crédito:** completa o cadastro sem duplicar — casa pelo CNPJ, preenche só o que
+  estiver em branco e sugere o crédito pelo regime (Simples → parcial, normal → sim). Como sempre, fica na tela
+  até você salvar.
+- **O que fica depois** (`rNotasMes`): o resumo não morre com a janela. Os valores vão para `monthly.notas` — ou
+  seja, viajam com o mês — e viram o bloco **"Quem pesa nas compras e nas vendas"** no Resumo do cliente, com os
+  oito maiores de cada lado, a barra de participação e as mesmas leituras. Aparece na apresentação ao cliente
+  (lá sem o botão de limpar) e some quando não há notas lidas naquele mês.
+
+Testes: seção `nf)` da suíte do painel — leitura dos campos, separação por CNPJ com descarte de nota de
+terceiros, o peso e a curva de 80%, a cadeia recebendo sem duplicar e o arquivo que não é NF-e sendo ignorado.
+
+---
+
 ## Leitura de documentos (API da Claude)
 
 Uma função na Vercel (`api/claude.js`) lê documentos e devolve os campos em JSON. A primeira aplicação é
