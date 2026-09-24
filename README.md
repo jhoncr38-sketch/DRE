@@ -583,11 +583,32 @@ cálculo mudou). O que entrou:
 - **Cadeia nos textos:** em "Compras do mês", avisa quantos fornecedores não geram crédito cheio
 - **Menu Opções:** Editar valores, Personalizar (nome, períodos, rodapé, 2 cores, logo),
   Modo apresentação, Imprimir, Salvar, Baixar HTML, Restaurar padrão, Limpar tudo
-- **Resumo do cliente** (handoff seção 5): a aba ficou só com a **cadeia de crédito** e os **produtos e
-  serviços**, cada um com o cadastro **recolhido por padrão** ("Ver cadastro" / "Ocultar cadastro",
-  `ui.cadastro`): sobra a frase-resumo e os dois gráficos, que é o que serve à conversa com o cliente.
-  Quem clica em "+ adicionar" abre o cadastro junto (adicionar é editar). O **Modo apresentação**
-  recolhe os dois e não oferece o botão. Os blocos ficam **um abaixo do outro**, em largura cheia
+- **Resumo do cliente — uma lista de cada vez** (reorganizado em 24/09/2026, a pedido do usuário: "muita
+  bagunça, tenho que ir lá embaixo para adicionar um cliente ou produto, não sei o que é fornecedor, cliente").
+  A aba abre com uma **régua** de quatro visões — Fornecedores · Clientes · Produtos e serviços · Notas do mês —,
+  cada uma com a sua contagem (`rCliNav`, `ui.cliVis`). Em cada visão:
+  - **o que é aquilo, em uma linha** (`.cli-def`): "De quem a empresa **compra**. O regime tributário de cada
+    fornecedor define quanto crédito de CBS a compra gera." / "Para quem a empresa **vende**…" / "O que a empresa
+    **vende**…". A frase-resumo estatística continua embaixo.
+  - **barra de trabalho no topo** (`rCliBarra`), antes da lista: busca, filtros e as ações — **+ adicionar**,
+    importar notas (XML) e Ver/Ocultar cadastro. O botão de adicionar continua também no rodapé da tabela, mas
+    não é mais o único: era preciso rolar a página inteira para cadastrar um fornecedor.
+  - **busca** (`normBusca`) sem acento e sem separador, então `37354860` acha o CNPJ escrito com ponto e barra;
+    casa nome, CNPJ e regime na cadeia, nome, NCM, NBS e cClassTrib no catálogo. Filtra só a lista — o gráfico e
+    a frase continuam falando do cadastro inteiro.
+  - **filtros do que falta preencher** (`FILTROS_CADEIA`, `FILTROS_PROD`): sem CNPJ, CNPJ inválido, sem regime,
+    crédito a definir; sem tipo, sem NCM, sem NBS, sem cClassTrib, com redução. Cada um com a contagem, e **só
+    aparece o que tem alguma coisa para achar** — cadastro em dia não mostra filtro nenhum.
+  - **a tabela vem aberta** no trabalho e **recolhida na apresentação** (`cadastroAberto`): quem está cadastrando
+    quer ver a lista; quem está mostrando ao cliente, não.
+  O **Modo apresentação** usa a **mesma régua** (o usuário pediu: "no modo apresentação também tá organizado
+  nesse estilo?"), sem nada de cadastro: sem busca, sem filtros e sem "+ adicionar" — só a definição, a
+  frase-resumo, os gráficos e o "Ver cadastro", para abrir a lista na frente do cliente.
+  **No papel é diferente** (`ui.imprimindo`, ligado por `imprimir()` e desligado no `afterprint`): uma visão por
+  vez serve à tela, mas o PDF do Resumo do cliente tem de levar tudo, então a aba sai **empilhada com as quatro
+  listas** — fornecedores, clientes, catálogo e notas (estas com parceiros *e* itens na mesma folha). Como os dois
+  lados da cadeia saem juntos, cada bloco lê as suas próprias chaves (`cad.fornecedores.*`, `cad.clientes.*`):
+  antes havia só `cad.*`, do lado visível, e os dois blocos mostrariam o mesmo gráfico. Os blocos ficam **um abaixo do outro**, em largura cheia
   (chegou a existir um lado a lado com os dois recolhidos; o usuário preferiu empilhado, que mantém a
   pizza ao lado das barras). O aviso de CNPJ inválido continua visível mesmo recolhido — é problema a
   resolver, não detalhe. "Para onde foi a receita", os quatro cartões ("O mês em quatro números") e o "O que
