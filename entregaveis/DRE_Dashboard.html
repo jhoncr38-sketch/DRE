@@ -4336,9 +4336,12 @@ async function trocar(tipo, valor){
 const tagXml = (el, nome) => { const l = el && el.getElementsByTagNameNS('*', nome); return l && l.length ? l[0] : null; };
 const txtXml = (el, nome) => { const t = tagXml(el, nome); return t ? String(t.textContent || '').trim() : ''; };
 const REGIME_CRT = {'1': 'Simples Nacional', '2': 'Simples Nacional', '3': 'Lucro Presumido'};
-function lerNfe(texto){
+function lerNfe(texto){                             // continua aceitando o texto: é assim que o teste chama
   const doc = new DOMParser().parseFromString(texto, 'application/xml');
   if(doc.getElementsByTagName('parsererror').length) return null;
+  return lerNfeDoc(doc);
+}
+function lerNfeDoc(doc){
   const inf = tagXml(doc, 'infNFe'); if(!inf) return null;
   const emit = tagXml(inf, 'emit'), dest = tagXml(inf, 'dest'), ide = tagXml(inf, 'ide');
   const tot = tagXml(inf, 'ICMSTot');
@@ -4352,6 +4355,37 @@ function lerNfe(texto){
     emissao: (txtXml(ide, 'dhEmi') || txtXml(ide, 'dEmi') || '').slice(0, 10),
     natureza: txtXml(ide, 'natOp')
   };
+}
+// NFS-e: o nacional traz prestador em <emit>/<prest> e tomador em <toma>; o ABRASF, em <PrestadorServico> e
+// <TomadorServico>. O valor pode vir como líquido ou bruto. Não existe CRT aqui — o regime do prestador fica
+// para o cadastro —, mas vem o ISS retido, que é o que o painel usa na coluna "No DAS".
+const primeiroTag = (el, nomes) => { for(const n of nomes){ const t = tagXml(el, n); if(t) return t; } return null; };
+const primeiroTxt = (el, nomes) => { for(const n of nomes){ const v = txtXml(el, n); if(v) return v; } return ''; };
+function lerNfse(doc){
+  const inf = primeiroTag(doc, ['infNFSe', 'InfNfse', 'infNfse']);
+  if(!inf) return null;
+  const prest = primeiroTag(inf, ['PrestadorServico', 'prest', 'emit', 'Prestador']) || inf;
+  const toma = primeiroTag(inf, ['TomadorServico', 'toma', 'Tomador', 'dest']);
+  const valor = +String(primeiroTxt(inf, ['vLiq', 'ValorLiquidoNfse', 'vServ', 'ValorServicos', 'vNF']) || 0).replace(',', '.') || 0;
+  const iss = primeiroTxt(inf, ['IssRetido', 'tpRetISSQN']);
+  return {
+    chave: (inf.getAttribute('Id') || '').replace(/\D/g, ''),
+    servico: true,
+    issRetido: iss === '1' || /^(sim|true)$/i.test(iss),
+    emitente: {cnpj: limpaCnpj(primeiroTxt(prest, ['Cnpj', 'CNPJ'])),
+               nome: primeiroTxt(prest, ['RazaoSocial', 'xNome', 'NomeFantasia', 'xFant']), crt: ''},
+    destino: toma ? {cnpj: limpaCnpj(primeiroTxt(toma, ['Cnpj', 'CNPJ'])), cpf: primeiroTxt(toma, ['Cpf', 'CPF']),
+                     nome: primeiroTxt(toma, ['RazaoSocial', 'xNome']), ie: ''} : null,
+    valor,
+    emissao: (primeiroTxt(inf, ['DataEmissao', 'dhEmi', 'dhProc']) || '').slice(0, 10),
+    natureza: 'Serviço'
+  };
+}
+// um arquivo, dois mundos: tenta a nota de mercadoria e, se não for, a de serviço
+function lerNota(texto){
+  const doc = new DOMParser().parseFromString(texto, 'application/xml');
+  if(doc.getElementsByTagName('parsererror').length) return null;
+  return lerNfeDoc(doc) || lerNfse(doc);
 }
 // Junta as notas por parceiro. O lado é decidido pelo CNPJ da empresa: nota emitida por ela é venda, nota
 // recebida é compra. Sem o CNPJ da empresa cadastrado, cai no tpNF da própria nota.
@@ -4369,12 +4403,13 @@ function agruparNotas(notas, cnpjEmpresa){
     const chave = doc || (p.nome || 'sem identificação').toUpperCase();
     const item = mapa.get(chave) || {doc, pf: !p.cnpj && !!p.cpf, nome: p.nome || 'sem identificação',
       valor: 0, notas: 0, regime: lado === 'compra' ? (REGIME_CRT[n.emitente.crt] || '') : '',
-      consumidor: lado === 'venda' && (!p.cnpj || p.ie === '9')};
+      servico: false, consumidor: lado === 'venda' && (!p.cnpj || p.ie === '9')};
+    if(n.servico) item.servico = true;
     item.valor += n.valor; item.notas += 1;
     mapa.set(chave, item);
   });
   const lista = mapa => [...mapa.values()].sort((a, b) => b.valor - a.valor);
-  return {compras: lista(compras), vendas: lista(vendas), fora};
+  return {compras: lista(compras), vendas: lista(vendas), fora, servicos: notas.filter(n => n.servico).length};
 }
 // peso de cada parceiro e quantos respondem por 80% do movimento (a conversa é sempre sobre esses)
 function pesoNotas(lista){
@@ -4599,14 +4634,14 @@ async function importarNotas(){
   ocupado(true);
   const notas = [], ruins = [];
   for(const f of arquivos){
-    try { const n = lerNfe(await f.text()); if(n) notas.push(n); else ruins.push(f.name); }
+    try { const n = lerNota(await f.text()); if(n) notas.push(n); else ruins.push(f.name); }
     catch(e){ ruins.push(f.name); }
   }
   ocupado(false);
   if(!notas.length){ render(); return toast('Nenhuma NF-e reconhecida nos arquivos escolhidos'); }
   const emp = banco.empresas.find(e => e.id === banco.empresaId) || {};
   const r = agruparNotas(notas, emp.cnpj || '');
-  S.monthly.notas = {compras: r.compras.map(x => [x.doc, x.nome, x.valor, x.notas, x.regime]),
+  S.monthly.notas = {compras: r.compras.map(x => [x.doc, x.nome, x.valor, x.notas, x.regime || (x.servico ? 'serviço' : '')]),
                      vendas: r.vendas.map(x => [x.doc, x.nome, x.valor, x.notas, x.consumidor ? 'consumidor' : ''])};
   const resp = await modal({titulo: 'Notas do mês', html: rNotas(r, notas.length, ruins),
     botoes: [['fechar', 'Fechar'], ['cadeia', 'Trazer para a cadeia de crédito', 'prim']], padrao: 'fechar'});
@@ -4624,7 +4659,7 @@ function rNotas(r, quantas, ruins){
     return `<div class="nf-bloco">
       <div class="nf-cab"><span class="cap">${titulo}</span><span class="nf-total">${brl(total)}</span></div>
       <div class="nf-lista">${lista.slice(0, 12).map(x => `<div class="nf-linha">
-        <span class="nf-nome">${esc(x.nome)}${x.regime ? ` <small>${esc(x.regime)}</small>` : ''}${x.consumidor ? ' <small>consumidor final</small>' : ''}</span>
+        <span class="nf-nome">${esc(x.nome)}${x.regime ? ` <small>${esc(x.regime)}</small>` : x.servico ? ' <small>serviço</small>' : ''}${x.consumidor ? ' <small>consumidor final</small>' : ''}</span>
         <span class="nf-barra"><i style="width:${(x.parte * 100).toFixed(1)}%"></i></span>
         <span class="nf-v">${brl(x.valor)}</span><span class="nf-p">${dec(x.parte * 100, 1, 1)}%</span>
       </div>`).join('')}</div>
@@ -4634,8 +4669,11 @@ function rNotas(r, quantas, ruins){
         ${!ehCompra && somaCons > 0.004 ? `${brl(somaCons)} (${dec(somaCons / total * 100, 1, 1)}%) foram para consumidor final, que não aproveita o crédito.` : ''}</p>
     </div>`;
   };
+  const servicos = r.servicos || 0, mercadorias = quantas - servicos;
+  const tipos = servicos && mercadorias ? ` (${mercadorias} de mercadoria, ${servicos} de serviço)`
+    : servicos ? ' de serviço' : '';
   return `<div class="nf">
-    <p class="sub">${quantas} ${quantas === 1 ? 'nota lida' : 'notas lidas'}${ruins.length ? ` · ${ruins.length} ${ruins.length === 1 ? 'arquivo não era NF-e' : 'arquivos não eram NF-e'}` : ''}${r.fora.length ? ` · ${r.fora.length} de outra empresa, fora da conta` : ''}.</p>
+    <p class="sub">${quantas} ${quantas === 1 ? 'nota lida' : 'notas lidas'}${tipos}${ruins.length ? ` · ${ruins.length} ${ruins.length === 1 ? 'arquivo não reconhecido' : 'arquivos não reconhecidos'}` : ''}${r.fora.length ? ` · ${r.fora.length} de outra empresa, fora da conta` : ''}.</p>
     ${bloco('Compras — fornecedores', r.compras, true)}
     ${bloco('Vendas — clientes', r.vendas, false)}
     <p class="nota">Os arquivos são lidos aqui no navegador: nenhuma nota sai do seu computador.</p>

@@ -751,6 +751,14 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   total e data. O **CRT do emitente** dá o regime do fornecedor (1 e 2 = Simples, 3 = normal) — é o que decide o
   crédito de CBS. Do lado das vendas, CPF ou `indIEDest = 9` marca **consumidor final**, que não aproveita
   crédito.
+- **Nota de serviço também entra** (`lerNfse`, com `lerNota` roteando): NFS-e não tem um layout só, então são
+  lidos o **padrão nacional** (`infNFSe`, com `emit`/`prest` e `toma`) e o **ABRASF** das prefeituras
+  (`InfNfse`, com `PrestadorServico` e `TomadorServico`), pegando as tags em qualquer nível e aceitando as
+  variações de valor (`vLiq`, `ValorLiquidoNfse`, `vServ`, `ValorServicos`). Serviço e mercadoria somam nos
+  mesmos dois blocos, e a janela diz quantas notas vieram de cada tipo. **Não existe CRT na NFS-e**: o prestador
+  entra sem regime (marcado como "serviço" na lista) e o cadastro pergunta. Em compensação vem o ISS retido
+  (`IssRetido`/`tpRetISSQN`), guardado na leitura. Layout municipal próprio (São Paulo, por exemplo) continua
+  caindo em "arquivos não reconhecidos", que a janela conta.
 - **Relevância:** cada parceiro com a sua participação e uma barra; a nota embaixo diz quantos respondem por 80%
   do movimento, quanto vem de fornecedor do Simples (sem crédito cheio) e quanto foi para consumidor final.
 - **Trazer para a cadeia de crédito:** completa o cadastro sem duplicar — casa pelo CNPJ, preenche só o que
