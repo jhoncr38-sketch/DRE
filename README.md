@@ -830,6 +830,17 @@ coisa só confundem.) manda a declaração, e o painel mostra lado a lado o que 
 lançado no mês aberto — competência, CNPJ, receita do período, DAS e RBT12 —, marcando o que não bate. Diferença
 de até R$ 1 passa (centavo de arredondamento não é divergência).
 
+**Quando a declaração não diz o anexo** (24/09/2026): o PGDAS nem sempre escreve "Anexo I" — muitas trazem só o
+nome da atividade, e a leitura devolve `anexo: null` (a instrução manda copiar, não deduzir). Antes o painel
+simplesmente não oferecia o campo, e a receita ficava em *"Escolha o anexo…"* com o DAS sem calcular. Agora,
+quando o anexo falta, a janela pergunta. **Com uma receita só** (ou nenhuma atividade discriminada), é um
+seletor "Anexo do Simples" (I a V, com o nome de cada um) que preenche o anexo do mês. **Com duas ou mais
+receitas sem anexo**, é **um seletor por receita** — comércio e serviço na mesma declaração não podem entrar pelo
+mesmo anexo só porque o documento não escreveu qual é: cada linha de receita nasce com o seu (posição 6), e o
+anexo do mês, se estiver vazio, recebe o da receita que mais pesa, que é o que o painel usa quando uma linha não
+tem anexo próprio. Marcar sem escolher não aplica nada — o painel não inventa anexo. A instrução da função também ganhou onde procurar (tabela de apuração e título da
+seção) e a ordem de dizer em `observacoes` quando o documento não trouxer.
+
 **Preencher o mês** (`camposPgdas`, `aplicarPgdas`): cada campo divergente ganha uma caixa *usar*, e o botão joga
 os marcados na tela — receita na primeira linha de receita, DAS na linha "Simples Nacional" das despesas
 tributárias (criada se não existir), RBT12 no campo, e o anexo quando a declaração traz um só e ele difere.

@@ -41,7 +41,10 @@ const FERRAMENTA_PGDAS = {
           type: 'object',
           properties: {
             descricao: {type: ['string', 'null']},
-            anexo: {type: ['string', 'null'], description: 'I, II, III, IV ou V.'},
+            anexo: {type: ['string', 'null'],
+              description: 'Anexo do Simples desta receita: I, II, III, IV ou V. Procure no cabeçalho da tabela ' +
+                'de apuração, ao lado da atividade, ou na seção que separa as receitas por anexo. Quando a ' +
+                'declaração não escrever o anexo em lugar nenhum, devolva null — não deduza pelo nome da atividade.'},
             receita: {type: ['number', 'null'], description: 'Receita da atividade no período, em reais.'},
             aliquota_efetiva: {type: ['number', 'null'], description: 'Alíquota efetiva em porcentagem, como 8.03.'},
             icms_st: {type: ['boolean', 'null'],
@@ -74,7 +77,10 @@ const INSTRUCAO_PGDAS =
   '8,03%). Nas atividades, separe uma linha para cada combinação de atividade e situação tributária que a ' +
   'declaração mostrar, e marque icms_st, monofasico e iss_retido conforme o que estiver escrito (substituição ' +
   'tributária de ICMS, tributação monofásica ou substituição de PIS/Cofins, ISS retido na fonte); sem menção, ' +
-  'deixe false. Se o documento não for um PGDAS, devolva tudo null e diga isso em observacoes.';
+  'deixe false. O anexo costuma vir escrito na tabela de apuração ("Anexo I", "Anexo III") ou como título da ' +
+  'seção que separa as receitas — procure nos dois lugares antes de desistir, e diga em observacoes quando o ' +
+  'documento não trouxer o anexo em parte nenhuma. Se o documento não for um PGDAS, devolva tudo null e diga ' +
+  'isso em observacoes.';
 
 const ACOES = {
   pgdas: {ferramenta: FERRAMENTA_PGDAS, instrucao: INSTRUCAO_PGDAS, tokens: 2000,

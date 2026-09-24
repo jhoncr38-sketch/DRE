@@ -303,6 +303,11 @@
     border:1px solid var(--line-2); border-radius:6px; background:var(--surface); margin-top:2px}
   .pg-dest-txt{grid-area:d; justify-self:start; font-size:11.5px; color:var(--muted); text-wrap:pretty}
   .pg-dest-txt b{font-weight:600; color:var(--ink-3)}
+  .pg-falta{font-size:11.5px; color:var(--muted-2)}
+  .pg-anexos{grid-area:d; display:flex; flex-direction:column; gap:6px; margin-top:2px}
+  .pg-anexo-l{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .pg-anexo-n{font-size:11.5px; color:var(--muted); flex:1; min-width:180px; max-width:300px}
+  .pg-anexo-n b{font-weight:600; color:var(--ink-3)}
   /* Notas do mês (XML): quem pesa em cada lado */
   .modal-caixa:has(.nf){width:min(680px,100%)}
   .modal-caixa:has(.nf), .modal-caixa:has(.pg){max-height:calc(100dvh - 32px); overflow:auto; overscroll-behavior:contain}
@@ -4696,7 +4701,13 @@ function camposPgdas(d){
   const c = calcMes(), campos = [];
   const debitos = S.monthly.reforma.debitos || [];
   const ativs = atividadesPgdas(d);
-  if(d.receita_bruta_pa != null){
+  // Só entra aqui o que muda alguma coisa: o que já bate com o lançado está logo acima, na comparação, e
+  // repetir embaixo só dá trabalho de conferir. A receita é exceção quando a declaração separa atividades e o
+  // mês ainda está numa linha só — aí o total bate, mas a estrutura muda.
+  const perto = (a, b) => Math.abs((+a || 0) - (+b || 0)) <= 1;
+  const jaSegregado = !ativs.length || (debitos.length === ativs.length &&
+    ativs.every((a, i) => perto(a.receita, +debitos[i][1] || 0)));
+  if(d.receita_bruta_pa != null && !(perto(d.receita_bruta_pa, c.R) && jaSegregado)){
     // a receita do mês é a soma das linhas: a linha escolhida absorve a diferença para o total bater com a
     // declaração. Com uma linha só, ela recebe o total — a conta é a mesma.
     const soma = debitos.reduce((a, r) => a + (+r[1] || 0), 0);
@@ -4709,16 +4720,33 @@ function camposPgdas(d){
       opcoes: !ativs.length && opcoes.length > 1 ? opcoes : null,
       padrao: ativs.length ? 'seg' : (opcoes[0] ? opcoes[0].v : '0')});
   }
-  if(d.das_total != null) campos.push({k: 'das', rot: 'DAS', valor: d.das_total, impede: ''});
-  if(d.rbt12 != null) campos.push({k: 'rbt12', rot: 'Receita dos últimos 12 meses', valor: d.rbt12, impede: ''});
+  if(d.das_total != null && !perto(d.das_total, c.simplesDeclarado))
+    campos.push({k: 'das', rot: 'DAS', valor: d.das_total, impede: ''});
+  if(d.rbt12 != null && !perto(d.rbt12, +S.monthly.rbt12 || 0))
+    campos.push({k: 'rbt12', rot: 'Receita dos últimos 12 meses', valor: d.rbt12, impede: ''});
+  // O anexo: a declaração nem sempre escreve "Anexo I" — muitas trazem só o nome da atividade. Quando ela diz,
+  // o campo vem pronto; quando não diz e o mês está sem anexo, a janela oferece a escolha, porque sem anexo o
+  // painel não calcula o DAS e a linha de receita fica em "Escolha o anexo…".
   const anexos = [...new Set(ativs.map(a => a.anexo).filter(Boolean))];
-  if(anexos.length === 1 && anexos[0] !== S.anexo)
+  const semAnexo = ativs.map((a, i) => ({...a, i})).filter(a => !a.anexo);
+  if(anexos.length === 1 && anexos[0] !== S.anexo && !semAnexo.length)
     campos.push({k: 'anexo', rot: 'Anexo', valor: anexos[0], impede: '', texto: true});
+  else if(semAnexo.length > 1)
+    // duas receitas sem anexo podem ser de anexos diferentes (comércio e serviço na mesma declaração): uma
+    // escolha por receita, e cada linha nasce com o seu
+    campos.push({k: 'anexo', rot: 'Anexo de cada receita', valor: '', impede: '', escolher: true,
+      porAtividade: semAnexo, nota: 'a declaração não diz o anexo'});
+  else if(semAnexo.length === 1 && !anexos.length && !ANEXOS[S.anexo])
+    campos.push({k: 'anexo', rot: 'Anexo do Simples', valor: '', impede: '', escolher: true,
+      nota: 'a declaração não diz o anexo'});
+  else if(!ativs.length && !ANEXOS[S.anexo])
+    campos.push({k: 'anexo', rot: 'Anexo do Simples', valor: '', impede: '', escolher: true,
+      nota: 'a declaração não diz o anexo'});
   return campos;
 }
 // Aplica no estado da tela o que foi marcado. Não salva: o painel fica "com alterações não salvas" e a pessoa
 // confere antes de gravar.
-function aplicarPgdas(d, marcados, linhaReceita){
+function aplicarPgdas(d, marcados, linhaReceita, extras){
   const feitos = [];
   const campos = camposPgdas(d).filter(x => !x.impede && marcados.includes(x.k));
   campos.forEach(x => {
@@ -4726,10 +4754,12 @@ function aplicarPgdas(d, marcados, linhaReceita){
       const deb = S.monthly.reforma.debitos, destino = linhaReceita != null ? String(linhaReceita) : String(x.padrao);
       if(destino === 'seg'){
         // uma linha por atividade, com o anexo de cada uma. A alíquota e o tipo da CBS saem da primeira linha
-        // que já existia, para não perder a premissa do mês
+        // que já existia, para não perder a premissa do mês. O anexo que a declaração não trouxe vem da escolha
+        // feita na janela, receita por receita.
         const modelo = deb[0] || ['', 0, S.monthly.reforma.aliqGeral || 0, 'geral'];
-        S.monthly.reforma.debitos = atividadesPgdas(d).map(a =>
-          [a.descricao, a.receita, modelo[2] || 0, modelo[3] || 'geral', '', a.sit, a.anexo || '']);
+        const escolha = i => { const v = String((extras || {})[`pg_anexo_${i}`] || ''); return ANEXOS[v] ? v : ''; };
+        S.monthly.reforma.debitos = atividadesPgdas(d).map((a, i) =>
+          [a.descricao, a.receita, modelo[2] || 0, modelo[3] || 'geral', '', a.sit, a.anexo || escolha(i)]);
         feitos.push('receita segregada por atividade'); sincronizarReceita();
         return;                                       // o rótulo já foi anotado
       }
@@ -4744,7 +4774,23 @@ function aplicarPgdas(d, marcados, linhaReceita){
       if(atual) atual[1] = x.valor; else trib.push(['Simples Nacional', x.valor]);
     }
     if(x.k === 'rbt12') S.monthly.rbt12 = x.valor;
-    if(x.k === 'anexo') S.anexo = x.valor;
+    if(x.k === 'anexo'){
+      if(x.porAtividade){
+        // o anexo mora em cada linha de receita; o da empresa só é preenchido se estiver vazio, com o da
+        // receita que mais pesa — é o que o painel usa quando uma linha não tem anexo próprio
+        const escolhidos = x.porAtividade.map(a => ({...a, esc: String((extras || {})[`pg_anexo_${a.i}`] || '')}))
+          .filter(a => ANEXOS[a.esc]);
+        if(!escolhidos.length) return;
+        if(!ANEXOS[S.anexo]) S.anexo = escolhidos.slice().sort((a, b) => b.receita - a.receita)[0].esc;
+        feitos.push(escolhidos.length === 1 ? 'anexo de 1 receita' : `anexo de ${escolhidos.length} receitas`);
+        return;
+      }
+      const escolhido = x.escolher ? String((extras || {}).pg_anexo_v || '') : x.valor;
+      if(!ANEXOS[escolhido]) return;                  // marcou a caixa mas não escolheu: não inventa anexo
+      S.anexo = escolhido;
+      feitos.push(`anexo ${escolhido}`);
+      return;
+    }
     feitos.push(x.rot.toLowerCase());
   });
   if(feitos.length){ render(); toast(`Preenchido: ${feitos.join(', ')} — confira e salve`); }
@@ -4794,13 +4840,27 @@ function rComparaPgdas(d){
       <span class="cap">Atividades declaradas</span>
       ${ativs.map(a => `<div class="pg-ativ"><span>${esc(a.descricao || '—')}${a.anexo ? ` · Anexo ${esc(a.anexo)}` : ''}</span>` +
         `<span class="v">${a.receita != null ? brl(a.receita) : '—'}${a.aliquota_efetiva != null ? ` · ${dec(a.aliquota_efetiva, 2, 2)}%` : ''}</span></div>`).join('')}
+      ${ativs.every(a => a.anexo) ? '' : `<p class="nota">${ativs.filter(a => !a.anexo).length === ativs.length
+        ? (ativs.length > 1 ? 'A declaração não diz o anexo de nenhuma delas — escolha o de cada uma abaixo, porque comércio e serviço não entram pelo mesmo.'
+                            : 'A declaração não diz o anexo — escolha abaixo.')
+        : 'A declaração não diz o anexo de todas — escolha o que falta abaixo.'}</p>`}
     </div>` : '';
 
   // --- preencher: caixa, campo, valor. O destino só aparece quando há escolha a fazer (linha de receita).
   const campos = mesmoMes && mesmaEmpresa ? camposPgdas(d) : [];
   const itens = campos.map(campo => {
-    const valor = campo.k === 'anexo' ? `Anexo ${esc(campo.valor)} (hoje ${esc(S.anexo || '—')})` : brl(campo.valor);
-    const seletor = campo.segregar
+    const valor = campo.escolher ? `<span class="pg-falta">${esc(campo.nota || '')}</span>`
+      : campo.k === 'anexo' ? `Anexo ${esc(campo.valor)} (hoje ${esc(S.anexo || '—')})` : brl(campo.valor);
+    const opcoesAnexo = (nome, rotulo) => `<select class="pg-dest" name="${nome}" aria-label="${esc(rotulo)}">
+      <option value="">escolha o anexo…</option>${Object.keys(ANEXOS).map(a =>
+      `<option value="${a}">Anexo ${a} — ${esc(ANEXOS[a].nome)}</option>`).join('')}</select>`;
+    const seletor = campo.porAtividade
+      ? `<span class="pg-anexos">${campo.porAtividade.map(a => `<span class="pg-anexo-l">
+          <span class="pg-anexo-n">${esc(a.descricao)}${a.sit ? ` <b>${esc(a.sitNome)}</b>` : ''} ${brl(a.receita)}</span>
+          ${opcoesAnexo(`pg_anexo_${a.i}`, `Anexo de ${a.descricao}`)}</span>`).join('')}</span>`
+      : campo.escolher
+      ? opcoesAnexo('pg_anexo_v', 'Anexo do Simples')
+      : campo.segregar
       ? `<span class="pg-dest-txt">${campo.segregar.length === 1 ? 'em 1 linha' : `em ${campo.segregar.length} linhas`}: ` +
         campo.segregar.map(a => `${esc(a.descricao)}${a.anexo ? ` <b>${esc(a.anexo)}</b>` : ''}` +
           `${a.sit ? ` <b>${esc(a.sitNome)}</b>` : ''} ${brl(a.receita)}`).join(' · ') + `</span>`
@@ -4828,7 +4888,7 @@ function rComparaPgdas(d){
 }
 // o que o formulário da janela devolve: as caixas marcadas viram a lista de campos (pg_linha é o seletor)
 const marcadosPgdas = valores => Object.keys(valores || {})
-  .filter(k => k.startsWith('pg_') && k !== 'pg_linha').map(k => k.slice(3));
+  .filter(k => k.startsWith('pg_') && k !== 'pg_linha' && !/^pg_anexo_/.test(k)).map(k => k.slice(3));
 async function conferirPgdas(){
   if(!leituraDisponivel()) return toast('A leitura de documentos só funciona no painel publicado, com sessão aberta.');
   const arquivo = await escolherArquivo('.pdf,.png,.jpg,.jpeg,.webp');
@@ -4849,7 +4909,7 @@ async function conferirPgdas(){
                         : [['fechar', 'Fechar', 'prim']],
     padrao: 'fechar'});
   if(r.botao === 'preencher'){
-    if(!aplicarPgdas(dados, marcadosPgdas(r.valores), r.valores.pg_linha)) toast('Nada marcado para preencher');
+    if(!aplicarPgdas(dados, marcadosPgdas(r.valores), r.valores.pg_linha, r.valores)) toast('Nada marcado para preencher');
     return;
   }
   render();
