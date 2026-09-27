@@ -846,6 +846,23 @@ código para copiar**. Ordem combinada: fundação → casca → telas → Paine
 - **Memória da CBS** com as barras em azul petróleo e o bloco "CBS a pagar" em fundo neutro, sem filete lateral
   e sem vermelho (o valor só fica verde quando o crédito passa o débito — aí é dinheiro a favor).
 
+- **Notas do mês: importador num lugar só.** O botão vive na aba Notas (no estado vazio e no cabeçalho do
+  bloco); nas outras listas, o estado vazio diz os dois caminhos e leva até lá. Com notas já lidas o botão
+  continua à mão — antes era preciso limpar para reimportar —, e a janela avisa que a leitura nova **substitui**
+  a anterior (para juntar, escolher todos os arquivos de uma vez).
+- **Parceiros e itens no mesmo resumo** (`grupoPorPeso`): as duas visões do bloco de notas deixaram a barrinha
+  por linha e passaram para o padrão do v3. O número grande é a **concentração** ("2 fornecedores respondem por
+  80% das compras do mês"), que antes era uma frase no rodapé. A rampa foi de cinco para oito tons — com cinco,
+  o quinto parceiro repetia cor — e o que sobra entra como "outros N", para a barra continuar sendo 100% do mês.
+  A redução da CBS de cada item desceu para o subtexto da linha.
+- **Tabela do catálogo sem o movimento do mês**: ele ficou na aba Notas, com barra, valor e fatia. Na tabela era
+  a segunda aparição do mesmo dado e disputava espaço com os códigos, que é o que se edita ali. Saiu também o
+  `min-width` de 700px (herança das sete colunas) e o tamanho natural dos `<input>`, que juntos deixavam dois
+  pixels de rolagem horizontal.
+- **Campo pendente**: a classe passou a ser `sel-vazio`. `vazio` já era a classe do estado vazio de uma tela
+  inteira (margem, padding grande e texto centralizado) e o `<select>` herdava tudo — a linha ficava mais alta e
+  o "Regime…" saía centralizado.
+
 **A fazer:** o **Relatório do cliente** (A4, 5 páginas). O gráfico do **Fator R** não está no handoff (nasceu
 depois) e ficou como estava.
 

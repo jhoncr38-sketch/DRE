@@ -344,6 +344,8 @@
   .nf-v{font-family:var(--mono); text-align:right}
   .nf-p{font-family:var(--mono); text-align:right; color:var(--muted-2)}
   .nf .nota{margin:8px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
+  .nf-troca{margin:0 0 12px; padding:10px 12px; font-size:12.5px; line-height:1.5; text-wrap:pretty;
+    background:#FBF2DE; border:1px solid #E8D9AE; border-radius:var(--r-2); color:#96701A}
   .nf-mes .nf-bloco:last-child{margin-bottom:0}
   .nf-mes .nf-cab{margin-top:4px}
   .nf-it .nf-nome{white-space:normal; overflow:visible; line-height:1.35}
@@ -1035,20 +1037,24 @@
   .rc-linha{display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); font-size:12.5px}
   .rc-linha:last-child{border-bottom:0}
   .rc-ponto{width:8px; height:8px; border-radius:2px; flex:0 0 8px}
-  .rc-nome{flex:1; min-width:0; color:var(--ink-2)}
+  .rc-nome{flex:1; min-width:0; color:var(--ink-2); display:flex; flex-direction:column; gap:2px}
+  .rc-nome small{font-size:11.5px; color:var(--muted-2)}
   .rc-n{color:var(--muted-2)}
   .rc-v{font-weight:600; min-width:96px; text-align:right}
   .rc-p{color:var(--muted-2); min-width:52px; text-align:right}
   .rc-rot{display:block; margin-bottom:8px}
   /* tabela nota a nota */
-  .gnf{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr); gap:14px;
-    align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:640px}
+  .gnf{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1fr) 84px minmax(0,1fr); gap:14px;
+    align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:700px}
   .gnf.gh{padding:0 0 8px; border-bottom:1px solid #CFC9BF; font-size:10.5px; font-weight:600;
     letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
   .gnf > span:nth-child(n+3){text-align:right}
+  .gnf.gh > span:nth-child(2){text-align:left}   /* a regra geral de .gh joga tudo à direita; o fornecedor é texto */
   .gnf.gh > span:nth-child(n+3){text-align:right}
   .gnf-forn{color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .gnf-sem{color:var(--muted-2); font-size:12px}
+  .gnf-sem.pend{color:#96701A}                       /* sem regime cadastrado: é pendência, não informação */
+  .gnf-pe{padding:12px 0 0; font-size:12.5px; color:var(--muted)}
   .cad-ctl{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
   .cad-alt{display:flex; gap:6px; background:var(--alt); padding:4px; border-radius:var(--r)}
   .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:var(--r-2); background:transparent; color:var(--muted); cursor:pointer}
@@ -1094,7 +1100,9 @@
   .cad-row:not(.gh):hover{background:var(--hover-linha)}
   /* produtos e serviços: as duas alíquotas saem calculadas, por isso são texto e não campo */
   .gprod{display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.15fr) 20px;
-    gap:14px; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:700px}
+    gap:14px; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px}
+  /* sem isto o tamanho natural do <input> segura a coluna e sobram dois pixels de rolagem */
+  .gprod > *, .gprod .in, .gprod .sel-wrap, .gprod .sel{min-width:0; max-width:100%}
   .gprod:not(.gh):hover{background:var(--hover-linha)}
   .gprod.gh{padding:0 0 7px; border-bottom-color:var(--ink)}
   .gprod.gh > span{text-align:left}
@@ -1116,7 +1124,7 @@
   .cad-cnpj{display:flex; align-items:center; gap:7px; min-width:0}
   .cad-cnpj .ponto{width:5px; height:5px; border-radius:50%; background:var(--line-2); flex:none}
   .cad-row .in:placeholder-shown::placeholder, .gprod .in:placeholder-shown::placeholder{color:#B09256}
-  .sel.vazio{color:#96701A}
+  .sel.sel-vazio{color:#96701A}
   .cad-cnpj.inv .ponto{background:var(--brand)}
   .cad-cnpj.inv .in{color:var(--brand)}
   .sel-wrap{position:relative; display:flex; align-items:center; min-width:0}
@@ -1368,7 +1376,7 @@
     /* tabelas no tamanho da folha, sem a coluna do botão de remover */
     .g5{grid-template-columns:minmax(0,1fr) 96px 130px 96px 90px}
     .grec{grid-template-columns:minmax(0,1fr) 110px 140px 130px 100px}
-    .gprod{min-width:0; grid-template-columns:minmax(0,1fr) 70px 90px 90px 120px 80px}
+    .gprod{grid-template-columns:minmax(0,1.6fr) 96px 90px 110px}
     .cad-row{grid-template-columns:150px minmax(0,1fr) 170px 100px}
     /* Presumido e ano: na tela as colunas têm a largura do conteúdo e a área rola de lado; no papel não há
        para onde rolar, então elas encolhem e a tabela cabe na folha */
@@ -1865,7 +1873,8 @@ function valorPorParceiro(lado){
   return m;
 }
 // as cores da lista: do dado principal ao neutro, na ordem em que as categorias aparecem
-const CORES_CAT = ['#3F6E73', '#8FB1B4', '#BDB5A8', '#E2DFD8', '#EFECE6'];
+// oito tons, do azul petróleo ao neutro: com cinco, os últimos parceiros da lista repetiam cor
+const CORES_CAT = ['#3F6E73', '#557E82', '#6B8E91', '#8FB1B4', '#BDB5A8', '#CFC9BF', '#E2DFD8', '#EFECE6'];
 // os regimes presentes na lista, os que mais pesam primeiro e "sem regime" sempre no fim
 function catsRegime(lst){
   const nomes = [...new Set(lst.map(r => r[2] || ''))];
@@ -1909,13 +1918,24 @@ function resumoCadastro({lst, cats, chave, doc, lado, rotulo, fraseOk, baseTxt, 
         : `Sobre ${brl(total)} movimentados no mês pelas notas importadas.`)
       : baseTxt(lst.length)};
 }
+// Monta o resumo a partir de uma lista já ordenada por valor: os oito primeiros viram segmentos da barra e
+// linhas da lista; o resto entra como "outros", para a barra continuar sendo 100% do mês.
+function grupoPorPeso(lista, total, {rotulo, numero, frase, explica, sub}){
+  const cabem = lista.slice(0, 8), resto = lista.slice(8);
+  const grupos = cabem.map((x, i) => ({k: 'p' + i, rot: x.nome, sub: sub ? sub(x) : '', n: null,
+    v: x.valor, cor: CORES_CAT[Math.min(i, CORES_CAT.length - 1)]}));
+  if(resto.length) grupos.push({k: 'outros', rot: `outros ${resto.length}`, sub: '', n: null,
+    v: resto.reduce((a, x) => a + x.valor, 0), cor: '#EFECE6'});
+  return {grupos, parte: g => total > 0.004 ? g.v / total * 100 : 0, porValor: true, total,
+          rotulo, numero, frase, explica};
+}
 function rResumoCad(r){
   if(!r.grupos.length) return '';
   const barra = r.grupos.map(g => `<span style="flex:${Math.max(0.04, r.parte(g))};background:${g.cor}"></span>`).join('');
   const linhas = r.grupos.map(g => `<div class="rc-linha">
     <span class="rc-ponto" style="background:${g.cor}"></span>
-    <span class="rc-nome">${esc(g.rot)}</span>
-    <span class="rc-n">${g.n} ${g.n === 1 ? 'item' : 'itens'}</span>
+    <span class="rc-nome">${esc(g.rot)}${g.sub ? `<small>${esc(g.sub)}</small>` : ''}</span>
+    ${g.n == null ? '' : `<span class="rc-n">${g.n} ${g.n === 1 ? 'item' : 'itens'}</span>`}
     ${r.porValor ? `<span class="rc-v">${brl(g.v)}</span>` : ''}
     <span class="rc-p">${dec(r.parte(g), 1, 1)}%</span></div>`).join('');
   return `<div class="rc">
@@ -3526,6 +3546,8 @@ function rNotasMes(){
   const temItens = !!(itC.length || itV.length);
   const vis = ui.notasVis === 'itens' && !temItens ? 'parceiros' : (ui.notasVis || 'notas');
   if(!compras.length && !vendas.length && !temItens) return '';
+  // v3: o mesmo resumo das outras listas — rótulo, número grande, barra de 100% e a lista com o peso de cada
+  // parceiro. O número é a concentração: quantos respondem por 80% do movimento.
   const bloco = (titulo, linhas, ehCompra) => {
     if(!linhas.length) return '';
     const lista = linhas.map(r => ({nome: r[1] || 'sem identificação', valor: +r[2] || 0, qtd: +r[3] || 0,
@@ -3534,19 +3556,16 @@ function rNotasMes(){
     const semCredito = ehCompra ? lista.filter(x => /simples/i.test(x.marca)) : [];
     const consumidor = ehCompra ? [] : lista.filter(x => x.marca === 'consumidor');
     const soma = g => g.reduce((a, x) => a + x.valor, 0);
-    const mostra = lista.slice(0, 8);
-    return `<div class="nf-bloco">
-      <div class="nf-cab"><span class="cap">${titulo}</span><span class="nf-total">${brl(total)}</span></div>
-      <div class="nf-lista">${mostra.map(x => `<div class="nf-linha">
-        <span class="nf-nome">${esc(x.nome)}${x.marca && ehCompra ? ` <small>${esc(x.marca)}</small>` : ''}${x.marca === 'consumidor' ? ' <small>consumidor final</small>' : ''}</span>
-        <span class="nf-barra"><i style="width:${(x.parte * 100).toFixed(1)}%"></i></span>
-        <span class="nf-v">${brl(x.valor)}</span><span class="nf-p">${dec(x.parte * 100, 1, 1)}%</span>
-      </div>`).join('')}</div>
-      ${lista.length > mostra.length ? `<p class="nota">e mais ${lista.length - mostra.length} com participação menor.</p>` : ''}
-      <p class="nota">${oitenta === 1 ? 'Um parceiro responde' : `${oitenta} parceiros respondem`} por 80% do movimento.
-        ${ehCompra && soma(semCredito) > 0.004 ? `${brl(soma(semCredito))} (${dec(soma(semCredito) / total * 100, 1, 1)}%) vêm de fornecedores do Simples, que não dão crédito cheio de CBS.` : ''}
-        ${!ehCompra && soma(consumidor) > 0.004 ? `${brl(soma(consumidor))} (${dec(soma(consumidor) / total * 100, 1, 1)}%) foram para consumidor final, que não aproveita o crédito.` : ''}</p>
-    </div>`;
+    return rResumoCad(grupoPorPeso(lista, total, {
+      rotulo: titulo,
+      numero: String(oitenta),
+      frase: ehCompra ? `${oitenta === 1 ? 'fornecedor responde' : 'fornecedores respondem'} por 80% das compras do mês`
+                      : `${oitenta === 1 ? 'cliente responde' : 'clientes respondem'} por 80% das vendas do mês`,
+      explica: `${lista.length} ${lista.length === 1 ? 'parceiro' : 'parceiros'} · ${brl(total)} no mês.` +
+        (ehCompra && soma(semCredito) > 0.004 ? ` ${brl(soma(semCredito))} (${dec(soma(semCredito) / total * 100, 1, 1)}%) vêm de fornecedores do Simples, que não dão crédito cheio de CBS.` : '') +
+        (!ehCompra && soma(consumidor) > 0.004 ? ` ${brl(soma(consumidor))} (${dec(soma(consumidor) / total * 100, 1, 1)}%) foram para consumidor final, que não aproveita o crédito.` : ''),
+      sub: x => x.marca === 'consumidor' ? 'consumidor final' : (ehCompra ? x.marca : '')
+    }));
   };
   const temUma = ((S.monthly.notasUma || []).filter(x => x[0] === 'compra')).length > 0;
   const abas = [['notas', 'Notas', temUma], ['parceiros', 'Parceiros', true], ['itens', 'Produtos e serviços', temItens]];
@@ -3561,7 +3580,8 @@ function rNotasMes(){
         : vis === 'notas' ? 'Cada nota de compra e o crédito de CBS que ela gera.'
         : 'Pelas notas fiscais do mês, lidas do XML.'}</p></div>
       <div class="cad-ctl">${temItens && !ui.imprimindo ? alt : ''}
-        ${ui.present || ui.imprimindo ? '' : `<button class="btn" data-act="notas-limpar">limpar</button>`}</div></div>
+        ${ui.present || ui.imprimindo ? '' : `<button class="btn" data-act="notas-xml">importar notas (XML)</button>
+        <button class="btn" data-act="notas-limpar">limpar</button>`}</div></div>
     ${ui.imprimindo
       ? bloco('Compras — fornecedores', compras, true) + bloco('Vendas — clientes', vendas, false) +
         blocoItens('Compras — o que foi comprado', itC, res.compras, true, 10) +
@@ -3603,7 +3623,7 @@ function rCliBarra({vis, lst, filtros, campos, achados, addAct, addRot, addG, ca
       <span class="cli-busca"><input class="in" type="search" data-busca value="${esc(q)}" placeholder="buscar ${vis === 'produtos' ? 'por nome, NCM ou NBS' : 'por nome ou CNPJ'}…" aria-label="Buscar"></span>
       <div class="cli-acoes">
         <button class="btn prim" data-act="${addAct}"${addG ? ` data-g="${addG}"` : ''}>+ ${addRot}</button>
-        <button class="btn" data-act="notas-xml">importar notas (XML)</button>
+        ${vis === 'notas' ? `<button class="btn" data-act="notas-xml">importar notas (XML)</button>` : ''}
         ${lst.length ? btnCadastro(cadastro) : ''}
       </div>
     </div>
@@ -3621,15 +3641,18 @@ function rCliNav(){
 function rCreditoNotas(){
   const c = creditoDasNotas();
   if(!c) return `<p class="sub">Nenhuma nota de compra lida neste mês.</p>`;
+  const aliq = +S.monthly.reforma.aliqCompras || 0;
   return rResumoCad(c) + `<div class="scroll-x">
-    <div class="gnf gh"><span>Nota</span><span>Fornecedor</span><span>Valor</span><span>Crédito CBS</span></div>
+    <div class="gnf gh"><span>Nota</span><span>Fornecedor</span><span>Valor</span><span>Alíquota</span><span>Crédito CBS</span></div>
     ${c.linhas.slice(0, 40).map(l => `<div class="gnf">
       <span>${l.numero ? `NF ${esc(l.numero)}` : 'sem número'}${l.emissao ? ` · ${esc(l.emissao.slice(8, 10))}/${esc(l.emissao.slice(5, 7))}` : ''}</span>
       <span class="gnf-forn">${esc(l.nome)}</span>
       <span>${brl(l.valor)}</span>
-      <span>${l.credito > 0.004 ? brl(l.credito) : `<span class="gnf-sem">${l.k === 'parcial' ? 'crédito do DAS' : l.k === 'nao' ? 'sem crédito' : 'a definir'}</span>`}</span>
+      <span>${l.k === 'sim' ? FMT.pct(aliq) : '<span class="gnf-sem">—</span>'}</span>
+      <span>${l.credito > 0.004 ? brl(l.credito) : `<span class="gnf-sem${l.k === '' ? ' pend' : ''}">${l.k === 'parcial' ? 'crédito do DAS' : l.k === 'nao' ? 'sem crédito' : 'a definir'}</span>`}</span>
     </div>`).join('')}
     ${c.linhas.length > 40 ? `<p class="nota">e mais ${c.linhas.length - 40} ${c.linhas.length - 40 === 1 ? 'nota' : 'notas'} de valor menor.</p>` : ''}
+    <div class="gnf-pe">${c.linhas.length} ${c.linhas.length === 1 ? 'nota' : 'notas'} · ${brl(c.total)} em compras · crédito de ${brl(c.credito)}</div>
   </div>`;
 }
 function rCliente(){
@@ -3652,10 +3675,11 @@ function creditoDasNotas(){
   const linhas = uma.map(x => { const k = cat(x[1]);
     return {doc: x[1], nome: x[2], valor: +x[3] || 0, numero: x[4] || '', emissao: x[5] || '', k,
             credito: k === 'sim' ? (+x[3] || 0) * aliq : 0}; });
-  const CATS = [['sim', 'Crédito integral', '#3F6E73'], ['parcial', 'Crédito do DAS', '#BDB5A8'],
-                ['nao', 'Sem crédito', '#E2DFD8'], ['', 'A definir', '#EFECE6']];
+  // duas categorias: a nota gera crédito de CBS ou não gera. O porquê de não gerar (Simples, sem direito ou
+  // fornecedor ainda sem regime cadastrado) fica na coluna de cada linha e na frase acima
+  const CATS = [['com', 'Notas com crédito', '#3F6E73'], ['sem', 'Notas sem gerar crédito', '#BDB5A8']];
   const grupos = CATS.map(([k, rot, cor]) => {
-    const g = linhas.filter(l => l.k === k);
+    const g = linhas.filter(l => (l.k === 'sim' ? 'com' : 'sem') === k);
     return {k, rot, cor, n: g.length, v: g.reduce((a, l) => a + l.valor, 0)};
   }).filter(g => g.n);
   const total = linhas.reduce((a, l) => a + l.valor, 0);
@@ -3664,7 +3688,7 @@ function creditoDasNotas(){
   const semRegime = linhas.filter(l => l.k === '');
   const nomesSem = [...new Set(semRegime.map(l => l.nome))];
   return {linhas: linhas.sort((a, b) => b.valor - a.valor), grupos, parte, total, credito,
-    numero: dec(total > 0.004 ? (grupos.find(g => g.k === 'sim') || {v: 0}).v / total * 100 : 0, 0, 1) + '%',
+    numero: dec(total > 0.004 ? (grupos.find(g => g.k === 'com') || {v: 0}).v / total * 100 : 0, 0, 1) + '%',
     rotulo: 'Crédito das notas do mês',
     frase: 'das compras com crédito cheio',
     explica: `${linhas.length === 1 ? 'A nota' : `As ${linhas.length} notas`} de ${mesCurto(banco.periodo || '') || 'do mês'} ${linhas.length === 1 ? 'soma' : 'somam'} ${brl(total)} e ${linhas.length === 1 ? 'gera' : 'geram'} ${brl(credito)} de crédito de CBS.` +
@@ -3708,7 +3732,8 @@ function rCadeia(lado){
       <div class="cad-vazio-t">Nenhum ${sing} cadastrado</div>
       <p>${forn
         ? 'Cadastrar os fornecedores mostra quanto das compras gera crédito de CBS para a empresa — e quanto vem de quem não gera.'
-        : 'Cadastrar os clientes mostra quanto da receita vai para quem aproveita o crédito da CBS — e quanto vai para consumidor final, que não aproveita.'}</p>
+        : 'Cadastrar os clientes mostra quanto da receita vai para quem aproveita o crédito da CBS — e quanto vai para consumidor final, que não aproveita.'}
+        ${ui.present || ui.imprimindo ? '' : `<br>Dá para preencher à mão, com o botão abaixo, ou de uma vez pelos XML do mês — <button class="lk" type="button" data-act="cli-vis" data-id="notas">importar notas</button>.`}</p>
       ${ui.present || ui.imprimindo ? '' : `<button class="btn prim" data-act="cad-add" data-g="${g}">+ adicionar ${sing}</button>`}
     </div>`;
   } else {
@@ -3720,7 +3745,7 @@ function rCadeia(lado){
       return `<div class="cad-row">
         <span class="cad-cnpj" data-cls="inv:cad.${g}.${i}.inv"><span class="ponto" aria-hidden="true"></span>${inp(`${p}.0`, 'cnpj', 'CNPJ — ' + nome, 'cnpj', 'placeholder="CNPJ"')}</span>
         ${inp(`${p}.1`, 'txt', `Nome do ${sing} ${i + 1}`, 'txt', 'placeholder="Nome"')}
-        <span class="sel-wrap regime"><select class="sel${r[2] ? '' : ' vazio'}" data-b="${p}.2" data-f="txt" aria-label="Regime tributário — ${esc(nome)}"${ro}>${regimes}</select></span>
+        <span class="sel-wrap regime"><select class="sel${r[2] ? '' : ' sel-vazio'}" data-b="${p}.2" data-f="txt" aria-label="Regime tributário — ${esc(nome)}"${ro}>${regimes}</select></span>
         <span class="sel-wrap cred" data-cls="sim:cad.${g}.${i}.sim parcial:cad.${g}.${i}.parcial nao:cad.${g}.${i}.nao"><select class="sel" data-b="${p}.3" data-f="txt" aria-label="Gera crédito — ${esc(nome)}"${ro}>${creditos}</select></span>
         <button class="cad-x" data-act="cad-rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(nome)}" title="Remover">×</button>
       </div>`;
@@ -3775,7 +3800,8 @@ function rProdutos(){
   if(!lst.length){
     corpo = `<div class="cad-vazio">
       <div class="cad-vazio-t">Nenhum produto ou serviço cadastrado</div>
-      <p>Cadastrar o que a empresa vende mostra quanto do catálogo tem redução na CBS e qual a alíquota de cada item na reforma.</p>
+      <p>Cadastrar o que a empresa vende mostra quanto do catálogo tem redução na CBS e qual a alíquota de cada item na reforma.
+        ${ui.present || ui.imprimindo ? '' : `<br>Dá para preencher à mão, com o botão abaixo, ou de uma vez pelos XML do mês — <button class="lk" type="button" data-act="cli-vis" data-id="notas">importar notas</button>.`}</p>
       ${ui.present || ui.imprimindo ? '' : `<button class="btn prim" data-act="pr-add">+ adicionar produto</button>`}
     </div>`;
   } else {
@@ -3789,18 +3815,12 @@ function rProdutos(){
         : nat === 'servico' ? inp(`produtos.${i}.4`, 'txt', `NBS — item ${i + 1}`, 'txt', 'placeholder="sem NBS"') : traco;
       // cClassTrib vale para produto e serviço (layout da NF-e da reforma); só espera o tipo ser escolhido
       const classtrib = nat ? inp(`produtos.${i}.5`, 'txt', `cClassTrib — item ${i + 1}`, 'txt', 'placeholder="sem classificação"') : traco;
-      // quanto este item movimentou no mês, pelas notas importadas: fica embaixo do nome, sem roubar coluna
-      const v = peso.mapa.get(chaveItem({ncm: r[3], nbs: r[4], servico: nat === 'servico', nome: r[0]})) || 0;
       const campoNome = inp(`produtos.${i}.0`, 'txt', `Nome do item ${i + 1}`, 'txt', 'placeholder="Nome"');
-      // a barra compara com o maior item (é o que se quer ver numa tabela); o número é a fatia do mês
-      const mesCel = v > 0.004
-        ? `<span class="pr-mes"><span class="pr-v">${brl(v)}</span><span class="nf-barra"><i style="width:${(peso.maior > 0.004 ? v / peso.maior * 100 : 0).toFixed(1)}%"></i></span><span class="pr-p">${dec(peso.total > 0.004 ? v / peso.total * 100 : 0, 1, 1)}%</span></span>`
-        : '';
-      // quatro colunas, como o protótipo: o produto (com o tipo e o movimento do mês embaixo), o código,
+      // quatro colunas, como o protótipo: o produto (com o tipo embaixo), o código,
       // a classificação e o tratamento na CBS — a alíquota calculada fica sob o seletor, não numa coluna só dela
       return `<div class="gprod">
       <span class="pr-nome">${campoNome}
-        <span class="pr-sub"><span class="sel-wrap mini"><select class="sel${nat ? '' : ' vazio'}" data-nat data-i="${i}" aria-label="Produto ou serviço — item ${i + 1}"${ro}>${opcoesSel(NATUREZAS, nat)}</select></span>${mesCel}</span></span>
+        <span class="pr-sub"><span class="sel-wrap mini"><select class="sel${nat ? '' : ' sel-vazio'}" data-nat data-i="${i}" aria-label="Produto ou serviço — item ${i + 1}"${ro}>${opcoesSel(NATUREZAS, nat)}</select></span></span></span>
       ${codigo}
       ${classtrib}
       <span class="pr-cbs"><span class="sel-wrap"><select class="sel" data-b="produtos.${i}.1" data-f="txt" aria-label="Redução da CBS — item ${i + 1}"${ro}>${opcoesSel(TIPOS, tipo)}</select></span>
@@ -3809,7 +3829,7 @@ function rProdutos(){
     }).join('');
     corpo = `<div class="cad-grafico" data-h="pr.resumo3"></div>
       ${!cadastroAberto('produtos') ? '' : `<div class="scroll-x">
-        <div class="gprod gh"><span>Produto${peso.tem ? (peso.lado === 'vendas' ? ' · nas vendas' : ' · nas compras') : ''}</span><span>NCM / NBS</span><span>cClassTrib</span><span>Tratamento na CBS</span><span></span></div>
+        <div class="gprod gh"><span>Produto</span><span>NCM / NBS</span><span>cClassTrib</span><span>Tratamento na CBS</span><span></span></div>
         ${linhas || `<div class="cli-nada">Nenhum item encontrado. <button class="lk" data-act="cli-limpar">mostrar todos</button></div>`}
       </div>
       <div class="cad-pe">
@@ -5698,16 +5718,23 @@ function blocoItens(titulo, lista, resumo, ehCompra, max){
     const t = tipoProduto(l);
     return `<small class="nf-aliq${t === 'geral' ? '' : ' red'}">${esc(rotuloTipo(t))} · CBS ${FMT.pct(aliqTipo(t))}</small>`;
   };
-  return `<div class="nf-bloco nf-it">
-    <div class="nf-cab"><span class="cap">${titulo}</span><span class="nf-total">${brl(total)}</span></div>
-    <div class="nf-lista">${mostra.map(x => `<div class="nf-linha">
-      <span class="nf-nome">${esc(x.nome)} <small>${x.servico ? (x.nbs ? 'NBS ' + esc(x.nbs) : 'serviço') : x.ncm ? 'NCM ' + fmtNcm(x.ncm) : 'sem NCM'}${x.parceiros > 1 ? ` · ${x.parceiros} ${ehCompra ? 'fornecedores' : 'clientes'}` : ''}${x.descricoes > 1 ? ` · ${x.descricoes} descrições` : ''}</small>${aliq(x)}</span>
-      <span class="nf-barra"><i style="width:${parte(x.valor).toFixed(1)}%"></i></span>
-      <span class="nf-v">${brl(x.valor)}</span><span class="nf-p">${dec(parte(x.valor), 1, 1)}%</span>
-    </div>`).join('')}</div>
-    ${itens > mostra.length ? `<p class="nota">e mais ${itens - mostra.length} com participação menor.</p>` : ''}
-    <p class="nota">${linhas} ${linhas === 1 ? 'linha de nota virou' : 'linhas de nota viraram'} ${itens === 1 ? '1 item' : `${itens} itens`}: o mesmo NCM entra uma vez só, ${ehCompra ? 'mesmo vindo de fornecedores diferentes' : 'em quantas notas for'}.${juntados ? ` ${juntados === 1 ? 'Um item juntou descrições diferentes' : `${juntados} itens juntaram descrições diferentes`} sob o mesmo NCM.` : ''}${semNcm ? ` ${semNcm === 1 ? '1 item veio sem NCM e foi agrupado' : `${semNcm} itens vieram sem NCM e foram agrupados`} pela descrição.` : ''}</p>
-  </div>`;
+  // v3: mesmo resumo das outras listas. O número é a concentração do catálogo no mês.
+  let acum = 0, oitenta = 0;
+  lista.forEach((x, i) => { acum += x.valor; if(!oitenta && total > 0.004 && acum / total >= 0.8) oitenta = i + 1; });
+  oitenta = oitenta || lista.length;
+  return rResumoCad(grupoPorPeso(lista, total, {
+    rotulo: titulo,
+    numero: String(oitenta),
+    frase: `${oitenta === 1 ? 'item responde' : 'itens respondem'} por 80% ${ehCompra ? 'das compras do mês' : 'das vendas do mês'}`,
+    explica: `${linhas} ${linhas === 1 ? 'linha de nota virou' : 'linhas de nota viraram'} ${itens === 1 ? '1 item' : `${itens} itens`}: o mesmo NCM entra uma vez só, ${ehCompra ? 'mesmo vindo de fornecedores diferentes' : 'em quantas notas for'}.${juntados ? ` ${juntados === 1 ? 'Um item juntou descrições diferentes' : `${juntados} itens juntaram descrições diferentes`} sob o mesmo NCM.` : ''}${semNcm ? ` ${semNcm === 1 ? '1 item veio sem NCM e foi agrupado' : `${semNcm} itens vieram sem NCM e foram agrupados`} pela descrição.` : ''}`,
+    // a redução da CBS do item cadastrado continua aqui: era o encontro entre as notas e o catálogo
+    sub: x => [x.servico ? (x.nbs ? 'NBS ' + x.nbs : 'serviço') : x.ncm ? 'NCM ' + fmtNcm(x.ncm) : 'sem NCM',
+               x.parceiros > 1 ? `${x.parceiros} ${ehCompra ? 'fornecedores' : 'clientes'}` : '',
+               x.descricoes > 1 ? `${x.descricoes} descrições` : '',
+               (() => { const l = cat.get(chaveItem(x)); if(!l) return '';
+                 const t = tipoProduto(l); return `${rotuloTipo(t)} · CBS ${FMT.pct(aliqTipo(t))}`; })()
+              ].filter(Boolean).join(' · ')
+  }));
 }
 function rNotas(r, quantas, ruins){
   const bloco = (titulo, lista, ehCompra) => {
@@ -5733,7 +5760,9 @@ function rNotas(r, quantas, ruins){
   const servicos = r.servicos || 0, mercadorias = quantas - servicos;
   const tipos = servicos && mercadorias ? ` (${mercadorias} de mercadoria, ${servicos} de serviço)`
     : servicos ? ' de serviço' : '';
+  const jaTem = (S.monthly.notasUma || []).length;
   return `<div class="nf">
+    ${jaTem ? `<p class="nf-troca">Este mês já tinha ${jaTem} ${jaTem === 1 ? 'nota lida' : 'notas lidas'}: trazer estas para o cadastro substitui aquela leitura. Para juntar as duas, escolha todos os arquivos de uma vez.</p>` : ''}
     <p class="sub">${quantas} ${quantas === 1 ? 'nota lida' : 'notas lidas'}${tipos}${ruins.length ? ` · ${ruins.length} ${ruins.length === 1 ? 'arquivo não reconhecido' : 'arquivos não reconhecidos'}` : ''}${r.fora.length ? ` · ${r.fora.length} de outra empresa, fora da conta` : ''}.</p>
     ${bloco('Compras — fornecedores', r.compras, true)}
     ${bloco('Vendas — clientes', r.vendas, false)}
