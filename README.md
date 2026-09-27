@@ -863,6 +863,23 @@ código para copiar**. Ordem combinada: fundação → casca → telas → Paine
   inteira (margem, padding grande e texto centralizado) e o `<select>` herdava tudo — a linha ficava mais alta e
   o "Regime…" saía centralizado.
 
+- **Empresa e competência com menu próprio** (`rMenuEmpresas`, `rMenuMeses`): os dois `<select>` abriam a lista
+  do sistema — branca, com o azul do Windows e sem busca — no meio de uma barra escura. Agora são menus na
+  paleta da lateral, com busca por nome ou CNPJ (a partir de 6 empresas), o item aberto marcado e "+ Nova
+  empresa…" / "+ Novo mês…" no pé, separados da lista. Escolher **sempre reabre**, como o `<select>` fazia:
+  clicar no mês que já está aberto é pedir para recarregar do banco.
+- **CNPJ obrigatório** no cadastro e na edição: é por ele que a importação separa compra de venda. Empresa sem
+  CNPJ faz todas as notas caírem em "de outra empresa, fora da conta".
+- **Editar empresa** (`editarEmpresa`, em Opções): nome e CNPJ de quem já existe. Antes, um CNPJ errado só se
+  resolvia criando outra empresa. O nome também vive dentro de cada mês salvo, então o toast lembra de salvar
+  para o nome novo valer no relatório; meses antigos mantêm o nome que tinham.
+- **CNPJ pode repetir entre empresas** (migração `20260927120000_cnpj_repetido.sql`, aplicada em 27/09/2026): a
+  tabela nasceu com `cnpj text unique`, mas o escritório mantém cenários da mesma empresa lado a lado — "BRO" e
+  "BRO SEM PRO-LABORE" são o mesmo CNPJ com pró-labore diferente. Sai a unicidade; ficam o formato conferido e o
+  índice. A importação não se confunde: ela lê as notas da empresa aberta.
+- **A tabela do ano vem recolhida** (`ui.anoMeses`): a aba Anual abre com a faixa de totais e "Ver mês a mês". No
+  papel sai tudo, independentemente do estado da tela.
+
 **A fazer:** o **Relatório do cliente** (A4, 5 páginas). O gráfico do **Fator R** não está no handoff (nasceu
 depois) e ficou como estava.
 

@@ -124,15 +124,40 @@
   .lat-emp-c{font-size:10px; color:#75787E}
   .lat-comp{display:flex; align-items:center; gap:6px; padding:8px 10px 8px 12px; border-top:1px solid var(--lat-linha)}
   .lat-comp .cap{flex:1; font-size:9.5px; color:var(--lat-mut-2); letter-spacing:.06em}
-  .lat-comp-v{position:relative; font-size:12.5px; font-weight:600; color:var(--lat-ink); padding:2px 4px; border-radius:5px}
+  .lat-comp-wrap{position:relative}
+  .lat-comp-v{font:inherit; font-size:12.5px; font-weight:600; color:var(--lat-ink); padding:3px 6px;
+    background:transparent; border:0; border-radius:5px; cursor:pointer}
   .lat-comp-v:hover{background:var(--lat-ativo)}
-  .lat-comp-sel{position:absolute; inset:0; opacity:0; width:100%; cursor:pointer}
+  .mes-menu{left:auto; right:0; min-width:160px}
   .lat-seta{display:flex; align-items:center; justify-content:center; width:20px; height:20px; padding:0;
     border:0; border-radius:5px; background:transparent; color:var(--lat-mut); font-size:15px; line-height:1; cursor:pointer}
   .lat-seta:hover:not(:disabled){background:var(--lat-ativo); color:var(--lat-ink)}
   .lat-seta:disabled{color:var(--lat-mut-2); opacity:.45; cursor:default}
-  .lat-emp-b{position:relative}
-  .lat-emp-sel{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; font:inherit}
+  .lat-emp-wrap{position:relative}
+  /* a lista de empresas, na paleta da lateral */
+  .emp-menu{position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50; display:flex; flex-direction:column;
+    background:#1F2022; border:1px solid var(--lat-linha); border-radius:10px; overflow:hidden;
+    box-shadow:0 12px 32px rgba(0,0,0,.45)}
+  .emp-busca{padding:8px 8px 6px; border-bottom:1px solid var(--lat-linha)}
+  .emp-busca .in{width:100%; font:inherit; font-size:12.5px; padding:6px 9px; color:var(--lat-ink);
+    background:#17181A; border:1px solid var(--lat-linha); border-radius:7px; text-align:left}
+  .emp-busca .in::placeholder{color:var(--lat-mut-2)}
+  .emp-busca .in:focus{outline:none; border-color:#3F6E73}
+  .emp-lista{display:flex; flex-direction:column; max-height:min(52vh,340px); overflow:auto; padding:4px}
+  .emp-lista::-webkit-scrollbar{width:8px}
+  .emp-lista::-webkit-scrollbar-thumb{background:#33353A; border-radius:99px}
+  .emp-item{display:flex; align-items:center; gap:10px; width:100%; padding:8px 10px; border:0; border-radius:7px;
+    background:transparent; color:var(--lat-mut); font:inherit; font-size:12.5px; text-align:left; cursor:pointer}
+  .emp-item:hover{background:var(--lat-2); color:var(--lat-ink)}
+  .emp-item[aria-current="true"]{background:var(--lat-ativo); color:var(--lat-ink)}
+  .emp-item-t{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+  .emp-item-n{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500}
+  .emp-item-c{font-size:10.5px; color:var(--lat-mut-2)}
+  .emp-item-ok{color:#FF6B5E}
+  .emp-nada{margin:0; padding:14px 10px; font-size:12px; color:var(--lat-mut-2); text-align:center}
+  .emp-nova{width:100%; padding:10px; border:0; border-top:1px solid var(--lat-linha); background:transparent;
+    color:var(--lat-mut); font:inherit; font-size:12.5px; text-align:left; cursor:pointer}
+  .emp-nova:hover{background:var(--lat-2); color:var(--lat-ink)}
   .lat-nav{display:flex; flex-direction:column; padding:0 12px}
   .lat-grupo{font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; color:var(--lat-mut-2); padding:0 10px 9px; font-family:var(--mono)}
   .lat-grupo + .lat-grupo, .lat-nav .lat-grupo ~ .lat-grupo{padding-top:22px}
@@ -2691,15 +2716,13 @@ function rLateral(){
     `<span class="lat-rot">${rot}</span><span class="lat-n" data-o="${chave}"></span></button>`;
   const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
   // o cartão da empresa É o seletor: o <select> fica por cima, invisível, para o clique abrir a lista do sistema
-  const opcoes = !banco.ativo ? '' : (banco.empresaId ? '' : '<option value="" selected>Nenhuma empresa</option>') +
-    (banco.empresas || []).map(e => `<option value="${e.id}"${e.id === banco.empresaId ? ' selected' : ''}>${esc(e.nome)}</option>`).join('') +
-    `<option value="__nova__">+ Nova empresa…</option>`;
-  const empresa = !banco.ativo ? '' : `<div class="lat-emp"><div class="lat-emp-b"
-      title="${esc((emp && emp.nome) || 'Escolher empresa')}"><span class="lat-emp-t">
-      <span class="lat-emp-n">${esc((emp && emp.nome) || 'Escolher empresa')}</span>
-      <span class="lat-emp-c">${emp && emp.cnpj ? fmtCnpj(emp.cnpj) : ''}</span></span>
-      <span class="lat-emp-seta" aria-hidden="true">▾</span>
-      <select class="lat-emp-sel" data-banco="empresa" aria-label="Empresa">${opcoes}</select></div>
+  const empresa = !banco.ativo ? '' : `<div class="lat-emp"><div class="lat-emp-wrap">
+      <button class="lat-emp-b" type="button" data-act="emp-menu" aria-haspopup="true" aria-expanded="${!!ui.menuEmp}"
+        title="${esc((emp && emp.nome) || 'Escolher empresa')}"><span class="lat-emp-t">
+        <span class="lat-emp-n">${esc((emp && emp.nome) || 'Escolher empresa')}</span>
+        <span class="lat-emp-c">${emp && emp.cnpj ? fmtCnpj(emp.cnpj) : ''}</span></span>
+        <span class="lat-emp-seta" aria-hidden="true">▾</span></button>
+      ${ui.menuEmp ? rMenuEmpresas() : ''}</div>
       ${!banco.empresaId ? '' : rLatComp()}</div>`;
   const pe = `<div class="lat-pe">
     ${banco.ativo ? `<div class="lat-salvo" id="lat-salvo"><span></span></div>` : ''}
@@ -2734,12 +2757,28 @@ function rLateral(){
     </nav>
     ${pe}</aside>`;
 }
+// A lista de empresas: busca quando há muitas, a aberta marcada e "+ Nova empresa" no pé. O <select> nativo
+// abria a lista do sistema — branca, com o azul do Windows e sem busca — bem no meio de uma barra escura.
+function rMenuEmpresas(){
+  const q = normBusca(ui.buscaEmpMenu || '');
+  const todas = banco.empresas || [];
+  const lista = todas.filter(e => !q || normBusca(`${e.nome} ${e.cnpj || ''}`).includes(q));
+  return `<div class="emp-menu" role="dialog" aria-label="Escolher empresa">
+    ${todas.length > 6 ? `<div class="emp-busca"><input class="in" type="search" data-busca-menu
+      value="${esc(ui.buscaEmpMenu || '')}" placeholder="buscar empresa…" aria-label="Buscar empresa"></div>` : ''}
+    <div class="emp-lista">${lista.map(e => `<button class="emp-item" type="button" data-act="emp-escolher" data-id="${e.id}"
+      ${e.id === banco.empresaId ? 'aria-current="true"' : ''}>
+      <span class="emp-item-t"><span class="emp-item-n">${esc(e.nome)}</span>
+        ${e.cnpj ? `<span class="emp-item-c">${esc(fmtCnpj(e.cnpj))}</span>` : ''}</span>
+      ${e.id === banco.empresaId ? '<span class="emp-item-ok" aria-hidden="true">✓</span>' : ''}</button>`).join('')
+      || `<p class="emp-nada">Nenhuma empresa com esse nome.</p>`}</div>
+    <button class="emp-nova" type="button" data-act="emp-nova">+ Nova empresa…</button>
+  </div>`;
+}
 // A competência dentro do cartão da empresa: ‹ set/2026 ›. As setas andam pelos meses salvos, na ordem em que
 // eles aparecem na lista; a lista continua existindo por baixo do rótulo, para escolher direto e para criar mês.
 function rLatComp(){
   const meses = banco.meses || [], i = meses.indexOf(banco.periodo);
-  const opcoes = meses.map(x => `<option value="${x}"${x === banco.periodo ? ' selected' : ''}>${mesCurto(x)}</option>`).join('') +
-    `<option value="__nova__">+ Novo mês…</option>`;
   const seta = (d, rot) => {
     const alvo = i >= 0 ? meses[i + d] : null;
     return `<button class="lat-seta" type="button" data-act="mes-passo" data-d="${d}" aria-label="${rot}"
@@ -2748,9 +2787,23 @@ function rLatComp(){
   return `<div class="lat-comp">
     <span class="cap">Competência</span>
     ${seta(-1, 'Mês anterior')}
-    <span class="lat-comp-v">${esc(mesCurto(banco.periodo || ''))}
-      <select class="lat-comp-sel" data-banco="periodo" aria-label="Competência">${opcoes}</select></span>
+    <span class="lat-comp-wrap">
+      <button class="lat-comp-v" type="button" data-act="mes-menu" aria-haspopup="true" aria-expanded="${!!ui.menuMes}"
+        aria-label="Competência">${esc(mesCurto(banco.periodo || ''))}</button>
+      ${ui.menuMes ? rMenuMeses() : ''}</span>
     ${seta(1, 'Próximo mês')}
+  </div>`;
+}
+// os meses salvos desta empresa, do mais novo para o mais antigo, e o caminho para criar o próximo
+function rMenuMeses(){
+  const meses = banco.meses || [];
+  return `<div class="emp-menu mes-menu" role="dialog" aria-label="Escolher competência">
+    <div class="emp-lista">${meses.map(x => `<button class="emp-item" type="button" data-act="mes-escolher" data-p="${x}"
+      ${x === banco.periodo ? 'aria-current="true"' : ''}>
+      <span class="emp-item-t"><span class="emp-item-n">${esc(mesCurto(x))}</span></span>
+      ${x === banco.periodo ? '<span class="emp-item-ok" aria-hidden="true">✓</span>' : ''}</button>`).join('')
+      || `<p class="emp-nada">Nenhum mês salvo ainda.</p>`}</div>
+    <button class="emp-nova" type="button" data-act="mes-novo">+ Novo mês…</button>
   </div>`;
 }
 // Cabeçalho: quem é a empresa, em que competência, e as ações do mês
@@ -2800,6 +2853,7 @@ function rMenu(){
     ${it('baixar', 'Baixar HTML')}
     ${banco.ativo && banco.empresaId && (banco.meses || []).includes(banco.periodo) ? it('historico', `Histórico de ${mesCurto(banco.periodo)}`) : ''}
     ${banco.ativo && banco.empresaId ? it('fator-r', 'Acompanhar o Fator R', fatorRLigado() ? 'ligado' : '') : ''}
+    ${banco.ativo && banco.empresaId && banco.sessao ? it('editar-empresa', 'Editar empresa…') : ''}
     ${banco.ativo && banco.empresaId ? it('copiar-empresa', 'Copiar empresa…') : ''}
     ${banco.ativo && banco.sessao ? it('lixeira', 'Lixeira') : ''}
     <div class="sep" role="separator"></div>
@@ -3852,8 +3906,9 @@ function rProdutos(){
 function rAnoMeses(){
   if(!banco.ativo || !banco.empresaId) return '';
   const a = banco.ano;
-  const cab = ano => `<div class="card-h"><div><h2>O ano pelos meses salvos</h2>
-    <p class="sub">Cada competência salva desta empresa${ano ? ' em ' + ano : ''}, somada direto do banco de dados.</p></div></div>`;
+  const cab = (ano, aberto) => `<div class="card-h"><div><h2>O ano pelos meses salvos</h2>
+    <p class="sub">Cada competência salva desta empresa${ano ? ' em ' + ano : ''}, somada direto do banco de dados.</p></div>
+    ${ui.present || ui.imprimindo ? '' : `<button class="btn" type="button" data-act="ano-meses" aria-expanded="${!!aberto}">${aberto ? 'Ocultar meses' : 'Ver mês a mês'}</button>`}</div>`;
   const atualizar = `<button class="lk" type="button" data-act="ano-atualizar">atualizar</button>`;
   if(!a || a.carregando) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a && a.ano)}<p class="sub">Somando as competências…</p></section>`;
   if(a.semFuncao) return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
@@ -3865,17 +3920,18 @@ function rAnoMeses(){
     <div class="vazio"><strong>Nenhuma competência salva em ${a.ano}</strong>
     <p>Salve um mês na aba Lançamento e ele passa a somar aqui.</p></div>
     <div class="ano-acoes">${atualizar}</div></section>`;
-  return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
+  const aberto = ui.anoMeses === true || ui.imprimindo;    // no papel sai tudo; na tela, quem quiser vê
+  return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano, aberto)}
     ${rFaixaAno(a)}
-    <div class="scroll-x">
+    ${!aberto ? '' : `<div class="scroll-x">
       <div class="gano gh"><span>Mês</span><span>Receita</span><span>DAS</span><span>CBS a pagar</span><span>CBS crédito</span><span>Resultado</span><span>Margem</span></div>
       ${linhasAno(a)}
       <div class="gano tot"><span>Total</span><span data-o="an.rec"></span><span data-o="an.das"></span><span data-o="an.cbsPag"></span><span data-o="an.cbsCred"></span><span data-o="an.res"></span><span data-o="an.mar"></span></div>
       ${rCbsAno(a)}
     </div>
-    <div class="obs"><h4>Leitura do ano</h4><p data-o="an.leitura"></p><p data-o="an.leitura2" data-v="an.temLeitura2"></p><p data-o="an.limite" data-v="an.temLimite"></p></div>
+    <div class="obs"><h4>Leitura do ano</h4><p data-o="an.leitura"></p><p data-o="an.leitura2" data-v="an.temLeitura2"></p><p data-o="an.limite" data-v="an.temLimite"></p></div>`}
     <div class="flag" data-v="an.temFalta" data-o="an.falta"></div>
-    <div class="ano-acoes">${atualizar}</div>
+    ${!aberto ? '' : `<div class="ano-acoes">${atualizar}</div>`}
   </section>`;
 }
 // v3: os totais do ano em cima da tabela, e o que falta fechar em amarelo — é a primeira pergunta de quem
@@ -5935,26 +5991,68 @@ async function novaEmpresa(){
   for(;;){
     const r = await modal({
       titulo: primeira ? 'Cadastre a primeira empresa' : 'Nova empresa',
-      texto: 'A empresa começa com categorias genéricas, as alíquotas padrão e os valores zerados.',
-      campos: [['nome', 'Nome da empresa', valores.nome], ['cnpj', 'CNPJ (opcional)', valores.cnpj], ['periodo', 'Competência (mês/ano)', valores.periodo]],
+      texto: 'A empresa começa com categorias genéricas, as alíquotas padrão e os valores zerados. O CNPJ é ' +
+        'obrigatório: é por ele que o painel separa compras de vendas ao ler os XML das notas.',
+      campos: [['nome', 'Nome da empresa', valores.nome], ['cnpj', 'CNPJ', valores.cnpj], ['periodo', 'Competência (mês/ano)', valores.periodo]],
       erro, botoes: [['cancelar', 'Cancelar'], ['criar', 'Cadastrar e salvar', 'prim']], padrao: 'criar'
     });
     if(r.botao !== 'criar'){ render(); return; }
     valores = r.valores;
     const nome = (valores.nome || '').trim(), cnpj = limpaCnpj(valores.cnpj), periodo = lerPeriodo(valores.periodo);
     erro = !nome ? 'Informe o nome da empresa.'
-      : cnpj && !cnpjValido(cnpj) ? 'CNPJ inválido — confira os números.'
+      : !cnpj ? 'Informe o CNPJ: é por ele que o painel sabe se a nota é de compra ou de venda.'
+      : !cnpjValido(cnpj) ? 'CNPJ inválido — confira os números.'
       : !periodo ? 'Competência inválida — use mês/ano, por exemplo 12/2025.' : '';
     if(erro) continue;
     try{
-      const [empresa] = await sb('empresas?select=id,nome,cnpj', {metodo: 'POST', corpo: {nome, cnpj: cnpj || null}, prefer: 'return=representation'}) || [];
+      const [empresa] = await sb('empresas?select=id,nome,cnpj', {metodo: 'POST', corpo: {nome, cnpj}, prefer: 'return=representation'}) || [];
       if(!empresa || !empresa.id) throw new Error('o banco não devolveu a empresa criada');
       banco.empresas = banco.empresas.concat(empresa).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
       banco.meses = [];
       return abrirMes(empresa.id, periodo);
     }catch(e){
       if(e.status === 401) throw e;
-      erro = e.status === 409 ? 'Já existe uma empresa com esse CNPJ.' : 'Não foi possível cadastrar: ' + e.message;
+      erro = e.status === 409
+        ? 'O banco ainda não aceita duas empresas com o mesmo CNPJ. Rode a migração supabase/migrations/20260927120000_cnpj_repetido.sql.'
+        : 'Não foi possível cadastrar: ' + e.message;
+    }
+  }
+}
+// Editar a empresa aberta: nome e CNPJ. O CNPJ errado atrapalha a importação inteira (nota da própria
+// empresa lida como de terceiro), e até aqui só dava para corrigir criando outra empresa.
+async function editarEmpresa(){
+  const emp = (banco.empresas || []).find(e => e.id === banco.empresaId);
+  if(!emp) return;
+  let valores = {nome: emp.nome || '', cnpj: emp.cnpj ? fmtCnpj(emp.cnpj) : ''};
+  let erro = '';
+  for(;;){
+    const r = await modal({
+      titulo: 'Editar empresa',
+      texto: 'Vale para todos os meses desta empresa. O CNPJ é o que separa compras de vendas na leitura dos XML.',
+      campos: [['nome', 'Nome da empresa', valores.nome], ['cnpj', 'CNPJ', valores.cnpj]],
+      erro, botoes: [['cancelar', 'Cancelar'], ['salvar', 'Salvar', 'prim']], padrao: 'salvar'
+    });
+    if(r.botao !== 'salvar'){ render(); return; }
+    valores = r.valores;
+    const nome = (valores.nome || '').trim(), cnpj = limpaCnpj(valores.cnpj);
+    erro = !nome ? 'Informe o nome da empresa.'
+      : !cnpj ? 'Informe o CNPJ: é por ele que o painel sabe se a nota é de compra ou de venda.'
+      : !cnpjValido(cnpj) ? 'CNPJ inválido — confira os números.' : '';
+    if(erro) continue;
+    if(nome === emp.nome && cnpj === (emp.cnpj || '')){ render(); return; }
+    try{
+      await sb(`empresas?id=eq.${emp.id}`, {metodo: 'PATCH', corpo: {nome, cnpj}});
+      emp.nome = nome; emp.cnpj = cnpj;
+      banco.empresas = banco.empresas.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      // o nome da empresa também vive no estado do mês, que é o que aparece no cabeçalho e no PDF
+      if(S.co !== nome){ S.co = nome; }
+      render(); toast('Empresa atualizada — salve o mês para o nome novo valer no relatório');
+      return;
+    }catch(e){
+      if(e.status === 401) throw e;
+      erro = e.status === 409
+        ? 'O banco ainda não aceita duas empresas com o mesmo CNPJ. Rode a migração supabase/migrations/20260927120000_cnpj_repetido.sql.'
+        : 'Não foi possível salvar: ' + e.message;
     }
   }
 }
@@ -6041,6 +6139,12 @@ app.addEventListener('focusin', e => {
 });
 app.addEventListener('focusout', e => { if(e.target.dataset && e.target.dataset.premissa === 'geral') alvoGeral = null; });
 app.addEventListener('input', e => {
+  if(e.target.matches('input[data-busca-menu]')){
+    ui.buscaEmpMenu = e.target.value; render();
+    const c = app.querySelector('input[data-busca-menu]');
+    if(c){ c.focus(); c.setSelectionRange(c.value.length, c.value.length); }
+    return;
+  }
   if(e.target.matches('input[data-busca-emp]')){
     ui.buscaEmp = e.target.value; render();
     const c = app.querySelector('input[data-busca-emp]');
@@ -6189,6 +6293,7 @@ app.addEventListener('click', e => {
       S.monthly.itens = {compras: [], vendas: [], resumo: {}}; S.monthly.notasUma = []; render(); break;
     case 'notas-vis': ui.notasVis = b.dataset.id; render();
       focar(`[data-act="notas-vis"][data-id="${b.dataset.id}"]`); break;
+    case 'editar-empresa': ui.menu = false; render(); comErro(editarEmpresa); break;
     case 'copiar-empresa': ui.menu = false; render(); comErro(copiarEmpresa); break;
     case 'excluir-empresa': ui.menu = false; render(); comErro(excluirEmpresa); break;
     case 'lixeira': ui.menu = false; render(); comErro(abrirLixeira); break;
@@ -6264,6 +6369,13 @@ app.addEventListener('click', e => {
     case 'carteira-mes': { const c = banco.carteira;
       comErro(() => carregarCarteira(somarMeses((c && c.periodo) || banco.periodo || periodoAtual(), +b.dataset.d || 0)));
       break; }
+    case 'mes-menu': ui.menuMes = !ui.menuMes; render(); focar('[data-act="mes-menu"]'); break;
+    case 'mes-escolher': ui.menuMes = false; comErro(() => trocar('periodo', b.dataset.p)); break;
+    case 'mes-novo': ui.menuMes = false; render(); comErro(novoMes); break;
+    case 'emp-menu': ui.menuEmp = !ui.menuEmp; ui.buscaEmpMenu = ''; render();
+      { const c = app.querySelector('input[data-busca-menu]'); if(c) c.focus(); else focar('[data-act="emp-menu"]'); } break;
+    case 'emp-escolher': ui.menuEmp = false; comErro(() => trocar('empresa', b.dataset.id)); break;
+    case 'emp-nova': ui.menuEmp = false; render(); comErro(novaEmpresa); break;
     case 'emp-filtro': ui.filtroEmp = b.dataset.id; render(); focar(`[data-act="emp-filtro"][data-id="${b.dataset.id}"]`); break;
     case 'emp-limpar': ui.buscaEmp = ''; ui.filtroEmp = 'todas'; render(); break;
     // clicar na linha abre a empresa: na Visão geral quando o mês está lançado, no Lançamento quando não está
@@ -6271,6 +6383,7 @@ app.addEventListener('click', e => {
       comErro(async () => { await trocar('empresa', id); irPara(salvo ? 'visao' : 'resultado'); garantirAnoDaTela(); });
       break; }
     case 'nova-empresa': comErro(novaEmpresa); break;
+    case 'ano-meses': ui.anoMeses = !ui.anoMeses; render(); focar('[data-act="ano-meses"]'); break;
     case 'ano-lancar': { const per = b.dataset.p;
       if((banco.meses || []).includes(per)) comErro(async () => { await trocar('periodo', per); irPara('resultado'); });
       else comErro(novoMes);
@@ -6297,6 +6410,8 @@ app.addEventListener('click', e => {
 });
 document.addEventListener('click', e => {
   if(ui.menu && !e.target.closest('.menu-wrap')){ ui.menu = false; ui.armado = false; render(); }
+  if(ui.menuEmp && !e.target.closest('.lat-emp-wrap')){ ui.menuEmp = false; render(); }
+  if(ui.menuMes && !e.target.closest('.lat-comp-wrap')){ ui.menuMes = false; render(); }
   if(ui.lpMenu && !e.target.closest('.lp-ver')){ ui.lpMenu = false; render(); }
 });
 document.addEventListener('keydown', e => {
@@ -6411,7 +6526,8 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', notasVis: 'parceiros', cliVis: 'fornecedores', cliBusca: '', cliFiltro: '', imprimindo: false, buscaEmp: '', filtroEmp: 'todas', cadastro: {cadeia: null, produtos: null}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, janela: 12, mesSel: null, lpCenario: 'ambos', lpResumo: true, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', notasVis: 'parceiros', cliVis: 'fornecedores', cliBusca: '', cliFiltro: '', imprimindo: false, buscaEmp: '', filtroEmp: 'todas',
+  menuEmp: false, buscaEmpMenu: '', menuMes: false, anoMeses: false, cadastro: {cadeia: null, produtos: null}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, janela: 12, mesSel: null, lpCenario: 'ambos', lpResumo: true, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
