@@ -22,10 +22,8 @@ TABELA_FONTES = [
     # Instrument Sans é a fonte de interface do layout v2 (handoff): entra embutida, como as outras — o painel
     # é um arquivo só e não busca nada na rede
     ("Instrument Sans", "400 700", "InstrumentSans-latin-var.woff2"),
-    ("IBM Plex Sans", "100 700", "IBMPlexSans-latin-var.woff2"),
-    ("IBM Plex Mono", "400", "IBMPlexMono-latin-400.woff2"),
-    ("IBM Plex Mono", "500", "IBMPlexMono-latin-500.woff2"),
-    ("IBM Plex Mono", "600", "IBMPlexMono-latin-600.woff2"),
+    # v3: fonte única. A IBM Plex (Sans e Mono) saiu — os números se alinham pelo tabular-nums da
+    # Instrument Sans, e o arquivo entregue encolhe quase 200 KB.
 ]
 
 

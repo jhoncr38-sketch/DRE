@@ -759,6 +759,101 @@ atende ramos diferentes — não pode haver "medicamento" hardcoded.
 
 ---
 
+## Layout v3 (handoff `design_handoff_painel_dre_v3/`)
+
+Reorganização em curso, aplicada por etapas a partir de 27/09/2026. O handoff tem os protótipos em HTML
+(`Painel DRE v3.dc.html`, `Relatório do cliente.dc.html`) e o README com os tokens — **referência de design, não
+código para copiar**. Ordem combinada: fundação → casca → telas → Painel de empresas → Relatório do cliente.
+
+**Feito:**
+
+- **Fonte única.** A IBM Plex Mono saiu dos 66 lugares onde marcava número; a Instrument Sans passa a servir
+  texto e número, alinhados por `tabular-nums` + `font-feature-settings:'tnum','lnum'`. A IBM Plex Sans, que era
+  só fallback, saiu junto: o entregável caiu de 604 KB para ~500 KB. `--mono` continua existindo e aponta para
+  `--sans`, para não reescrever 66 seletores.
+- **Cinzas quentes.** `--ink-2` `#4A4D52`→`#4A4640`, `--muted` `#82868C`→`#77726A`, `--muted-2`
+  `#9A9EA4`→`#948E85`, `--disabled` `#B6B8BC`→`#B5AFA6`. Os cinzas azulados brigavam com o fundo bege.
+- **Vermelho só da marca.** O "Lucro operacional bruto" era `var(--brand)`; virou tinta comum. O vermelho fica
+  em Salvar, no ícone do item aberto do menu e nos links.
+- **Barra lateral por grupos** (`ICONES`, `iconeLat`): Mês · <competência> (Visão geral, Lançamento, Comparar
+  regimes), Cadastros (Fornecedores, Clientes, Produtos e serviços, Notas do mês, cada um com a contagem) e
+  Exercício · <ano>. Ícone de traço 17px em cada item; o aberto marca o ícone em `#FF6B5E`. **"Resumo do cliente"
+  deixou de ser uma aba**: as quatro listas são itens do menu, e a régua interna saiu. O primeiro cadastro leva o
+  id `tab-cliente`, que é por onde o teclado, o link do cliente e os testes chegam à aba.
+- **Selo de conferência no cabeçalho** (`rSelo`): era um cartão no topo de cada tela, ocupando a primeira dobra
+  para dizer, quase sempre, que estava tudo certo. Virou pílula (`● 2 pontos a conferir ▾`) que abre um menu de
+  360px com a lista. Some no modo Apresentar.
+- **Competência no cartão da empresa** (`rLatComp`): `‹ set/2026 ›` dentro do cartão, na lateral, com setas para
+  andar pelos meses salvos (`mes-passo`) — antes só dava para trocar pela lista, que continua por baixo do rótulo.
+- **Visão geral responde antes de mostrar** (`rResposta`): o primeiro cartão diz qual regime sai mais barato no
+  mês, com filete verde, os dois totais e o ponto de equilíbrio, e leva para a comparação. Antes a tela abria no
+  gráfico e a conclusão ficava a dois cliques.
+- **Paleta dos gráficos**: `--g-imp` passa a ser o azul petróleo `#3F6E73` (o dado principal) e `--g-rec`, o
+  cinza quente `#BDB5A8` (o secundário). O verde fica reservado a dinheiro a favor do cliente.
+
+- **Lançamento com trilho** (`rTrilho`, `etapasLanc`): duas colunas, com um trilho de 260px fixo à direita — as
+  quatro etapas do fechamento (clicáveis, rolam até a seção com folga de 100px para o cabeçalho), o resultado
+  líquido, o DAS, a CBS e o botão Salvar sempre à mão. O ✓ e o ! saem das **mesmas conferências** da pílula do
+  cabeçalho. As seções ganharam número (01 a 04). Na apresentação o trilho não aparece. A animação de entrada
+  passou a tratar `.lanc-col` como nível de bloco, e o `.lanc` (o arranjo) ficou de fora da cascata.
+- **Salvar em vermelho** (`#b-salvar`, `.trilho-salvar`, `.fixo-salvar`) e **resultado líquido** com a linha dupla
+  `3px double #8FB1B4` sobre `#F4F1EB`.
+- **Comparar regimes**: título "Tradicional × híbrido" com a competência no subtítulo, total em 28px, composição
+  em cinza quente (DAS) + azul petróleo (CBS) — era o último gráfico com o vermelho da marca — e o **ponto de
+  equilíbrio em dois blocos** (`k.equilibrioTit`, `k.eqCompras*`, `k.eqDespesas*`), no lugar da frase corrida.
+  Os casos de borda continuam: uma alíquota só → um bloco; alíquotas iguais → um bloco que diz as duas coisas;
+  IBS acima da parcela → só a frase.
+- **Cadastros com o resumo v3** (`resumoCadastro`, `rResumoCad`, `dadosResumoCadeia`, `dadosResumoProdutos`):
+  saíram as barras por regime e a pizza; entrou o número grande (34px), a frase, a barra de 100% e a lista com o
+  peso de cada categoria. **A conta é por valor quando o mês tem notas importadas** (casadas pelo CNPJ) e por
+  contagem quando não tem. Quando parte das notas não casa com o cadastro, a explicação diz quanto ficou de fora
+  — senão um "100%" sobre base pequena enganaria. Filtros de pendência em amarelo e campos vazios em âmbar.
+- **Anual**: faixa de totais no alto (receita, DAS pago, resultado e o que falta, em amarelo), **mês sem
+  competência como linha clicável** que leva ao Lançamento (`ano-lancar`, `linhasAno`) e total com linha dupla.
+  O menu único de filtros do Presumido que o handoff pede já existia desde setembro.
+- **Painel de empresas** (`carregarCarteira`, `rEmpresas`, `rLinhaEmpresa`): a carteira do escritório numa
+  competência, com busca, filtros (Todas · Pendentes · Híbrido ganha), tendência de 12 meses por empresa, regime
+  indicado com a economia, situação e o rodapé da carteira. Os números saem do `resumo` de cada mês salvo: **uma
+  consulta por empresa, todas em paralelo** (a RPC `resumos` é por empresa; uma consulta única da carteira
+  exigiria migração). Clicar na linha abre a Visão geral quando o mês está lançado e o Lançamento quando não
+  está. **Não aparece na apresentação nem no link do cliente** — a tela mostra todos os clientes do escritório.
+  Ficaram de fora, por não existirem no banco: **ramo**, **responsável** e os status "a conferir" e "aguardando
+  documentos" (seriam colunas novas).
+- **Modo Apresentar com frase de conclusão** (`rConclusao`, `conclusaoDaTela`): cada tela abre com o que ela quer
+  dizer em uma linha de 26px, com o número principal em verde. No handoff as frases são fixas; aqui são
+  calculadas — "A empresa ficou com R$ 15,96 de cada R$ 100 vendidos", "73,7% das compras vêm de quem gera
+  crédito integral de CBS", "Receita de R$ 1,14 milhão em 11 meses salvos".
+
+- **Cadastros no formato do protótipo** (ajustes pedidos na revisão): rótulo acima do número em todas as
+  listas; a barra do resumo ocupa a largura do cartão (o container era do par barras+pizza, que não existe mais)
+  e tem ponta quase reta (3px), não pílula; os grupos são ordenados **por valor** e a cor mais forte vai para
+  quem mais pesa — antes a ordem era por contagem, e o tom principal caía no grupo que menos movimentava.
+  Na **cadeia** a lista quebra por **regime tributário** (o número grande segue sendo o do crédito); no
+  **catálogo**, por tratamento na CBS, e a rampa vermelha da CBS saiu do gráfico — ela ficou só onde é a própria
+  alíquota. A tabela de produtos passou de sete para **quatro colunas** (produto · NCM/NBS · cClassTrib ·
+  tratamento): o tipo desceu para baixo do nome, junto do movimento do mês, e a alíquota, para baixo do seletor.
+  Campos vazios escritos em amarelo ("sem NCM", "sem classificação") e a contagem no rodapé.
+- **Notas do mês: o crédito nota a nota** (`creditoDasNotas`, `rCreditoNotas`). O painel passou a guardar cada
+  nota (`monthly.notasUma`: lado, parceiro, valor, número, emissão — as 250 maiores), porque antes a importação
+  agregava por parceiro e o número e a data se perdiam. A aba abre com o resumo do crédito (integral · do DAS ·
+  a definir, por valor) e a tabela Nota · Fornecedor · Valor · Crédito CBS. **O crédito sai do cadastro**: quem
+  gera crédito rende valor × alíquota de compras, o Simples aparece como "crédito do DAS" e quem está sem regime
+  fica "a definir" — com a frase dizendo quais notas esperam cadastro. É o elo que faltava entre a cadeia de
+  crédito e o dinheiro.
+- **No trilho do Lançamento**, o Salvar saiu (o do cabeçalho acompanha a rolagem e já fazia o mesmo) e a margem
+  também (ela já está na linha do resultado, na própria DRE). O "calculado" do DAS ficou em itálico âmbar, e só
+  aparece quando o número vem da tabela, não quando a guia foi lançada.
+- **Memória da CBS** com as barras em azul petróleo e o bloco "CBS a pagar" em fundo neutro, sem filete lateral
+  e sem vermelho (o valor só fica verde quando o crédito passa o débito — aí é dinheiro a favor).
+
+**A fazer:** o **Relatório do cliente** (A4, 5 páginas). O gráfico do **Fator R** não está no handoff (nasceu
+depois) e ficou como estava.
+
+O handoff (`design_handoff_painel_dre_v3/`) **não vai para o repositório**, como o v2: os protótipos trazem nomes
+de clientes reais e o repositório é público.
+
+---
+
 ## Notas fiscais (XML)
 
 **Resumo do cliente → cadeia de crédito → importar notas (XML)** (o botão fica no cabeçalho do bloco, ao lado do

@@ -10,8 +10,8 @@
      --ink (texto) nunca muda, para uma cor clara escolhida não apagar o texto. */
   :root{
     color-scheme:light;
-    --ink:#16171A; --fill:#16171A; --ink-2:#4A4D52; --ink-3:#4A4D52;
-    --muted:#82868C; --muted-2:#9A9EA4; --muted-3:#9A9EA4; --disabled:#B6B8BC;
+    --ink:#16171A; --fill:#16171A; --ink-2:#4A4640; --ink-3:#4A4640;
+    --muted:#77726A; --muted-2:#948E85; --muted-3:#948E85; --disabled:#B5AFA6;
     /* o vermelho é o da logo do escritório (#A80000, medido nos pixels dela), não um carmim próximo:
        com azul na mistura, os tons claros da rampa da CBS puxavam para o rosa e destoavam da marca */
     --brand:#A80000; --brand-dark:#760000; --brand-wash:#FBF2F2;
@@ -30,7 +30,9 @@
        O contraste baixo do preenchimento é coberto pela legenda e pelos rótulos em cima das barras */
     --frr-linha:#1B6B55;                          /* linha do Fator R */
     /* gráficos da Visão geral: verde do que fica com a empresa, vermelho do imposto, azul da folha */
-    --g-rec:#3E8E6A; --g-rec-soft:#B9DBC8; --g-imp:#B5452F; --g-imp-soft:#E0A698;
+    /* v3: azul petróleo é o dado principal (o imposto) e cinza quente o secundário (o que fica com a empresa).
+       O verde saiu daqui: ele é só de economia, e o vermelho, só da marca */
+    --g-rec:#BDB5A8; --g-rec-soft:#E4E0D9; --g-imp:#3F6E73; --g-imp-soft:#C8DBDC;
     --g-folha:#3B6FB6; --g-folha-soft:#A9C1E3; --g-zona:#EEF6F1;
     /* Faixas de redução da CBS: uma escala, não categorias. Um tom só — o vermelho da marca —, escuro na
        alíquota cheia e clareando conforme a redução cresce, para a leitura ser "quanto mais forte, mais imposto".
@@ -55,8 +57,8 @@
        Antes cada bloco tinha o seu (28/30/22, 22/26, 12/18…), e era isso que fazia a página parecer desalinhada */
     --r:9px; --r-2:7px; --r-card:14px;
     --e1:4px; --e2:8px; --e3:12px; --e4:16px; --e5:24px; --e6:32px; --e7:48px;
-    --sans:'Instrument Sans','IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
-    --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    --mono:var(--sans);                           /* v3: fonte única; os números se alinham pelo tabular-nums */
   }
   /* Modo noturno: só os tokens trocam. --fill e --brand ficam de fora de propósito: são as cores personalizáveis,
      chegam como estilo inline e estilo inline vence qualquer regra daqui — refresh() recalcula as duas */
@@ -88,7 +90,8 @@
   *{box-sizing:border-box}
   html,body{margin:0}
   body{background:var(--canvas); color:var(--ink); font-family:var(--sans); font-size:14px; line-height:1.45;
-    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums}
+    -webkit-font-smoothing:antialiased; font-variant-numeric:tabular-nums;
+    font-feature-settings:'tnum' 1,'lnum' 1}
   [hidden]{display:none !important}
   button{font:inherit; color:inherit}
   :focus-visible{outline:2px solid var(--brand); outline-offset:2px}
@@ -98,7 +101,7 @@
   h3{margin:0 0 2px; font-size:15px; font-weight:600}
   h4{margin:0 0 8px; font-size:13px; font-weight:600; color:var(--ink)}
   .sub{margin:4px 0 0; font-size:13px; color:var(--muted)}
-  .cap{font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase}
+  .cap{font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
 
   /* Casca v2: barra lateral fixa + cabeçalho preso no alto + coluna de conteúdo */
   .page{padding:0}
@@ -112,24 +115,37 @@
     color:var(--lat-mut); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .lat-x{background:transparent; border:0; color:var(--lat-mut-2); font-size:15px; line-height:1; cursor:pointer; padding:5px 7px; border-radius:var(--r-2)}
   .lat-x:hover{background:var(--lat-ativo); color:var(--lat-ink)}
-  .lat-emp{padding:0 14px 22px}
-  .lat-emp-b{width:100%; display:flex; align-items:center; gap:10px; background:var(--lat-2); border:1px solid var(--lat-linha);
+  .lat-emp{margin:0 14px 22px; background:var(--lat-2); border:1px solid var(--lat-linha); border-radius:10px}
+  .lat-emp-b{width:100%; display:flex; align-items:center; gap:10px; background:transparent; border:0;
     border-radius:10px; padding:11px 12px; font:inherit; color:var(--lat-ink); cursor:pointer; text-align:left}
   .lat-emp-b:hover{background:#232427}
   .lat-emp-t{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px}
   .lat-emp-n{font-size:12.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .lat-emp-c{font-size:10px; color:#75787E; font-family:var(--mono)}
+  .lat-emp-c{font-size:10px; color:#75787E}
+  .lat-comp{display:flex; align-items:center; gap:6px; padding:8px 10px 8px 12px; border-top:1px solid var(--lat-linha)}
+  .lat-comp .cap{flex:1; font-size:9.5px; color:var(--lat-mut-2); letter-spacing:.06em}
+  .lat-comp-v{position:relative; font-size:12.5px; font-weight:600; color:var(--lat-ink); padding:2px 4px; border-radius:5px}
+  .lat-comp-v:hover{background:var(--lat-ativo)}
+  .lat-comp-sel{position:absolute; inset:0; opacity:0; width:100%; cursor:pointer}
+  .lat-seta{display:flex; align-items:center; justify-content:center; width:20px; height:20px; padding:0;
+    border:0; border-radius:5px; background:transparent; color:var(--lat-mut); font-size:15px; line-height:1; cursor:pointer}
+  .lat-seta:hover:not(:disabled){background:var(--lat-ativo); color:var(--lat-ink)}
+  .lat-seta:disabled{color:var(--lat-mut-2); opacity:.45; cursor:default}
   .lat-emp-b{position:relative}
   .lat-emp-sel{position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; font:inherit}
   .lat-nav{display:flex; flex-direction:column; padding:0 12px}
   .lat-grupo{font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; color:var(--lat-mut-2); padding:0 10px 9px; font-family:var(--mono)}
   .lat-grupo + .lat-grupo, .lat-nav .lat-grupo ~ .lat-grupo{padding-top:22px}
-  .lat-item{display:flex; align-items:center; gap:10px; width:100%; background:transparent; border:0; color:var(--lat-mut);
+  .lat-item{display:flex; align-items:center; gap:11px; width:100%; background:transparent; border:0; color:var(--lat-mut);
     font:inherit; font-size:13px; text-align:left; padding:9px 10px; border-radius:8px; cursor:pointer; transition:background-color .12s ease, color .12s ease}
   .lat-item:hover{background:var(--lat-2); color:var(--lat-ink)}
   .lat-item[aria-current="page"]{background:var(--lat-ativo); color:#fff; font-weight:600}
-  .lat-ponto{width:4px; height:4px; border-radius:50%; background:transparent; flex:0 0 4px}
-  .lat-item[aria-current="page"] .lat-ponto{background:var(--brand)}
+  .lat-ic{width:17px; height:17px; flex:0 0 17px; color:var(--lat-mut-2)}
+  .lat-item:hover .lat-ic{color:var(--lat-mut)}
+  .lat-item[aria-current="page"] .lat-ic{color:#FF6B5E}      /* v3: o vermelho da marca só marca o item aberto */
+  .lat-rot{flex:1; text-align:left; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .lat-n{font-size:11.5px; color:var(--lat-mut-2)}
+  .lat-item[aria-current="page"] .lat-n{color:var(--lat-mut)}
   .lat-pe{margin-top:auto; padding:18px 20px; display:flex; flex-direction:column; gap:12px; border-top:1px solid #232427}
   .lat-salvo{display:flex; align-items:center; gap:7px; font-size:11.5px; color:var(--lat-mut)}
   .lat-salvo::before{content:""; width:5px; height:5px; border-radius:50%; background:#3FA87A; flex:0 0 5px}
@@ -146,8 +162,9 @@
   body.lat-fina .lat-grupo{height:18px; overflow:hidden; font-size:0; padding:0}
   body.lat-fina .lat-topo, body.lat-fina .lat-pe{flex-direction:column; align-items:center; padding:18px 0}
   body.lat-fina .lat-emp{padding:0 12px 22px}
+  body.lat-fina .lat-comp{display:none}
   body.lat-fina .lat-emp-b, body.lat-fina .lat-item{justify-content:center; padding:9px 0}
-  body.lat-fina .lat-ponto{width:7px; height:7px; flex-basis:7px; background:var(--lat-mut-2)}
+  body.lat-fina .lat-rot, body.lat-fina .lat-n{display:none}
   body.lat-fina .lat-item span:not(.lat-ponto){display:none}
   .main{flex:1; min-width:0; display:flex; flex-direction:column}
   .cab{position:sticky; top:0; z-index:5; background:color-mix(in srgb, var(--canvas) 92%, transparent);
@@ -336,16 +353,55 @@
   .nf-mes .cad-ctl{margin-left:auto}
   .pg .nota{margin:12px 0 0; font-size:11.5px; color:var(--muted); line-height:1.5; text-wrap:pretty}
 
+  /* v3: o Lançamento em duas colunas — o conteúdo rola, o trilho acompanha */
+  .lanc{display:flex; align-items:flex-start; gap:20px}
+  .lanc-col{flex:1 1 560px; min-width:0; display:flex; flex-direction:column; gap:var(--e5)}
+  .trilho{position:sticky; top:104px; flex:0 0 260px; display:flex; flex-direction:column; gap:12px}
+  .trilho-bl{background:var(--surface); border:1px solid var(--line-2); border-radius:var(--r-card); padding:16px 18px}
+  .trilho-bl .cap{display:block; margin-bottom:10px}
+  .trilho-etapas{display:flex; flex-direction:column; gap:2px}
+  .trilho-et{display:flex; align-items:center; gap:9px; width:100%; padding:7px 8px; margin:0 -8px;
+    background:transparent; border:0; border-radius:var(--r-2); font:500 13px/1.2 var(--sans); color:var(--ink-2);
+    text-align:left; cursor:pointer}
+  .trilho-et:hover{background:var(--hover-linha)}
+  .trilho-mk{display:flex; align-items:center; justify-content:center; width:17px; height:17px; flex:0 0 17px;
+    border-radius:5px; font-size:10px; font-weight:600}
+  .trilho-mk.ok{background:var(--surface-2); color:var(--ink-2)}
+  .trilho-mk.atencao{background:#FBF2DE; color:#96701A}
+  .trilho-res{font-size:20px; font-weight:600; letter-spacing:-.02em}
+  .trilho-linhas{display:flex; flex-direction:column; gap:7px; margin:12px 0 0; padding-top:12px; border-top:1px solid var(--line)}
+  .trilho-linhas > div{display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--ink-2)}
+  .trilho-linhas i{font-style:italic; color:#96701A}   /* "calculado": o DAS veio da tabela, não do que foi lançado */
+  .trilho-linhas .v{font-weight:600}
+  /* o número da etapa, à esquerda do título da seção */
+  .sec-n{display:inline-block; min-width:25px; font-size:11px; font-weight:500; color:var(--muted-2); letter-spacing:.04em}
+  @media (max-width:1100px){ .lanc{display:block} .trilho{position:static; width:100%; margin-top:20px} }
+  /* v3: a resposta do mês. Filete verde no alto porque é dinheiro a favor do cliente — a única cor que o
+     handoff reserva para isso */
+  .resposta{padding:0; overflow:hidden}
+  .resposta.ganha{border-top:3px solid var(--ok)}
+  .resposta-in{display:flex; align-items:center; gap:24px; flex-wrap:wrap; padding:20px 26px 22px}
+  .resposta-txt{flex:1; min-width:260px}
+  .resp-selo{display:inline-flex; align-items:center; gap:6px; padding:4px 9px; margin-bottom:10px;
+    font:600 10.5px/1 var(--sans); letter-spacing:.06em; text-transform:uppercase;
+    background:#E8F3ED; border:1px solid #CBE0D5; border-radius:5px; color:var(--ok)}
+  .resp-frase{margin:0; font-size:20px; font-weight:600; letter-spacing:-.01em; text-wrap:pretty}
+  .resp-linha{margin:6px 0 0; font-size:13px; color:var(--muted); text-wrap:pretty}
   /* Selo de conferência: filete verde quando está tudo certo, âmbar quando algo pede atenção */
-  .selo{background:var(--surface); border:1px solid var(--line-2); border-left:4px solid var(--ok); border-radius:12px; overflow:hidden}
-  .selo.atencao{border-color:#EDE0C2; border-left-color:var(--aviso)}
-  .selo-b{display:flex; align-items:center; gap:12px; width:100%; background:transparent; border:0; padding:14px 18px; font:inherit; cursor:pointer; text-align:left}
-  .selo-ponto{width:9px; height:9px; border-radius:50%; flex:0 0 9px; background:var(--ok)}
-  .selo.atencao .selo-ponto{background:var(--aviso)}
-  .selo-txt{display:flex; flex-direction:column; gap:2px; flex:1; min-width:0}
-  .selo-tit{font-size:13.5px; font-weight:600}
-  .selo-sub{font-size:12.5px; color:var(--ink-3)}
-  .selo-seta{font-size:12px; color:var(--muted)}
+  /* v3: pílula no cabeçalho. Amarela quando há ponto a conferir; tinta neutra quando está tudo conferido —
+     verde é reservado a dinheiro a favor do cliente */
+  .selo-wrap{position:relative}
+  .selo-pill{display:flex; align-items:center; gap:7px; padding:7px 12px; font:500 12.5px/1 var(--sans);
+    border:1px solid #E8D9AE; border-radius:999px; background:#FBF2DE; color:#96701A; cursor:pointer; white-space:nowrap}
+  .selo-wrap.ok .selo-pill{border-color:var(--line-2); background:var(--surface); color:var(--ink-2)}
+  .selo-ponto{width:7px; height:7px; border-radius:50%; flex:0 0 7px; background:var(--aviso)}
+  .selo-wrap.ok .selo-ponto{background:var(--ink-2)}
+  .selo-seta{font-size:10px; opacity:.75}
+  .selo-menu{position:absolute; top:calc(100% + 8px); left:0; z-index:40; width:min(360px,90vw);
+    background:var(--surface); border:1px solid var(--line-2); border-radius:12px; overflow:hidden;
+    box-shadow:0 12px 32px rgba(30,26,20,.16)}
+  .selo-menu-cab{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:12px 16px 10px}
+  .selo-menu-n{font-size:11.5px; color:var(--muted)}
   .selo-lista{display:flex; flex-direction:column; border-top:1px solid var(--line)}
   .selo-item{display:flex; align-items:flex-start; gap:11px; padding:11px 18px; border-bottom:1px solid var(--line)}
   .selo-item:last-child{border-bottom:0}
@@ -494,12 +550,14 @@
   .dl.tot .v{font-size:16px; font-weight:600}
   /* lucro bruto só em texto vermelho: com fundo rosa ele chamava mais atenção que o próprio resultado */
   .dl.gross{padding:12px 0}
-  .dl.gross .l, .dl.gross .v, .dl.gross .p{color:var(--brand)}
+  /* v3: o vermelho da marca é só da marca (Salvar, item aberto do menu, links). Valor nenhum usa. */
+  .dl.gross .l, .dl.gross .v{color:var(--ink)}
+  .dl.gross .p{color:var(--muted-2)}
   .dl.gross .l{font-size:15px; font-weight:500}
   .dl.gross .v{font-size:16px; font-weight:600}
   /* fechamento da DRE (17/09/2026): traço duplo em cima e fundo bege claro, a convenção do total final em demonstrativo
      impresso. Substituiu o bloco preto; a faixa com filete escuro à esquerda foi comparada na tela e perdeu */
-  .dl.res{background:var(--surface-2); color:var(--ink); margin:10px -16px 0; padding:14px 16px; border-top:4px double var(--ink); align-items:center}
+  .dl.res{background:#F4F1EB; color:var(--ink); margin:10px -16px 0; padding:14px 16px; border-top:3px double #8FB1B4; align-items:center}
   .dl.res .l{font-size:16px; font-weight:500}
   .dl.res .v{font-size:20px; font-weight:600}
   .dl.res .p{color:var(--muted-2); font-size:13px}
@@ -597,12 +655,11 @@
   .sum.credor span{font-weight:400 !important; color:var(--ink-3)}
   /* CBS a pagar: fundo claro, filete e valor em vermelho — a mesma linha "CBS a pagar" do topo da página. Com sobra
      de crédito, verde suave. Substituiu o bloco vermelho em 17/09/2026 */
-  .total{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px 14px 13px; margin:10px -16px 0;
-    background:var(--surface-2); color:var(--ink); border-left:3px solid var(--brand)}
+  .total{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; margin:10px -16px 0;
+    background:var(--surface-2); color:var(--ink); border-radius:10px}
   .total > span:first-child{font-size:15px; font-weight:500}
-  .total > span:last-child{font-family:var(--mono); font-size:19px; font-weight:600; white-space:nowrap; color:var(--brand)}
-  .total.credito{border-left-color:color-mix(in srgb, var(--ok) 80%, var(--surface))}
-  .total.credito > span:last-child{color:var(--ok)}
+  .total > span:last-child{font-size:19px; font-weight:600; white-space:nowrap; color:var(--ink)}
+  .total.credito > span:last-child{color:var(--ok)}          /* crédito sobrando é dinheiro a favor: verde */
   .total .suf{margin-left:8px; font-size:12px; font-weight:400; color:var(--muted)}
   /* débito e crédito com a barra na mesma linha: rótulo, barra, valor; a origem do crédito embaixo da barra */
   .sum-bar{display:grid; grid-template-columns:minmax(120px,.8fr) minmax(0,2fr) auto; align-items:center; gap:4px 18px;
@@ -614,11 +671,11 @@
   .sb-leg{grid-column:2 / 4; font-size:11px; color:var(--muted-2)}
   /* débito em grafite (neutro, de partida); crédito em tons de verde, porque é a favor da empresa — as partes na ordem da
      legenda. Grafite e verde se separam pela claridade, não só pela cor; vermelho fica para a CBS a pagar, na linha de baixo */
-  .c-deb{background:var(--ink-3)}
-  .cr-compras{background:color-mix(in srgb, var(--ok) 70%, var(--surface))}
-  .cr-despesas{background:var(--ok)}
-  .cr-outras{background:color-mix(in srgb, var(--ok) 45%, var(--surface))}
-  .cr-saldo{background:color-mix(in srgb, var(--ok) 25%, var(--surface))}
+  .c-deb{background:#3F6E73}
+  .cr-compras{background:#3F6E73}
+  .cr-despesas{background:#8FB1B4}
+  .cr-outras{background:#BDB5A8}
+  .cr-saldo{background:#E4E0D9}
   .bar{display:flex; flex-direction:column; gap:5px; margin-bottom:14px}
   .bar-h{display:flex; justify-content:space-between; gap:12px; font-size:12px}
   .bar-h > span:first-child{color:var(--ink-3)}
@@ -626,6 +683,7 @@
   .track{height:10px; background:var(--canvas)}
   .fill{height:100%; width:0; transition:width .3s cubic-bezier(.2,.7,.2,1)}
   .c-ink{background:var(--fill)} .c-ink3{background:var(--ink-3)} .c-mut{background:var(--muted-3)} .c-brand{background:var(--brand)} .c-line{background:var(--line-3)}
+  .c-cbs{background:#3F6E73}
   .track.empilhada{display:flex}
   .cr-legenda{margin:5px 0 0; font-size:11px; color:var(--muted-2); line-height:1.5}
   .fill.credito{background:var(--ok)}
@@ -648,7 +706,7 @@
   .cmp-row small{display:block; font-size:11px; color:var(--muted-2)}
   .cmp-row .v{font-family:var(--mono); font-size:14px; color:var(--ink); white-space:nowrap}
   .cmp-row.dest > span:first-child, .cmp-row.tot > span:first-child{font-weight:500; color:var(--ink)}
-  .cmp-row.dest .v, .cmp-row.tot .v{font-size:17px; font-weight:600}
+  .cmp-row.dest .v, .cmp-row.tot .v{font-size:28px; font-weight:600; letter-spacing:-.02em}
   .cmp-row.sub, .cmp-row.tot{margin-top:4px; padding:9px 10px; border-top:0; background:var(--surface)}   /* faixa branca no cartão cinza */
   .cmp-row.sub, .cmp-row.sub .v{color:var(--muted)}               /* parte do DAS, não soma a ele */
   .cmp-comp{margin-top:auto; padding-top:16px}                    /* as duas composições na mesma altura */
@@ -657,7 +715,9 @@
   .cmp-bar2{display:flex; height:10px; background:var(--canvas)}
   .cmp-bar2 > span{display:block; height:100%; width:0}
   /* o DAS em cinza, não em preto: a barra fica leve e o olho vai para o vermelho, que é a CBS — o que se compara ali */
-  .c-das{background:var(--muted-2)}
+  /* v3: cinza quente no DAS (secundário) e azul petróleo na CBS (principal). O vermelho da marca saiu do
+     gráfico — ele marca a marca, não um tributo */
+  .c-das{background:#BDB5A8}
   .cmp-leg{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px 12px; margin-top:10px}
   .cmp-parte{display:flex; align-items:flex-start; gap:7px; min-width:0; font-size:11px; color:var(--muted)}
   .cmp-parte .cg-q{margin-top:3px}
@@ -669,6 +729,12 @@
      etiqueta com troféu e a diferença embaixo do valor. A barra preta embaixo dos cartões saiu em 17/09/2026 (pesava
      mais que os cartões); a faixa clara no lugar dela e o contorno escuro no cartão foram testados e recusados.
      Filete por sombra interna, não por borda: não empurra o conteúdo e as linhas dos dois cartões seguem alinhadas */
+  .cmp-eq-bl{margin-top:20px; padding-top:18px; border-top:1px solid var(--line)}
+  .cmp-eq-txt{margin:8px 0 12px; font-size:13.5px; color:var(--ink-2); text-wrap:pretty}
+  .cmp-eq-cx{display:flex; gap:12px; flex-wrap:wrap}
+  .cmp-eq-c{flex:1 1 220px; background:var(--surface-2); border-radius:var(--r); padding:14px 16px}
+  .cmp-eq-v{display:block; font-size:19px; font-weight:600; letter-spacing:-.01em}
+  .cmp-eq-r{display:block; margin-top:3px; font-size:12.5px; color:var(--muted)}
   .cmp-tag, .cmp-ganho{display:none}
   .cmp-card.ganha{background:var(--surface); border-top-color:color-mix(in srgb, var(--ok) 80%, var(--surface));
     box-shadow:inset 0 2px 0 color-mix(in srgb, var(--ok) 80%, var(--surface))}   /* borda de cima + sombra: 3px verdes rentes à borda */
@@ -704,7 +770,7 @@
   .gano > span:not(:first-child){font-family:var(--mono); text-align:right; white-space:nowrap}
   .gano.gh{border-top:0; padding-bottom:5px; font-size:11px; color:var(--muted)}
   .gano.gh > span:not(:first-child){font-family:var(--sans); font-weight:400}
-  .gano.tot{border-top:1px solid var(--line-3); font-weight:500}
+  .gano.tot{border-top:3px double #8FB1B4; border-top:1px solid var(--line-3); font-weight:500}
   .gano.tot > span:first-child{font-weight:500}
   .gano.tot > span:not(:first-child), .gpres.tot > span:not(:first-child),
   .gpres.dif > span:not(:first-child), .sn-fim > .v{font-weight:600}
@@ -807,6 +873,9 @@
   /* Banco de dados: barra de salvamento, login e janelas */
   .btn.prim{background:var(--fill); border-color:var(--fill); color:var(--sobre-fill)}
   .btn.prim:hover{border-color:var(--fill); filter:brightness(1.25)}
+  /* v3: Salvar é o botão da marca — o vermelho da logo, e só ele */
+  #b-salvar, .fixo-salvar{background:var(--brand); border-color:var(--brand); color:#fff}
+  #b-salvar:hover, .fixo-salvar:hover{background:var(--brand-dark); border-color:var(--brand-dark); filter:none}
   .btn:disabled{opacity:.55; cursor:default; filter:none}
   .barra{display:flex; align-items:flex-end; gap:12px 22px; flex-wrap:wrap; background:var(--surface); padding:var(--e3) var(--e4); box-shadow:0 0 0 1px var(--line-2); border-radius:var(--r)}
   .barra.local{padding:9px 16px; font-size:12px; color:var(--muted); background:var(--surface-2)}
@@ -888,11 +957,98 @@
   .cli-acoes{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-left:auto}
   .cli-filtros{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
   .cli-chip{display:flex; align-items:center; gap:6px; padding:5px 11px; font:500 11.5px/1 var(--sans);
-    border:1px solid var(--line-2); border-radius:999px; background:transparent; color:var(--muted); cursor:pointer}
-  .cli-chip:hover{color:var(--ink-2); border-color:var(--line-3)}
-  .cli-chip[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:var(--surface)}
+    border:1px solid #E8D9AE; border-radius:999px; background:#FBF2DE; color:#96701A; cursor:pointer}
+  .cli-chip:hover{border-color:#D9C48A}
+  .cli-chip[aria-pressed="true"]{background:#96701A; border-color:#96701A; color:#FFF}
   .cli-chip .m{font-family:var(--mono); opacity:.7}
   .cli-nada{padding:18px 0; font-size:13px; color:var(--muted)}
+  /* v3: a frase de conclusão, só no modo Apresentar */
+  .concl{padding:4px 0 2px}
+  .concl .cap{display:block; margin-bottom:10px}
+  .concl-f{margin:0; font-size:26px; font-weight:600; letter-spacing:-.02em; line-height:1.25; text-wrap:pretty}
+  .concl-f b{color:var(--ok); font-weight:600}
+  .concl-a{margin:8px 0 0; font-size:14.5px; color:var(--muted)}
+  /* v3: o Painel de empresas — a carteira do escritório em linhas */
+  .lat-voltar{display:block; width:calc(100% - 28px); margin:0 14px 14px; padding:8px 10px; text-align:left;
+    background:transparent; border:0; border-radius:var(--r-2); color:var(--lat-mut); font:500 12.5px/1 var(--sans); cursor:pointer}
+  .lat-voltar:hover{background:var(--lat-2); color:var(--lat-ink)}
+  .gemp{display:grid; grid-template-columns:minmax(0,2.2fr) minmax(0,1.15fr) minmax(0,1fr) minmax(0,.65fr) minmax(0,1.25fr) minmax(0,1.35fr) 12px;
+    gap:12px; align-items:center; width:100%; padding:12px 8px; margin:0 -8px; border-top:1px solid var(--line);
+    background:transparent; border-left:0; border-right:0; border-bottom:0; font:inherit; text-align:left; color:var(--ink); cursor:pointer; min-width:940px}
+  .gemp.gh{padding:0 8px 8px; border-top:0; border-bottom:1px solid #CFC9BF; cursor:default; font-size:10.5px;
+    font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  .gemp:not(.gh):hover{background:var(--hover-linha)}
+  .gemp.ganha{background:#F7FBF8}
+  .gemp.tot{cursor:default; font-weight:600; background:var(--surface-2)}
+  .gemp.tot > span:nth-child(n+2){font-size:13px}
+  .ge-nome{display:flex; align-items:center; gap:11px; min-width:0}
+  .ge-ini{display:flex; align-items:center; justify-content:center; width:32px; height:32px; flex:0 0 32px;
+    border-radius:8px; background:#DDEAEB; color:#3F6E73; font-size:11.5px; font-weight:600}
+  .ge-ini.ok{background:#E8F3ED; color:var(--ok)}
+  .ge-txt{min-width:0; display:flex; flex-direction:column; gap:2px}
+  .ge-txt b{font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ge-txt small, .ge-res small, .ge-reg small, .ge-sit small{display:block; font-size:12px; color:var(--muted);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ge-rec, .ge-res, .ge-ef{text-align:right; font-weight:600}
+  .ge-rec{display:flex; flex-direction:column; align-items:flex-end; gap:5px}
+  .ge-res, .ge-ef{font-weight:500}
+  .ge-spark{display:flex; align-items:flex-end; gap:2px; height:18px}
+  .ge-b{width:4px; border-radius:1px; background:#E4E0D9; height:6px}
+  .ge-b.atual{background:#3F6E73}
+  .ge-b.atual.ok{background:var(--ok)}
+  .ge-b.vazia{height:18px; border:1px dashed var(--line-3); background:transparent; border-radius:2px}
+  .ge-tag{display:inline-block; padding:3px 8px; border-radius:5px; background:#E3EEEF; color:#3F6E73; font-size:11.5px; font-weight:600}
+  .ge-tag.hib{background:var(--ok); color:#fff}
+  .ge-calc{font-size:12.5px; color:var(--muted-2)}
+  .ge-sit{display:flex; align-items:flex-start; gap:8px; min-width:0}
+  .ge-pt{width:7px; height:7px; border-radius:50%; flex:0 0 7px; margin-top:5px; background:var(--ink-2)}
+  .ge-pt.pend{background:var(--disabled)}
+  .ge-seta{color:var(--muted-2)}
+  .gemp-eco{color:var(--ok)}
+  .carteira-chip[aria-pressed="false"]{background:transparent; border-color:var(--line-2); color:var(--muted)}
+  .cart-mes{display:flex; align-items:center; gap:7px; padding:6px 10px; border:1px solid var(--line-2); border-radius:var(--r)}
+  .cart-mes .cap{color:var(--muted)}
+  .cart-mes .lat-seta{color:var(--muted)}
+  .cart-mes .lat-seta:hover:not(:disabled){background:var(--surface-2); color:var(--ink)}
+  .ge-reg small{white-space:normal; line-height:1.3}
+  /* v3: faixa de totais do ano, antes da tabela */
+  .ano-faixa{display:flex; gap:12px; flex-wrap:wrap; margin:0 0 18px}
+  .ano-faixa > div{flex:1 1 150px; background:var(--surface-2); border-radius:var(--r); padding:12px 14px}
+  .ano-faixa .af-v{display:block; margin-top:4px; font-size:17px; font-weight:600; letter-spacing:-.01em}
+  .ano-faixa .af-falta{background:#FBF2DE; color:#96701A}
+  .ano-faixa .af-falta .cap{color:inherit}
+  /* mês sem competência salva: linha clicável que leva para o Lançamento */
+  .gano.vazio{background:transparent; border:0; border-top:1px solid var(--line); font:inherit; text-align:left;
+    color:var(--muted-2); cursor:pointer; width:100%; padding:7px 0}
+  .gano.vazio > span:not(:first-child){text-align:left}
+  .gano.vazio:hover{background:var(--hover-linha); color:var(--ink-2)}
+  .gano-lanc{color:#96701A; font-size:12.5px}
+  /* v3: o resumo do cadastro — número grande, frase, barra de 100% e a lista com o peso de cada categoria */
+  .rc{margin:4px 0 20px; flex:1 1 100%; width:100%}
+  .rc-topo{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap}
+  .rc-num{font-size:34px; font-weight:600; letter-spacing:-.02em; line-height:1}
+  .rc-frase{font-size:14px; color:var(--ink-2); max-width:46ch; text-wrap:pretty}
+  .rc-explica{margin:6px 0 0; font-size:12.5px; color:var(--muted); max-width:62ch; text-wrap:pretty}
+  .rc-barra{display:flex; gap:2px; height:10px; margin:14px 0 12px}
+  .rc-barra > span{border-radius:3px; min-width:4px}    /* ponta quase reta: a pílula arredondava demais */
+  .rc-lista{display:flex; flex-direction:column}
+  .rc-linha{display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line); font-size:12.5px}
+  .rc-linha:last-child{border-bottom:0}
+  .rc-ponto{width:8px; height:8px; border-radius:2px; flex:0 0 8px}
+  .rc-nome{flex:1; min-width:0; color:var(--ink-2)}
+  .rc-n{color:var(--muted-2)}
+  .rc-v{font-weight:600; min-width:96px; text-align:right}
+  .rc-p{color:var(--muted-2); min-width:52px; text-align:right}
+  .rc-rot{display:block; margin-bottom:8px}
+  /* tabela nota a nota */
+  .gnf{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr); gap:14px;
+    align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:640px}
+  .gnf.gh{padding:0 0 8px; border-bottom:1px solid #CFC9BF; font-size:10.5px; font-weight:600;
+    letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+  .gnf > span:nth-child(n+3){text-align:right}
+  .gnf.gh > span:nth-child(n+3){text-align:right}
+  .gnf-forn{color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .gnf-sem{color:var(--muted-2); font-size:12px}
   .cad-ctl{display:flex; align-items:center; gap:10px 14px; flex-wrap:wrap}
   .cad-alt{display:flex; gap:6px; background:var(--alt); padding:4px; border-radius:var(--r)}
   .cad-aba{display:flex; align-items:center; gap:6px; padding:6px 12px; font:500 12px/1 var(--sans); border:0; border-radius:var(--r-2); background:transparent; color:var(--muted); cursor:pointer}
@@ -937,14 +1093,19 @@
   .cad-row{display:grid; grid-template-columns:200px minmax(0,1fr) 170px 130px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px}
   .cad-row:not(.gh):hover{background:var(--hover-linha)}
   /* produtos e serviços: as duas alíquotas saem calculadas, por isso são texto e não campo */
-  .gprod{display:grid; grid-template-columns:minmax(0,1.25fr) 104px 112px 108px 138px 84px 28px; gap:12px; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:824px}
+  .gprod{display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.15fr) 20px;
+    gap:14px; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; min-width:700px}
   .gprod:not(.gh):hover{background:var(--hover-linha)}
   .gprod.gh{padding:0 0 7px; border-bottom-color:var(--ink)}
   .gprod.gh > span{text-align:left}
-  .gprod.gh > span:nth-child(6){text-align:right}
+
   .gprod > .mut{color:var(--muted-2)}
   /* com notas importadas, o movimento do mês fica embaixo do nome: nenhuma coluna sai da tela */
-  .pr-nome{display:flex; flex-direction:column; gap:6px; min-width:0}
+  .pr-nome{display:flex; flex-direction:column; gap:7px; min-width:0}
+  .pr-sub{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .sel-wrap.mini .sel{font-size:11.5px; padding:2px 16px 2px 0; color:var(--muted)}
+  .pr-cbs{display:flex; flex-direction:column; gap:3px; min-width:0}
+  .pr-aliq{font-size:11.5px; color:var(--muted)}
   .pr-mes{display:flex; align-items:center; gap:8px}
   .pr-v{font-family:var(--mono); font-size:11.5px; color:var(--muted)}
   .pr-mes .nf-barra{height:4px; flex:1; min-width:36px; max-width:80px}
@@ -954,6 +1115,8 @@
   .cad-row .in{text-align:left}
   .cad-cnpj{display:flex; align-items:center; gap:7px; min-width:0}
   .cad-cnpj .ponto{width:5px; height:5px; border-radius:50%; background:var(--line-2); flex:none}
+  .cad-row .in:placeholder-shown::placeholder, .gprod .in:placeholder-shown::placeholder{color:#B09256}
+  .sel.vazio{color:#96701A}
   .cad-cnpj.inv .ponto{background:var(--brand)}
   .cad-cnpj.inv .in{color:var(--brand)}
   .sel-wrap{position:relative; display:flex; align-items:center; min-width:0}
@@ -1007,7 +1170,7 @@
   @keyframes revela{from{clip-path:inset(0 100% 0 0)}}
   .entra .track, .entra .sb-track, .entra .cmp-bar2{animation:revela .5s cubic-bezier(.2,.7,.2,1) backwards;
     animation-delay:calc(min(var(--i, 0), 6) * 35ms + 140ms)}
-  .conteudo > .entra{animation-delay:calc(min(var(--i, 0), 6) * 35ms)}   /* os blocos da seção entram em cascata */
+  .conteudo > .entra, .lanc-col > .entra{animation-delay:calc(min(var(--i, 0), 6) * 35ms)}   /* os blocos da seção entram em cascata */
   .menu.entra{animation:cai .14s ease-out backwards}
   .modal-fundo{animation:esmaece .16s ease-out backwards}
   .modal-caixa{animation:entra .2s cubic-bezier(.2,.7,.2,1) backwards}
@@ -1311,6 +1474,8 @@ function defaults(){ return {
     // 'servico' quando é nota de serviço]. resumo guarda [linhas, itens, total] de cada lado, porque a lista é
     // cortada nos que mais pesam.
     itens: {compras: [], vendas: [], resumo: {}},
+    // cada nota lida: [lado ('compra'|'venda'), documento do parceiro, nome, valor, número, emissão]
+    notasUma: [],
     estoque: [["Inventário 25/11/2025 — custo total",211166.93],["Inventário 25/11/2025 — preço total",569370.33],
               ["Estoque atualizado 26/11/2025 — custo total",177250.29],["Estoque atualizado 26/11/2025 — preço total",453222.22],
               ["Pagamento a fornecedor até dezembro",506100.89]],
@@ -1683,6 +1848,124 @@ function propagar(tipo){
 
 /* ---------- textos ---------- */
 // Cadeia de crédito — concordância: singular/plural pela contagem; fornecedor "gera crédito", cliente "aproveita o crédito"
+/* ---------- v3: o resumo de cada cadastro ---------- */
+// As cores das categorias: azul petróleo no que conta a favor, cinza quente no meio-termo, neutro no resto.
+const CATS_CADEIA = forn => [
+  ['sim', forn ? 'gera crédito integral' : 'aproveita o crédito', '#3F6E73'],
+  ['parcial', forn ? 'gera crédito parcial' : 'aproveita parcialmente', '#BDB5A8'],
+  ['nao', forn ? 'não gera crédito' : 'não aproveita', '#E2DFD8'],
+  ['', 'a definir', '#EFECE6']
+];
+// quanto cada parceiro movimentou no mês, pelas notas importadas (CNPJ → valor)
+function valorPorParceiro(lado){
+  const m = new Map();
+  (((S.monthly.notas || {})[lado]) || []).forEach(r => {
+    const d = limpaCnpj(r[0] || ''); if(d) m.set(d, (m.get(d) || 0) + (+r[2] || 0));
+  });
+  return m;
+}
+// as cores da lista: do dado principal ao neutro, na ordem em que as categorias aparecem
+const CORES_CAT = ['#3F6E73', '#8FB1B4', '#BDB5A8', '#E2DFD8', '#EFECE6'];
+// os regimes presentes na lista, os que mais pesam primeiro e "sem regime" sempre no fim
+function catsRegime(lst){
+  const nomes = [...new Set(lst.map(r => r[2] || ''))];
+  const conta = n => lst.filter(r => (r[2] || '') === n).length;
+  nomes.sort((a, b) => (a === '') - (b === '') || conta(b) - conta(a));
+  return nomes.map((n, i) => [n, n || 'sem regime definido', CORES_CAT[Math.min(i, CORES_CAT.length - 1)]]);
+}
+// Monta o resumo: categorias com quantidade e valor, o número grande e a explicação da base.
+// `chave` diz a categoria de cada linha; `doc`, o CNPJ (para casar com as notas); `conta`, quem entra no
+// número grande — na cadeia a lista é por regime, mas o número continua sendo o do crédito.
+function resumoCadastro({lst, cats, chave, doc, lado, rotulo, fraseOk, baseTxt, conta}){
+  const mapa = lado ? valorPorParceiro(lado) : null;
+  const val = r => mapa ? (mapa.get(limpaCnpj(doc(r) || '')) || 0) : 0;
+  const total = lst.reduce((a, r) => a + val(r), 0);
+  const porValor = total > 0.004;                   // sem nota no mês, a conta é por cadastro
+  const grupos = cats.map(([k, rot, cor]) => {
+    const linhas = lst.filter(r => chave(r) === k);
+    return {k, rot, cor, n: linhas.length, v: linhas.reduce((a, r) => a + val(r), 0)};
+  }).filter(g => g.n);
+  // quem mais pesa vem primeiro e leva a cor mais forte: com a conta por valor, ordenar por contagem colocava
+  // o tom principal no grupo que menos movimenta
+  if(total > 0.004){
+    grupos.sort((a, b) => b.v - a.v);
+    grupos.forEach((g, i) => { if(CORES_CAT[i] !== undefined) g.cor = CORES_CAT[Math.min(i, CORES_CAT.length - 1)]; });
+  }
+  const base = porValor ? total : lst.length;
+  const parte = g => base > 0 ? (porValor ? g.v : g.n) / base * 100 : 0;
+  // o número grande: quem "conta" (o crédito integral, na cadeia) sobre a mesma base da barra
+  const contam = lst.filter(conta || (r => chave(r) === cats[0][0]));
+  const pct = base > 0 ? (porValor ? contam.reduce((a, r) => a + val(r), 0) : contam.length) / base * 100 : 0;
+  // o que as notas do mês movimentaram ao todo, casado ou não com o cadastro: sem isso, uma base pequena
+  // daria um "100%" que não quer dizer nada
+  const totalNotas = mapa ? [...mapa.values()].reduce((a, v) => a + v, 0) : 0;
+  const fora = totalNotas - total;
+  return {grupos, parte, porValor, total,
+    numero: dec(pct, 0, 1) + '%', rotulo,
+    frase: fraseOk(porValor),
+    explica: porValor
+      ? (fora > 0.004
+        ? `Sobre ${brl(total)} dos ${brl(totalNotas)} movimentados no mês: ${brl(fora)} estão em parceiros que ainda não foram cadastrados (ou com o CNPJ diferente do que veio na nota).`
+        : `Sobre ${brl(total)} movimentados no mês pelas notas importadas.`)
+      : baseTxt(lst.length)};
+}
+function rResumoCad(r){
+  if(!r.grupos.length) return '';
+  const barra = r.grupos.map(g => `<span style="flex:${Math.max(0.04, r.parte(g))};background:${g.cor}"></span>`).join('');
+  const linhas = r.grupos.map(g => `<div class="rc-linha">
+    <span class="rc-ponto" style="background:${g.cor}"></span>
+    <span class="rc-nome">${esc(g.rot)}</span>
+    <span class="rc-n">${g.n} ${g.n === 1 ? 'item' : 'itens'}</span>
+    ${r.porValor ? `<span class="rc-v">${brl(g.v)}</span>` : ''}
+    <span class="rc-p">${dec(r.parte(g), 1, 1)}%</span></div>`).join('');
+  return `<div class="rc">
+    ${r.rotulo ? `<span class="cap rc-rot">${esc(r.rotulo)}</span>` : ''}
+    <div class="rc-topo"><span class="rc-num">${r.numero}</span><span class="rc-frase">${esc(r.frase)}</span></div>
+    <p class="rc-explica">${esc(r.explica)}</p>
+    <div class="rc-barra" aria-hidden="true">${barra}</div>
+    <div class="rc-lista">${linhas}</div>
+  </div>`;
+}
+// o resumo de um lado da cadeia, num lugar só: a tela e a frase da apresentação leem daqui
+function dadosResumoCadeia(g){
+  const lista = (S.cadeia && S.cadeia[g]) || [], forn = g === 'fornecedores';
+  return resumoCadastro({
+    rotulo: forn ? 'Compras por regime do fornecedor' : 'Vendas por regime do cliente',
+    // a lista quebra por regime tributário (é o que define o crédito); o número grande segue sendo o do crédito
+    lst: lista, cats: catsRegime(lista), chave: r => r[2] || '', doc: r => r[0],
+    conta: r => (r[3] || '') === 'sim',
+    lado: forn ? 'compras' : 'vendas',
+    fraseOk: porValor => forn
+      ? (porValor ? 'das compras vêm de quem gera crédito integral de CBS' : 'dos fornecedores geram crédito integral de CBS')
+      : (porValor ? 'das vendas vão para quem aproveita o crédito da CBS' : 'dos clientes aproveitam o crédito da CBS'),
+    baseTxt: n => `Sobre ${n} ${n === 1 ? (forn ? 'fornecedor cadastrado' : 'cliente cadastrado') : (forn ? 'fornecedores cadastrados' : 'clientes cadastrados')}. Importe as notas do mês para a conta ser por valor.`
+  });
+}
+// o mesmo para o catálogo, onde a categoria é a faixa de redução da CBS
+function dadosResumoProdutos(){
+  const prods = S.produtos || [];
+  if(!prods.length) return null;
+  const pesoP = pesoCatalogo();
+  const valProd = l => pesoP.mapa.get(chaveItem({ncm: l[3], nbs: l[4], servico: l[2] === 'servico', nome: l[0]})) || 0;
+  const total = pesoP.tem ? prods.reduce((a, l) => a + valProd(l), 0) : 0;
+  const porValor = total > 0.004;
+  // v3: a rampa do resumo é a mesma das outras listas — azul petróleo no que mais pesa, cinza quente depois.
+  // A escala vermelha da CBS ficou só nos lugares onde ela é a própria alíquota, nunca num gráfico.
+  const grupos = TIPOS.map(([k, rot]) => {
+    const linhas = prods.filter(l => (TIPOS.some(([v]) => v === l[1]) ? l[1] : 'geral') === k);
+    return {k, rot, n: linhas.length, v: linhas.reduce((a, l) => a + valProd(l), 0)};
+  }).filter(g => g.n);
+  grupos.sort((a, b) => porValor ? b.v - a.v : b.n - a.n);
+  grupos.forEach((g, i) => { g.cor = CORES_CAT[Math.min(i, CORES_CAT.length - 1)]; });
+  const base = porValor ? total : prods.length;
+  const parte = g => base > 0 ? (porValor ? g.v : g.n) / base * 100 : 0;
+  const pct = grupos.filter(g => g.k !== 'geral').reduce((a, g) => a + parte(g), 0);
+  return {grupos, parte, porValor, total, numero: dec(pct, 0, 1) + '%',
+    rotulo: porValor ? 'Receita por tratamento na CBS' : 'Catálogo por tratamento na CBS',
+    frase: porValor ? 'do que a empresa vende tem redução na CBS' : 'dos itens cadastrados têm redução na CBS',
+    explica: porValor ? `Sobre ${brl(total)} movimentados no mês pelas notas importadas.`
+      : `Sobre ${prods.length} ${prods.length === 1 ? 'item cadastrado' : 'itens cadastrados'}. Importe as notas do mês para a conta ser por valor.`};
+}
 function resumoCadeia(lst, forn){
   const n = lst.length;
   if(!n) return '';                                 // a definição da visão já diz o que é aquela lista
@@ -1832,6 +2115,8 @@ function saidas(){
 
   O.co = S.co || ''; O.footer = S.footer || '';
   // barra lateral e Visão geral (layout v2)
+  const anoLat = (banco.ativo && banco.ano && banco.ano.ano) || (String(S.anoLabel || '').match(/\d{4}/) || [])[0];
+  O['lat.grupoAno'] = anoLat ? 'Exercício · ' + anoLat : 'Exercício';
   O['lat.grupoMes'] = 'Mês · ' + (banco.ativo && banco.periodo ? mesCurto(banco.periodo) : (S.mesLabel || ''));
   // a logo é do escritório: o CNPJ ao lado do nome deixa claro de quem é a empresa do painel
   const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
@@ -1994,6 +2279,23 @@ function saidas(){
   O['k.ganhoConv'] = `${brl(Math.abs(cm.delta))} a menos que o híbrido`;
   O['k.ganhoHib'] = `${brl(Math.abs(cm.delta))} a menos que o tradicional`;
   V['k.temEquilibrio'] = O['k.equilibrio'] !== '';
+  // o mesmo cálculo da frase, agora repartido em dois blocos: quanto falta em compras e quanto em despesas
+  {
+    const rf = S.monthly.reforma, aC = +rf.aliqCompras || 0, aD = +rf.aliqGeral || 0;
+    const falta = cm.faltaCredito, v = falta === null ? 0 : Math.abs(falta);
+    const vale = falta !== null && v >= 0.005;
+    O['k.equilibrioTit'] = !vale ? (O['k.equilibrio'] || '')
+      : falta > 0 ? 'O que falta no mês para o híbrido empatar com o tradicional:'
+                  : 'O que o híbrido já tem de sobra sobre o tradicional, no mês:';
+    V['k.eqCompras'] = vale && aC > 0;
+    V['k.eqDespesas'] = vale && aD > 0 && Math.abs(aC - aD) > 1e-9;
+    O['k.eqComprasV'] = aC > 0 ? brl(v / aC) : '';
+    // com a mesma alíquota nos dois lados, um bloco só diz as duas coisas
+    O['k.eqComprasR'] = aD > 0 && Math.abs(aC - aD) < 1e-9
+      ? `em compras ou despesas com direito a crédito (${FMT.pct0(aC)})` : `em compras (${FMT.pct0(aC)})`;
+    O['k.eqDespesasV'] = aD > 0 ? brl(v / aD) : '';
+    O['k.eqDespesasR'] = `em despesas com direito a crédito (${FMT.pct0(aD)})`;
+  }
   V['k.semDas'] = cm.dasBase <= 0.004;
   // "Tributos do mês" soma as despesas tributárias da DRE. Sem nenhuma lançada, o tradicional daria
   // R$ 0,00 e o híbrido, só a diferença — dois números que não se comparam. Melhor não mostrar.
@@ -2187,8 +2489,8 @@ function saidas(){
     O[`cad.${g}.resumo`] = resumoCadeia(lista, g === 'fornecedores');
     O[`cad.${g}.alerta`] = ruins === 1 ? '1 CNPJ não confere' : `${ruins} CNPJs não conferem`;
     V[`cad.${g}.temAlerta`] = ruins > 0;
-    if(lista.length) H[`cad.${g}.grafico`] = graficoCadeia(lista, g === 'fornecedores');
-  });
+    if(lista.length) H[`cad.${g}.resumo3`] = rResumoCad(dadosResumoCadeia(g));
+    });
   const visao = ui.present || ui.imprimindo ? (ui.cadeia || 'fornecedores')
     : (cliVis() === 'clientes' ? 'clientes' : 'fornecedores');
   const lst = (S.cadeia && S.cadeia[visao]) || [];
@@ -2196,7 +2498,7 @@ function saidas(){
   const invalidos = lst.filter(r => limpaCnpj(r[0]) && !cnpjValido(r[0])).length;
   O['cad.alerta'] = invalidos === 1 ? '1 CNPJ não confere' : `${invalidos} CNPJs não conferem`;
   V['cad.temAlerta'] = invalidos > 0;
-  H['cad.grafico'] = graficoCadeia(lst, visao === 'fornecedores');
+  H['cad.resumo3'] = H[`cad.${visao}.resumo3`] || '';
   // produtos e serviços: a reduzida sai das premissas e a efetiva, da faixa do Simples com a situação no DAS
   const prods = S.produtos || [];
   O['pr.resumo'] = resumoProdutos(prods);
@@ -2204,7 +2506,8 @@ function saidas(){
   // notas lidas no mês: parceiros dos dois lados (o número que a régua da aba mostra)
   O['nf.qtd'] = String((((S.monthly.notas || {}).compras) || []).length + (((S.monthly.notas || {}).vendas) || []).length || '');
   prods.forEach((r, i) => { O[`pr.${i}.red`] = FMT.pct(aliqTipo(TIPOS.some(([v]) => v === r[1]) ? r[1] : 'geral')); });
-  if(prods.length) H['pr.grafico'] = graficoProdutos(prods);
+  if(prods.length){ H['pr.resumo3'] = rResumoCad(dadosResumoProdutos()); }
+
   return {O, W, C, V, H};
 }
 
@@ -2316,28 +2619,56 @@ function conferencias(){
   }
   return lista;
 }
+// v3: a conferência mora no cabeçalho, como pílula. Antes era um cartão no topo de cada tela — ocupava a
+// primeira dobra em todas elas para dizer, quase sempre, que estava tudo certo.
 function rSelo(){
-  if(ui.tab === 'visao') return '';        // a Visão geral é dos gráficos; o selo acompanha as outras telas
+  if(ui.present || !banco.ativo) return '';       // quem está mostrando ao cliente não confere nada
   const lista = conferencias(), pendentes = lista.filter(x => !x.ok).length;
+  if(!lista.length) return '';
   const item = c => `<div class="selo-item"><span class="selo-marca ${c.ok ? 'ok' : 'atencao'}">${c.ok ? '✓' : '!'}</span>` +
     `<span><span class="selo-t">${c.titulo}</span><span class="selo-d">${esc(c.detalhe)}</span></span></div>`;
-  return `<section class="selo ${pendentes ? 'atencao' : 'ok'}" aria-label="Conferência do mês">
-    <button class="selo-b" type="button" data-act="selo" aria-expanded="${ui.selo}">
-      <span class="selo-ponto"></span>
-      <span class="selo-txt"><span class="selo-tit">${pendentes ? 'Conferir antes de entregar' : 'Conferido — pode entregar'}</span>
-      <span class="selo-sub">${pendentes
-        ? `${pendentes} ${pendentes > 1 ? 'pontos pedem atenção' : 'ponto pede atenção'} · ${lista.length - pendentes} ${lista.length - pendentes === 1 ? 'verificação passou' : 'verificações passaram'}`
-        : `Todas as ${lista.length} verificações passaram`}</span></span>
-      <span class="selo-seta">${ui.selo ? 'ocultar ▲' : 'ver tudo ▼'}</span></button>
-    ${ui.selo ? `<div class="selo-lista">${lista.map(item).join('')}</div>` : ''}</section>`;
+  const rotulo = pendentes ? `${pendentes} ${pendentes > 1 ? 'pontos a conferir' : 'ponto a conferir'}` : 'Conferido';
+  return `<div class="selo-wrap ${pendentes ? 'atencao' : 'ok'}">
+    <button class="selo-pill" type="button" data-act="selo" aria-expanded="${ui.selo}"
+      title="Conferência do mês">
+      <span class="selo-ponto"></span><span>${rotulo}</span>
+      <span class="selo-seta" aria-hidden="true">▾</span></button>
+    ${ui.selo ? `<div class="selo-menu" role="dialog" aria-label="Conferência do mês">
+      <div class="selo-menu-cab"><span class="cap">Conferência de ${esc(mesCurto(banco.periodo || ''))}</span>
+        <span class="selo-menu-n">${pendentes ? `${lista.length - pendentes} de ${lista.length} passaram` : `${lista.length} verificações`}</span></div>
+      <div class="selo-lista">${lista.map(item).join('')}</div></div>` : ''}
+  </div>`;
 }
 // Barra lateral (handoff v2): marca do escritório, empresa aberta, navegação em dois grupos e o rodapé com o
 // estado do salvamento. Recolhida (body.lat-fina) fica só a coluna de pontos, com o nome no title
+// desenhados à mão no handoff (SVG 24×24, traço 1,6): quatro quadrados, lista com tique, balança, caminhão,
+// duas pessoas, caixa, documento e calendário
+const ICONES = {
+  visao: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  resultado: 'M5 6h14M5 12h14M5 18h9M17 16l2 2 3-4',
+  regimes: 'M12 4v16M8 20h8M5 7h14M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0z',
+  fornecedores: 'M3 6h11v10H3zM14 10h4l3 3v3h-7M7.5 19.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17.5 19.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  clientes: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 6.5M18 14.8c1.9.7 3.1 2.5 3.5 5.2',
+  produtos: 'M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9',
+  notas: 'M6 3h9l4 4v14H6zM15 3v4h4M9 12h7M9 16h7',
+  anual: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M8 14h2M14 14h2M8 17h2'
+};
+const iconeLat = k => `<svg class="lat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ICONES[k] || ''}"/></svg>`;
 function rLateral(){
-  const secoes = [['visao', 'Visão geral'], ['resultado', 'Lançamento'], ['regimes', 'Comparar regimes'], ['cliente', 'Resumo do cliente']];
+  const secoes = [['visao', 'Visão geral'], ['resultado', 'Lançamento'], ['regimes', 'Comparar regimes']];
   // o id de cada seção continua sendo tab-<id>: é por ele que o teclado, os testes e o link do cliente chegam aqui
   const item = ([id, rot]) => `<button class="lat-item" type="button" id="tab-${id}" data-act="tab" data-id="${id}" title="${rot}"` +
-    `${ui.tab === id ? ' aria-current="page"' : ''}><span class="lat-ponto"></span><span>${rot}</span></button>`;
+    `${ui.tab === id ? ' aria-current="page"' : ''}>${iconeLat(id)}<span class="lat-rot">${rot}</span></button>`;
+  // Cadastros: cada lista é um item do menu (v3). O clique leva para a aba do cliente já na lista certa, e a
+  // contagem vem do refresh, como vinha na régua que isto substitui.
+  const cadastros = [['fornecedores', 'Fornecedores', 'cad.fornecedores.qtd'], ['clientes', 'Clientes', 'cad.clientes.qtd'],
+                     ['produtos', 'Produtos e serviços', 'pr.qtd'], ['notas', 'Notas do mês', 'nf.qtd']];
+  const itemCad = ([id, rot, chave]) => (id === 'notas' && ui.present) ? '' :
+    // o primeiro cadastro carrega o id da aba: é por #tab-cliente que o teclado, o link do cliente e os testes chegam
+    `<button class="lat-item" type="button" id="${id === 'fornecedores' ? 'tab-cliente' : 'tab-cad-' + id}" data-act="cli-vis" data-id="${id}" title="${rot}"` +
+    `${ui.tab === 'cliente' && cliVis() === id ? ' aria-current="page"' : ''}>${iconeLat(id)}` +
+    `<span class="lat-rot">${rot}</span><span class="lat-n" data-o="${chave}"></span></button>`;
   const emp = banco.ativo && (banco.empresas || []).find(e => e.id === banco.empresaId);
   // o cartão da empresa É o seletor: o <select> fica por cima, invisível, para o clique abrir a lista do sistema
   const opcoes = !banco.ativo ? '' : (banco.empresaId ? '' : '<option value="" selected>Nenhuma empresa</option>') +
@@ -2348,7 +2679,8 @@ function rLateral(){
       <span class="lat-emp-n">${esc((emp && emp.nome) || 'Escolher empresa')}</span>
       <span class="lat-emp-c">${emp && emp.cnpj ? fmtCnpj(emp.cnpj) : ''}</span></span>
       <span class="lat-emp-seta" aria-hidden="true">▾</span>
-      <select class="lat-emp-sel" data-banco="empresa" aria-label="Empresa">${opcoes}</select></div></div>`;
+      <select class="lat-emp-sel" data-banco="empresa" aria-label="Empresa">${opcoes}</select></div>
+      ${!banco.empresaId ? '' : rLatComp()}</div>`;
   const pe = `<div class="lat-pe">
     ${banco.ativo ? `<div class="lat-salvo" id="lat-salvo"><span></span></div>` : ''}
     <div class="lat-acoes menu-wrap">
@@ -2356,27 +2688,57 @@ function rLateral(){
       <button type="button" data-act="menu" aria-haspopup="true" aria-expanded="${ui.menu}">Opções</button>
       ${ui.menu ? rMenu() : ''}
     </div></div>`;
+  // a carteira é do escritório: não aparece na apresentação nem no link do cliente
+  const naCarteira = ui.tab === 'empresas';
+  const podeCarteira = banco.ativo && !!banco.sessao && !ui.present && !ui.client;
+  const voltar = podeCarteira && !naCarteira
+    ? `<button class="lat-voltar" type="button" data-act="carteira">← Todas as empresas</button>` : '';
   return `<aside class="lat" aria-label="Navegação">
     <div class="lat-topo"><img class="logo" data-src="logo" alt="Logo do escritório">
       <span class="lat-marca" data-o="footer"></span>
       <button class="lat-x" type="button" data-act="lat-fina" title="${ui.latFina ? 'Abrir menu' : 'Recolher menu'}">${ui.latFina ? '»' : '«'}</button>
     </div>
-    ${empresa}
+    ${voltar}
+    ${naCarteira ? '' : empresa}
     <nav class="lat-nav" aria-label="Seções do painel">
-      <div class="lat-grupo" data-o="lat.grupoMes"></div>
+      ${!naCarteira ? '' : `<div class="lat-grupo">Escritório</div>
+        <button class="lat-item" type="button" id="tab-empresas" data-act="carteira" aria-current="page">
+          ${iconeLat('empresas')}<span class="lat-rot">Empresas</span>
+          <span class="lat-n">${(banco.empresas || []).length || ''}</span></button>`}
+      ${naCarteira ? '' : `<div class="lat-grupo" data-o="lat.grupoMes"></div>
       ${secoes.map(item).join('')}
-      <div class="lat-grupo">Exercício</div>
-      ${item(['anual', 'Anual'])}
+      <div class="lat-grupo">Cadastros</div>
+      ${cadastros.map(itemCad).join('')}
+      <div class="lat-grupo" data-o="lat.grupoAno"></div>
+      ${item(['anual', 'Anual'])}`}
     </nav>
     ${pe}</aside>`;
+}
+// A competência dentro do cartão da empresa: ‹ set/2026 ›. As setas andam pelos meses salvos, na ordem em que
+// eles aparecem na lista; a lista continua existindo por baixo do rótulo, para escolher direto e para criar mês.
+function rLatComp(){
+  const meses = banco.meses || [], i = meses.indexOf(banco.periodo);
+  const opcoes = meses.map(x => `<option value="${x}"${x === banco.periodo ? ' selected' : ''}>${mesCurto(x)}</option>`).join('') +
+    `<option value="__nova__">+ Novo mês…</option>`;
+  const seta = (d, rot) => {
+    const alvo = i >= 0 ? meses[i + d] : null;
+    return `<button class="lat-seta" type="button" data-act="mes-passo" data-d="${d}" aria-label="${rot}"
+      title="${alvo ? mesCurto(alvo) : rot}"${alvo ? '' : ' disabled'}>${d < 0 ? '‹' : '›'}</button>`;
+  };
+  return `<div class="lat-comp">
+    <span class="cap">Competência</span>
+    ${seta(-1, 'Mês anterior')}
+    <span class="lat-comp-v">${esc(mesCurto(banco.periodo || ''))}
+      <select class="lat-comp-sel" data-banco="periodo" aria-label="Competência">${opcoes}</select></span>
+    ${seta(1, 'Próximo mês')}
+  </div>`;
 }
 // Cabeçalho: quem é a empresa, em que competência, e as ações do mês
 function rCabecalho(){
   const meses = !banco.ativo ? '' : (banco.meses || []).map(x =>
     `<option value="${x}"${x === banco.periodo ? ' selected' : ''}>${mesCurto(x)}</option>`).join('') +
     `<option value="__nova__">+ Novo mês…</option>`;
-  const comp = !banco.ativo ? '' : `<label class="cab-comp"><span class="cap">Competência</span>
-    <select data-banco="periodo" aria-label="Competência"${banco.empresaId ? '' : ' disabled'}>${meses}</select></label>`;
+  const comp = '';                                  // v3: a competência mora no cartão da empresa, na lateral
   const salvar = banco.ativo && banco.sessao && !ui.present
     ? `<button class="btn prim" type="button" data-act="salvar-banco" id="b-salvar" title="Salvar (Ctrl+S)">Salvar</button>` : '';
   const telaCheia = ui.present && document.fullscreenEnabled
@@ -2384,11 +2746,25 @@ function rCabecalho(){
   const modo = ui.client ? '' : `<div class="modo" role="group" aria-label="Modo de uso">
     <button type="button" data-act="modo" data-p="lancar" aria-pressed="${!ui.present}">Lançar</button>
     <button type="button" data-act="modo" data-p="apresentar" aria-pressed="${ui.present}">Apresentar</button></div>`;
+  if(ui.tab === 'empresas'){
+    const c = banco.carteira, per = (c && c.periodo) || banco.periodo || periodoAtual();
+    const n = (banco.empresas || []).length;
+    return `<header class="cab"><div class="cab-in">
+      <div class="cab-id"><button class="hamburguer" type="button" data-act="lat-abrir" aria-label="Abrir menu">☰</button>
+        <div><h1>Empresas</h1><div class="cab-sub">Fechamento de ${esc(mesCurto(per))} · ${n} ${n === 1 ? 'empresa na carteira' : 'empresas na carteira'}</div></div></div>
+      <div class="cab-dir">
+        <div class="cart-mes"><span class="cap">Competência</span>
+          <button class="lat-seta" type="button" data-act="carteira-mes" data-d="-1" aria-label="Mês anterior">‹</button>
+          <b>${esc(mesCurto(per))}</b>
+          <button class="lat-seta" type="button" data-act="carteira-mes" data-d="1" aria-label="Próximo mês">›</button></div>
+        <button class="btn" type="button" data-act="nova-empresa">+ Nova empresa</button>
+      </div></div></header>`;
+  }
   return `<header class="cab"><div class="cab-in">
     <div class="cab-id"><button class="hamburguer" type="button" data-act="lat-abrir" aria-label="Abrir menu">☰</button>
       <div><h1 data-o="co"></h1><div class="cab-sub" data-o="ctx"></div>
         <div class="imp-info so-papel" id="imp-info"></div></div></div>
-    <div class="cab-dir">${modo}${telaCheia}${comp}${salvar}</div>
+    <div class="cab-dir">${rSelo()}${modo}${telaCheia}${comp}${salvar}</div>
   </div></header>`;
 }
 function rMenu(){
@@ -2531,8 +2907,8 @@ function dasDeclaradoCampo(){
 function rSimplesMes(){
   const ro = ui.present ? ' disabled' : '';
   const anexos = [['', 'Escolha…']].concat(Object.keys(ANEXOS).map(k => [k, `${k} · ${ANEXOS[k].nome}`]));
-  return `<section class="card sn" aria-label="Simples Nacional do mês">
-    <div class="card-h"><div><h2>Simples Nacional do mês</h2><p class="sub" data-o="r.snSub"></p></div></div>
+  return `<section class="card sn" id="sec-sn" aria-label="Simples Nacional do mês">
+    <div class="card-h"><div><h2><span class="sec-n">01</span>Simples Nacional do mês</h2><p class="sub" data-o="r.snSub"></p></div></div>
     <div class="seg-prem">
       <label class="seg-campo" data-v="r.umAnexo"><span>Anexo do Simples</span><span class="sel-wrap"><select class="sel" data-b="anexo" data-f="txt" aria-label="Anexo do Simples Nacional"${ro}>${opcoesSel(anexos, S.anexo || '')}</select></span></label>
       <label class="seg-campo"><span>Receita dos últimos 12 meses</span>${inp('monthly.rbt12', 'brl', 'Receita dos últimos 12 meses')}</label>
@@ -2566,13 +2942,14 @@ function rComparativo(){
     `<span>${rot}<b data-o="${pre}.${id}.p"></b><span class="m" data-o="${pre}.${id}.v"></span></span></div>`;
   // o IBS só entra onde existe número para ele: dentro do DAS o painel não o separa, e por fora é o informado
   const comp = (pre, rotDas, rotCbs, rotIbs, carga) => `<div class="cmp-comp"><h4>Composição dos tributos do mês</h4>
-      <div class="cmp-bar2" aria-hidden="true"><span class="c-das" data-w="${pre}.das"></span><span class="c-brand" data-w="${pre}.cbs"></span>` +
+      <div class="cmp-bar2" aria-hidden="true"><span class="c-das" data-w="${pre}.das"></span><span class="c-cbs" data-w="${pre}.cbs"></span>` +
       (rotIbs ? `<span class="c-line" data-w="${pre}.ibs"></span>` : '') + `</div>
-      <div class="cmp-leg">${parte(pre, 'das', rotDas, 'c-das')}${parte(pre, 'cbs', rotCbs, 'c-brand')}` +
+      <div class="cmp-leg">${parte(pre, 'das', rotDas, 'c-das')}${parte(pre, 'cbs', rotCbs, 'c-cbs')}` +
       (rotIbs ? `<div data-v="k.temIbs">${parte(pre, 'ibs', rotIbs, 'c-line')}</div>` : '') + `</div>
       <small class="cmp-carga" data-o="${carga}" data-v="k.temCarga"></small></div>`;
   return `<section class="card comparativo" aria-label="Tradicional × Híbrido">
-    <div class="card-h"><div><h2>Tradicional × Híbrido</h2><p class="sub">Compare os dois cenários e veja qual sai mais barato neste mês.</p></div></div>
+    <div class="card-h"><div><h2>Tradicional × híbrido</h2>
+      <p class="sub">Comparação dos tributos de ${esc(banco.periodo ? mesCurto(banco.periodo) : competencia(S.mesLabel))} nos dois regimes.</p></div></div>
     <div class="cmp2">
       <article class="cmp-card" data-cls="ganha:k.convGanha"><span class="cmp-tag">${TROFEU}Mais barato no mês</span><h3>Simples tradicional</h3><p class="cmp-nota">CBS dentro do DAS</p>
         ${linha('DAS total', 'k.dasConv', 'dest')}<p class="cmp-ganho" data-o="k.ganhoConv"></p>${linha('Alíquota efetiva', 'k.efetConv')}${linha('CBS dentro do DAS', 'k.cbsConv', 'sub')}
@@ -2586,13 +2963,53 @@ function rComparativo(){
     <p class="cmp-eq" data-v="k.empate">Os dois regimes empatam no mês.</p>
     <div class="flag" data-v="k.semDas" data-o="k.semDas"></div>
     <p class="cmp-eq" data-v="k.temVariacao" data-o="k.variacao"></p>
-    <p class="cmp-eq" data-v="k.temEquilibrio" data-o="k.equilibrio"></p>
+    <div class="cmp-eq-bl" data-v="k.temEquilibrio">
+      <span class="cap">Ponto de equilíbrio</span>
+      <p class="cmp-eq-txt" data-o="k.equilibrioTit"></p>
+      <div class="cmp-eq-cx">
+        <div class="cmp-eq-c" data-v="k.eqCompras"><span class="cmp-eq-v" data-o="k.eqComprasV"></span>
+          <span class="cmp-eq-r" data-o="k.eqComprasR"></span></div>
+        <div class="cmp-eq-c" data-v="k.eqDespesas"><span class="cmp-eq-v" data-o="k.eqDespesasV"></span>
+          <span class="cmp-eq-r" data-o="k.eqDespesasR"></span></div>
+      </div>
+    </div>
     <p class="cmp-eq nota" data-v="k.semIbs">O IBS ainda não é calculado: os dois cenários comparam só o DAS e a CBS.</p>
   </section>`;
 }
+// As quatro etapas do fechamento, na ordem em que se lança. O ✓ e o ! saem das mesmas conferências da pílula
+// do cabeçalho — é a mesma verdade, dita no lugar onde se trabalha.
+function etapasLanc(){
+  const c = calcMes(), conf = conferencias();
+  const ok = titulo => { const x = conf.find(y => y.titulo === titulo); return !x || x.ok; };
+  return [
+    {id: 'sn', n: '01', rot: 'Simples do mês', ok: !!ANEXOS[S.anexo] && (+S.monthly.rbt12 || 0) > 0.004},
+    {id: 'dre', n: '02', rot: 'DRE', ok: ok('Receita da DRE bate com as linhas do PGDAS') && ok('DAS declarado confere com o calculado')},
+    {id: 'est', n: '03', rot: 'Estoque e compras', ok: c.compras > 0.004 || (S.monthly.estoque || []).length > 0},
+    {id: 'cbs', n: '04', rot: 'Memória da CBS', ok: ok('Crédito de CBS compatível com as compras')}
+  ];
+}
+function rTrilho(){
+  return `<aside class="trilho" aria-label="Fechamento do mês">
+    <div class="trilho-bl">
+      <span class="cap">Fechamento do mês</span>
+      <div class="trilho-etapas">${etapasLanc().map(e =>
+        `<button class="trilho-et" type="button" data-act="ir-secao" data-id="${e.id}">
+          <span class="trilho-mk ${e.ok ? 'ok' : 'atencao'}">${e.ok ? '✓' : '!'}</span>
+          <span>${e.rot}</span></button>`).join('')}</div>
+    </div>
+    <div class="trilho-bl">
+      <span class="cap">Resultado líquido</span>
+      <div class="trilho-res" data-o="m.resultado"></div>
+      <div class="trilho-linhas">
+        <div><span>DAS <i data-v="m.dasAuto">calculado</i></span><span class="v" data-o="m.tr.0.v"></span></div>
+        <div><span data-o="m.cbsRotulo"></span><span class="v" data-o="m.cbsRes"></span></div>
+      </div>
+    </div>
+  </aside>`;
+}
 function rResultado(){
   const m = S.monthly;
-  let h = `<div class="card-h"><div><h2>Demonstração de resultado</h2><p class="sub">Valores do mês e participação sobre a receita.</p></div>${btnDetalhe()}</div>`;
+  let h = `<div class="card-h" id="sec-dre"><div><h2><span class="sec-n">02</span>Demonstração de resultado</h2><p class="sub">Valores do mês e participação sobre a receita.</p></div>${btnDetalhe()}</div>`;
   h += linha('rec', 'Receita declarada <span class="tag-src">PGDAS</span>' + varMes('receita'), 'm.receita', 'm.receitaP');
   if(ui.detalhe) h += detReceita();
   if(m.custos.length === 1) h += linha('', '( − ) ' + esc(m.custos[0][0]), 'm.cu.0.v', 'm.cu.0.p', 'monthly.custos.0.1');
@@ -2607,7 +3024,9 @@ function rResultado(){
   // na apresentação, a DRE fecha com a leitura em português — é o que o cliente quer ouvir
   if(ui.present) h += `<div class="como-ler"><span class="cap">Como ler</span>
     <p data-o="v.comoLer"></p></div>`;
-  return rSimplesMes() + painel('card', 'resultado', h) + rEstoque() + rReforma();
+  const secoes = rSimplesMes() + painel('card', 'resultado', h) + rEstoque() + rReforma();
+  // na apresentação não se lança: o trilho (etapas e Salvar) não faz sentido na frente do cliente
+  return ui.present ? secoes : `<div class="lanc"><div class="lanc-col">${secoes}</div>${rTrilho()}</div>`;
 }
 // Compras do mês: mesma tabela das despesas gerais — regra de crédito, alíquota e crédito de CBS por linha
 function tabelaCompras(){
@@ -2630,7 +3049,7 @@ function tabelaCompras(){
 }
 function rEstoque(){
   const lst = S.monthly.estoque || [];
-  let h = `<div class="card-h"><div><h2>Estoque e compras</h2><p class="sub">Compras do mês, posição de estoque e pagamentos.</p></div>` +
+  let h = `<div class="card-h" id="sec-est"><div><h2><span class="sec-n">03</span>Estoque e compras</h2><p class="sub">Compras do mês, posição de estoque e pagamentos.</p></div>` +
     `<button class="btn" data-act="estoque" aria-expanded="${ui.estoque}">${ui.estoque ? 'Ocultar detalhamento' : 'Ver detalhamento'}</button></div>`;
   // o total vem da soma das linhas de compra; o detalhamento traz as compras e a posição de estoque
   h += linha('rec', 'Compra de mercadoria do mês', 'm.compra', 'm.compraP');
@@ -2670,7 +3089,7 @@ function rReforma(){
         <span class="sb-v" data-o="m.creditoTotal"></span><span class="sb-leg" data-v="cr.temLegenda" data-o="cr.legenda"></span></div>
     </div>`;
   const memo = `<div class="memo${aberta ? '' : ' fechada'}">
-    <div class="card-h"><div><h2>Memória de cálculo — CBS</h2>
+    <div class="card-h" id="sec-cbs"><div><h2><span class="sec-n">04</span>Memória de cálculo — CBS</h2>
       <p class="sub">${aberta ? 'Base × alíquota.<span class="so-tela"> Ajuste os campos e tudo recalcula.</span>'
         : 'Débito e crédito do mês.'}</p></div>
       <button class="btn" data-act="memoria" aria-expanded="${aberta}">${aberta ? 'Ocultar memória' : 'Ver memória'}</button></div>
@@ -2927,9 +3346,164 @@ function rLadoFatorR(c){
     ${c.faltam ? `<p class="nota">${c.faltam} ${c.faltam === 1 ? 'mês ainda não foi salvo' : 'meses ainda não foram salvos'}: o número muda quando ${c.faltam === 1 ? 'ele entrar' : 'eles entrarem'}.</p>` : ''}`;
 }
 // Visão geral (v2): o mês em três números, quem sai mais barato e a faixa do Simples
+// v3: a primeira coisa da tela é a resposta — qual regime sai mais barato neste mês, numa frase. Antes a tela
+// abria no gráfico, e a conclusão ficava na aba de comparação, a dois cliques de distância.
+function rResposta(){
+  const cm = calcMes();
+  if(!(cm.dasBase > 0.004)) return '';             // sem DAS não há o que comparar
+  const conv = Math.abs(cm.delta) > 0.004 ? cm.delta > 0 : null;   // true = tradicional ganha; null = empate
+  const nome = conv === null ? '' : conv ? 'Simples tradicional' : 'Simples híbrido';
+  const frase = conv === null
+    ? 'Os dois regimes custam o mesmo neste mês.'
+    : `${nome}, ${brl(Math.abs(cm.delta))} a menos que o ${conv ? 'híbrido' : 'tradicional'}`;
+  return `<section class="card resposta${conv === null ? '' : ' ganha'}" aria-label="Regime mais barato no mês">
+    <div class="resposta-in">
+      <div class="resposta-txt">
+        <span class="resp-selo">Mais barato em ${esc(banco.periodo ? mesCurto(banco.periodo) : competencia(S.mesLabel))}</span>
+        <h2 class="resp-frase">${esc(frase)}</h2>
+        <p class="resp-linha">Tradicional ${brl(cm.dasBase)} · híbrido ${brl(cm.naTransicao)}<span data-v="k.temEquilibrio"> · <span data-o="k.equilibrio"></span></span></p>
+      </div>
+      <button class="btn" type="button" data-act="tab" data-id="regimes">Ver comparação →</button>
+    </div>
+  </section>`;
+}
+/* ---------- a tela do Painel de empresas ---------- */
+const CARTEIRA_FILTROS = [['todas', 'Todas'], ['pendentes', 'Pendentes'], ['hibrido', 'Híbrido ganha']];
+const iniciais = nome => String(nome || '?').trim().split(/\s+/).filter(x => x.length > 2 || /^[A-Z]/.test(x))
+  .slice(0, 2).map(x => x[0]).join('').toUpperCase() || '?';
+function rEmpresas(){
+  const c = banco.carteira;
+  const cab = '';                                   // o título e a competência estão no cabeçalho da tela
+  if(!c || c.carregando) return painel('card carteira', 'empresas', `<p class="sub">Somando as empresas…</p>`);
+  const busca = normBusca(ui.buscaEmp || '');
+  const filtro = ui.filtroEmp || 'todas';
+  const conta = k => c.linhas.filter(l => k === 'todas' || (k === 'pendentes' ? !l.salvo : l.hibGanha)).length;
+  const linhas = c.linhas
+    .filter(l => !busca || normBusca(`${l.empresa.nome} ${l.empresa.cnpj || ''}`).includes(busca))
+    .filter(l => filtro === 'todas' || (filtro === 'pendentes' ? !l.salvo : l.hibGanha));
+  // padrão: quem ganha no híbrido primeiro, depois as lançadas por receita, e as pendentes no fim
+  linhas.sort((a, b) => (b.hibGanha - a.hibGanha) || (b.salvo - a.salvo) || (b.receita - a.receita));
+  const chips = CARTEIRA_FILTROS.map(([k, rot]) =>
+    `<button class="cli-chip carteira-chip" type="button" data-act="emp-filtro" data-id="${k}" aria-pressed="${filtro === k}">${rot} <span class="m">${conta(k)}</span></button>`).join('');
+  const lancadas = c.linhas.filter(l => l.salvo);
+  const somaRec = lancadas.reduce((a, l) => a + l.receita, 0);
+  const somaRes = lancadas.reduce((a, l) => a + (l.resultado || 0), 0);
+  const somaDas = lancadas.reduce((a, l) => a + l.das, 0);
+  const economia = lancadas.reduce((a, l) => a + (l.hibGanha ? l.delta : 0), 0);
+  return painel('card carteira', 'empresas', `${cab}
+    <div class="cli-barra">
+      <div class="cli-linha1">
+        <span class="cli-busca"><input class="in" type="search" data-busca-emp value="${esc(ui.buscaEmp || '')}"
+          placeholder="buscar por nome ou CNPJ…" aria-label="Buscar empresa"></span>
+        <div class="cli-filtros">${chips}</div>
+      </div>
+    </div>
+    <div class="scroll-x">
+      <div class="gemp gh"><span>Empresa</span><span>Receita do mês</span><span>Resultado</span><span>Efetiva</span>
+        <span>Regime indicado</span><span>Situação</span><span></span></div>
+      ${linhas.map(rLinhaEmpresa).join('') || `<div class="cli-nada">Nenhuma empresa encontrada. <button class="lk" data-act="emp-limpar">mostrar todas</button></div>`}
+      ${lancadas.length ? `<div class="gemp tot"><span>Carteira · ${lancadas.length} ${lancadas.length === 1 ? 'empresa lançada' : 'empresas lançadas'}</span>
+        <span>${brl(somaRec)}</span><span>${brl(somaRes)}</span>
+        <span>${somaRec > 0.004 ? dec(somaDas / somaRec * 100, 1, 2) + '%' : '—'}</span>
+        <span class="gemp-eco">${economia > 0.004 ? brl(economia) + ' a economizar' : ''}</span><span></span><span></span></div>` : ''}
+    </div>`);
+}
+function rLinhaEmpresa(l){
+  const e = l.empresa;
+  const maior = Math.max(...l.serie.map(x => x.receita), 1);
+  const barras = l.serie.map((x, i) => {
+    const ult = i === l.serie.length - 1;
+    if(!x.salvo) return `<i class="ge-b vazia"></i>`;
+    return `<i class="ge-b${ult ? (l.hibGanha ? ' atual ok' : ' atual') : ''}" style="height:${Math.max(2, x.receita / maior * 18).toFixed(0)}px"></i>`;
+  }).join('');
+  const regime = !l.salvo ? `<span class="ge-calc">A calcular</span><small>depois do lançamento</small>`
+    : l.hibGanha
+    ? `<span class="ge-tag hib">Híbrido</span><small>economiza ${brl(l.delta)} no mês</small>`
+    : `<span class="ge-tag">Tradicional</span><small>${Math.abs(l.delta) > 0.004 ? `${brl(Math.abs(l.delta))} a menos que o híbrido` : 'empata com o híbrido'}</small>`;
+  const situacao = !l.salvo
+    ? `<span class="ge-pt pend"></span><span>Não lançado${l.ultimo ? `<small>${esc(mesCurto(l.ultimo.periodo))}: ${brl(l.ultimo.receita)}</small>` : ''}</span>`
+    : `<span class="ge-pt ok"></span><span>Lançado${l.salvoEm ? `<small>salvo em ${esc(String(l.salvoEm).slice(8, 10))}/${esc(String(l.salvoEm).slice(5, 7))}</small>` : ''}</span>`;
+  return `<button type="button" class="gemp${l.hibGanha ? ' ganha' : ''}" data-act="abrir-empresa" data-id="${e.id}" data-salvo="${l.salvo ? 1 : 0}">
+    <span class="ge-nome"><span class="ge-ini${l.hibGanha ? ' ok' : ''}">${esc(iniciais(e.nome))}</span>
+      <span class="ge-txt"><b>${esc(e.nome)}</b><small>${e.cnpj ? esc(fmtCnpj(e.cnpj)) : 'sem CNPJ'}</small></span></span>
+    <span class="ge-rec">${l.salvo ? brl(l.receita) : '—'}<span class="ge-spark" aria-hidden="true">${barras}</span></span>
+    <span class="ge-res">${l.resultado != null ? brl(l.resultado) : '—'}${l.salvo && l.receita > 0.004
+      ? `<small>${dec(l.resultado / l.receita * 100, 1, 1)}% da receita</small>` : ''}</span>
+    <span class="ge-ef">${l.efetiva != null && l.efetiva > 0 ? FMT.pct(l.efetiva) : '—'}</span>
+    <span class="ge-reg">${regime}</span>
+    <span class="ge-sit">${situacao}</span>
+    <span class="ge-seta" aria-hidden="true">›</span>
+  </button>`;
+}
+/* ---------- v3: a frase de conclusão do modo Apresentar ---------- */
+// Uma por tela, calculada. O número principal vai em <b> para receber o destaque; o resto é o contexto que a
+// pessoa precisa para entender de onde ele saiu.
+function conclusaoDaTela(){
+  const c = calcMes();
+  const num = v => `<b>${esc(brl(v))}</b>`;
+  if(ui.tab === 'visao'){
+    const de100 = c.R > 0.004 ? c.resultado / c.R * 100 : 0;
+    return {rotulo: 'O que sobra', frase: `A empresa ficou com ${num(de100)} de cada R$ 100 vendidos.`,
+      apoio: `Receita de ${brl(c.R)} e resultado de ${brl(c.resultado)} em ${banco.periodo ? mesCurto(banco.periodo) : competencia(S.mesLabel)}.`};
+  }
+  if(ui.tab === 'resultado'){
+    return {rotulo: 'Resultado do mês',
+      frase: `Lucro líquido de ${num(c.resultado)}, ${dec(c.R > 0.004 ? c.resultado / c.R * 100 : 0, 1, 1)}% da receita.`,
+      apoio: `Receita de ${brl(c.R)}, custos e despesas de ${brl(c.R - c.resultado)}.`};
+  }
+  if(ui.tab === 'regimes'){
+    if(!(c.dasBase > 0.004)) return {rotulo: 'Reforma tributária', frase: 'Sem DAS no mês, os dois regimes não se comparam.', apoio: ''};
+    const conv = c.delta > 0.004, emp = Math.abs(c.delta) <= 0.004;
+    return {rotulo: 'Reforma tributária',
+      frase: emp ? 'Os dois regimes custam o mesmo neste mês.'
+        : `${conv ? 'Continuar no Simples tradicional' : 'Passar para o regime híbrido'} economiza ${num(Math.abs(c.delta))} no mês.`,
+      apoio: `Tradicional ${brl(c.dasBase)} · híbrido ${brl(c.naTransicao)}.`};
+  }
+  if(ui.tab === 'cliente'){
+    const r = resumoDaLista();
+    return r ? {rotulo: r.rotulo, frase: `<b>${esc(r.numero)}</b> ${esc(r.frase)}.`, apoio: r.explica}
+             : {rotulo: 'Cadastros', frase: 'Nada cadastrado nesta lista ainda.', apoio: ''};
+  }
+  if(ui.tab === 'anual'){
+    const a = banco.ano;
+    if(!a || !a.linhas || !a.linhas.length) return {rotulo: 'Exercício', frase: 'Nenhum mês salvo neste exercício.', apoio: ''};
+    const rec = a.linhas.reduce((x, l) => x + (+((l.resumo || {}).receita) || +l.receita || 0), 0);
+    const n = a.linhas.length;
+    return {rotulo: `Exercício de ${a.ano}`,
+      frase: `Receita de ${num(rec)} em ${n} ${n === 1 ? 'mês salvo' : 'meses salvos'}.`,
+      apoio: `Média de ${brl(rec / n)} por mês.`};
+  }
+  return null;
+}
+// o resumo da lista aberta nos Cadastros, para a frase e para o cartão usarem a mesma conta
+function resumoDaLista(){
+  const vis = cliVis();
+  if(vis === 'notas') return null;
+  if(vis === 'produtos'){
+    const prods = S.produtos || [];
+    if(!prods.length) return null;
+    return {rotulo: 'Produtos e serviços', numero: (dadosResumoProdutos() || {}).numero || '',
+      frase: (dadosResumoProdutos() || {}).frase || '', explica: (dadosResumoProdutos() || {}).explica || ''};
+  }
+  const g = vis === 'clientes' ? 'clientes' : 'fornecedores';
+  const lista = (S.cadeia && S.cadeia[g]) || [];
+  if(!lista.length) return null;
+  const r = dadosResumoCadeia(g);
+  return {rotulo: g === 'fornecedores' ? 'Fornecedores' : 'Clientes', numero: r.numero, frase: r.frase, explica: r.explica};
+}
+function rConclusao(){
+  if(!ui.present) return '';
+  const c = conclusaoDaTela();
+  if(!c) return '';
+  return `<section class="concl" aria-label="Conclusão da tela">
+    <span class="cap">${esc(c.rotulo)}</span>
+    <h2 class="concl-f">${c.frase}</h2>
+    ${c.apoio ? `<p class="concl-a">${esc(c.apoio)}</p>` : ''}
+  </section>`;
+}
 function rVisao(){
   // os cartões da tela, na ordem; o primeiro que existir leva os atributos do painel de abas
-  const partes = [rMeses(), rFatorR(), rFaixaSimples()].filter(Boolean);
+  const partes = [rResposta(), rMeses(), rFatorR(), rFaixaSimples()].filter(Boolean);
   return partes.map((h, i) => i ? h
     : h.replace('<section ', '<section id="painel" role="tabpanel" aria-labelledby="tab-visao" ')).join('');
 }
@@ -2950,7 +3524,7 @@ function rNotasMes(){
   const n = (S.monthly.notas || {}), compras = n.compras || [], vendas = n.vendas || [];
   const it = (S.monthly.itens || {}), itC = lerItens(it.compras), itV = lerItens(it.vendas), res = it.resumo || {};
   const temItens = !!(itC.length || itV.length);
-  const vis = temItens ? (ui.notasVis || 'parceiros') : 'parceiros';
+  const vis = ui.notasVis === 'itens' && !temItens ? 'parceiros' : (ui.notasVis || 'notas');
   if(!compras.length && !vendas.length && !temItens) return '';
   const bloco = (titulo, linhas, ehCompra) => {
     if(!linhas.length) return '';
@@ -2974,19 +3548,26 @@ function rNotasMes(){
         ${!ehCompra && soma(consumidor) > 0.004 ? `${brl(soma(consumidor))} (${dec(soma(consumidor) / total * 100, 1, 1)}%) foram para consumidor final, que não aproveita o crédito.` : ''}</p>
     </div>`;
   };
-  const alt = `<div class="cad-alt" role="group" aria-label="Mostrar">
-    <button class="cad-aba" data-act="notas-vis" data-id="parceiros" aria-pressed="${vis === 'parceiros'}">Parceiros</button>
-    <button class="cad-aba" data-act="notas-vis" data-id="itens" aria-pressed="${vis === 'itens'}">Produtos e serviços</button></div>`;
+  const temUma = ((S.monthly.notasUma || []).filter(x => x[0] === 'compra')).length > 0;
+  const abas = [['notas', 'Notas', temUma], ['parceiros', 'Parceiros', true], ['itens', 'Produtos e serviços', temItens]];
+  const alt = `<div class="cad-alt" role="group" aria-label="Mostrar">${abas.filter(a => a[2]).map(([k, rot]) =>
+    `<button class="cad-aba" data-act="notas-vis" data-id="${k}" aria-pressed="${vis === k}">${rot}</button>`).join('')}</div>`;
   return `<section class="card nf nf-mes" aria-label="Notas do mês">
-    <div class="card-h"><div><h2>${ui.imprimindo ? 'Notas do mês' : vis === 'itens' ? 'O que a empresa compra e vende' : 'Quem pesa nas compras e nas vendas'}</h2>
+    <div class="card-h"><div><h2>${ui.imprimindo ? 'Notas do mês'
+      : vis === 'itens' ? 'O que a empresa compra e vende'
+      : vis === 'notas' ? 'Crédito das notas do mês' : 'Quem pesa nas compras e nas vendas'}</h2>
       <p class="sub">${ui.imprimindo ? 'Parceiros e itens das notas fiscais do mês, lidas do XML.'
-        : vis === 'itens' ? 'Itens das notas do mês, juntados pelo NCM.' : 'Pelas notas fiscais do mês, lidas do XML.'}</p></div>
+        : vis === 'itens' ? 'Itens das notas do mês, juntados pelo NCM.'
+        : vis === 'notas' ? 'Cada nota de compra e o crédito de CBS que ela gera.'
+        : 'Pelas notas fiscais do mês, lidas do XML.'}</p></div>
       <div class="cad-ctl">${temItens && !ui.imprimindo ? alt : ''}
         ${ui.present || ui.imprimindo ? '' : `<button class="btn" data-act="notas-limpar">limpar</button>`}</div></div>
     ${ui.imprimindo
       ? bloco('Compras — fornecedores', compras, true) + bloco('Vendas — clientes', vendas, false) +
         blocoItens('Compras — o que foi comprado', itC, res.compras, true, 10) +
         blocoItens('Vendas — o que foi vendido', itV, res.vendas, false, 10)
+      : vis === 'notas'
+      ? rCreditoNotas()
       : vis === 'itens'
       ? blocoItens('Compras — o que foi comprado', itC, res.compras, true, 10) +
         blocoItens('Vendas — o que foi vendido', itV, res.vendas, false, 10)
@@ -3036,15 +3617,59 @@ function rCliNav(){
   return `<div class="cli-nav" role="group" aria-label="Mostrar">${CLI_VIS.map(([k, rotulo]) =>
     `<button class="cli-aba" data-act="cli-vis" data-id="${k}" aria-pressed="${vis === k}">${rotulo} <span class="m" data-o="${chave[k]}"></span></button>`).join('')}</div>`;
 }
+// a tela do crédito: o resumo do handoff e a tabela nota a nota
+function rCreditoNotas(){
+  const c = creditoDasNotas();
+  if(!c) return `<p class="sub">Nenhuma nota de compra lida neste mês.</p>`;
+  return rResumoCad(c) + `<div class="scroll-x">
+    <div class="gnf gh"><span>Nota</span><span>Fornecedor</span><span>Valor</span><span>Crédito CBS</span></div>
+    ${c.linhas.slice(0, 40).map(l => `<div class="gnf">
+      <span>${l.numero ? `NF ${esc(l.numero)}` : 'sem número'}${l.emissao ? ` · ${esc(l.emissao.slice(8, 10))}/${esc(l.emissao.slice(5, 7))}` : ''}</span>
+      <span class="gnf-forn">${esc(l.nome)}</span>
+      <span>${brl(l.valor)}</span>
+      <span>${l.credito > 0.004 ? brl(l.credito) : `<span class="gnf-sem">${l.k === 'parcial' ? 'crédito do DAS' : l.k === 'nao' ? 'sem crédito' : 'a definir'}</span>`}</span>
+    </div>`).join('')}
+    ${c.linhas.length > 40 ? `<p class="nota">e mais ${c.linhas.length - 40} ${c.linhas.length - 40 === 1 ? 'nota' : 'notas'} de valor menor.</p>` : ''}
+  </div>`;
+}
 function rCliente(){
   // no papel sai tudo: o PDF do Resumo do cliente leva as duas pontas da cadeia, o catálogo e as notas
   if(ui.imprimindo) return painel('cli', 'cliente',
     `<div class="cli-blocos">${rCadeia('fornecedores')}${rCadeia('clientes')}${rProdutos()}</div>`) + rNotasMes();
   const vis = cliVis();
   const corpo = vis === 'produtos' ? rProdutos() : vis === 'notas' ? rNotasVis() : rCadeia();
-  return painel('cli', 'cliente', `${rCliNav()}<div class="cli-blocos">${corpo}</div>`);
+  return painel('cli', 'cliente', `<div class="cli-blocos">${corpo}</div>`);
 }
 // a visão das notas: o bloco de sempre, ou o convite a importar quando o mês ainda não tem nota lida
+// O crédito que as compras do mês geram, nota a nota. O regime do fornecedor (do cadastro) decide: quem está
+// fora do Simples gera crédito integral; o Simples gera só o que está dentro do DAS; sem regime, fica a definir.
+function creditoDasNotas(){
+  const uma = (S.monthly.notasUma || []).filter(x => x[0] === 'compra');
+  if(!uma.length) return null;
+  const forn = new Map(((S.cadeia && S.cadeia.fornecedores) || []).map(r => [limpaCnpj(r[0] || ''), r[3] || '']));
+  const aliq = +S.monthly.reforma.aliqCompras || 0;
+  const cat = doc => { const c = forn.get(limpaCnpj(doc || '')); return c === 'sim' ? 'sim' : c === 'parcial' ? 'parcial' : c === 'nao' ? 'nao' : ''; };
+  const linhas = uma.map(x => { const k = cat(x[1]);
+    return {doc: x[1], nome: x[2], valor: +x[3] || 0, numero: x[4] || '', emissao: x[5] || '', k,
+            credito: k === 'sim' ? (+x[3] || 0) * aliq : 0}; });
+  const CATS = [['sim', 'Crédito integral', '#3F6E73'], ['parcial', 'Crédito do DAS', '#BDB5A8'],
+                ['nao', 'Sem crédito', '#E2DFD8'], ['', 'A definir', '#EFECE6']];
+  const grupos = CATS.map(([k, rot, cor]) => {
+    const g = linhas.filter(l => l.k === k);
+    return {k, rot, cor, n: g.length, v: g.reduce((a, l) => a + l.valor, 0)};
+  }).filter(g => g.n);
+  const total = linhas.reduce((a, l) => a + l.valor, 0);
+  const credito = linhas.reduce((a, l) => a + l.credito, 0);
+  const parte = g => total > 0.004 ? g.v / total * 100 : 0;
+  const semRegime = linhas.filter(l => l.k === '');
+  const nomesSem = [...new Set(semRegime.map(l => l.nome))];
+  return {linhas: linhas.sort((a, b) => b.valor - a.valor), grupos, parte, total, credito,
+    numero: dec(total > 0.004 ? (grupos.find(g => g.k === 'sim') || {v: 0}).v / total * 100 : 0, 0, 1) + '%',
+    rotulo: 'Crédito das notas do mês',
+    frase: 'das compras com crédito cheio',
+    explica: `${linhas.length === 1 ? 'A nota' : `As ${linhas.length} notas`} de ${mesCurto(banco.periodo || '') || 'do mês'} ${linhas.length === 1 ? 'soma' : 'somam'} ${brl(total)} e ${linhas.length === 1 ? 'gera' : 'geram'} ${brl(credito)} de crédito de CBS.` +
+      (nomesSem.length ? ` ${nomesSem.length === 1 ? `A nota de ${nomesSem[0]} fica` : `${nomesSem.length} notas ficam`} sem crédito até o regime do fornecedor ser cadastrado.` : ''), porValor: true};
+}
 function rNotasVis(){
   const n = (S.monthly.notas || {}), it = (S.monthly.itens || {});
   if((n.compras || []).length || (n.vendas || []).length || (it.compras || []).length) return rNotasMes();
@@ -3095,7 +3720,7 @@ function rCadeia(lado){
       return `<div class="cad-row">
         <span class="cad-cnpj" data-cls="inv:cad.${g}.${i}.inv"><span class="ponto" aria-hidden="true"></span>${inp(`${p}.0`, 'cnpj', 'CNPJ — ' + nome, 'cnpj', 'placeholder="CNPJ"')}</span>
         ${inp(`${p}.1`, 'txt', `Nome do ${sing} ${i + 1}`, 'txt', 'placeholder="Nome"')}
-        <span class="sel-wrap regime"><select class="sel" data-b="${p}.2" data-f="txt" aria-label="Regime tributário — ${esc(nome)}"${ro}>${regimes}</select></span>
+        <span class="sel-wrap regime"><select class="sel${r[2] ? '' : ' vazio'}" data-b="${p}.2" data-f="txt" aria-label="Regime tributário — ${esc(nome)}"${ro}>${regimes}</select></span>
         <span class="sel-wrap cred" data-cls="sim:cad.${g}.${i}.sim parcial:cad.${g}.${i}.parcial nao:cad.${g}.${i}.nao"><select class="sel" data-b="${p}.3" data-f="txt" aria-label="Gera crédito — ${esc(nome)}"${ro}>${creditos}</select></span>
         <button class="cad-x" data-act="cad-rm" data-g="${g}" data-i="${i}" aria-label="Remover ${esc(nome)}" title="Remover">×</button>
       </div>`;
@@ -3103,7 +3728,7 @@ function rCadeia(lado){
     // o aviso de CNPJ fica visível mesmo com o cadastro recolhido: é problema a resolver, não detalhe
     // com os dois lados na mesma folha, cada bloco lê as suas próprias chaves
     const k = lado ? `cad.${g}.` : 'cad.';
-    corpo = `<div class="cad-grafico" data-h="${k}grafico"></div>
+    corpo = `<div class="cad-grafico" data-h="${k}resumo3"></div>
       <div class="cad-alerta" data-v="${k}temAlerta" role="status"><strong data-o="${k}alerta"></strong><span>Confira antes de usar o crédito na apuração.</span></div>
       ${!cadastroAberto('cadeia') ? '' : `<div class="cad-tabela">
         <div class="cad-row gh"><span>CNPJ</span><span>Nome</span><span>Regime tributário</span><span>Gera crédito</span><span></span></div>
@@ -3160,32 +3785,37 @@ function rProdutos(){
       const nat = NATUREZAS.some(([v]) => v === r[2]) ? r[2] : '';
       // produto pede NCM; serviço pede NBS e cClassTrib. Cada código no seu lugar, para trocar o tipo não apagar o outro
       const traco = '<span class="m mut">—</span>';
-      const codigo = nat === 'produto' ? inp(`produtos.${i}.3`, 'txt', `NCM — item ${i + 1}`, 'txt', 'placeholder="NCM"')
-        : nat === 'servico' ? inp(`produtos.${i}.4`, 'txt', `NBS — item ${i + 1}`, 'txt', 'placeholder="NBS"') : traco;
+      const codigo = nat === 'produto' ? inp(`produtos.${i}.3`, 'txt', `NCM — item ${i + 1}`, 'txt', 'placeholder="sem NCM"')
+        : nat === 'servico' ? inp(`produtos.${i}.4`, 'txt', `NBS — item ${i + 1}`, 'txt', 'placeholder="sem NBS"') : traco;
       // cClassTrib vale para produto e serviço (layout da NF-e da reforma); só espera o tipo ser escolhido
-      const classtrib = nat ? inp(`produtos.${i}.5`, 'txt', `cClassTrib — item ${i + 1}`, 'txt', 'placeholder="cClassTrib"') : traco;
+      const classtrib = nat ? inp(`produtos.${i}.5`, 'txt', `cClassTrib — item ${i + 1}`, 'txt', 'placeholder="sem classificação"') : traco;
       // quanto este item movimentou no mês, pelas notas importadas: fica embaixo do nome, sem roubar coluna
       const v = peso.mapa.get(chaveItem({ncm: r[3], nbs: r[4], servico: nat === 'servico', nome: r[0]})) || 0;
       const campoNome = inp(`produtos.${i}.0`, 'txt', `Nome do item ${i + 1}`, 'txt', 'placeholder="Nome"');
       // a barra compara com o maior item (é o que se quer ver numa tabela); o número é a fatia do mês
-      const nomeCel = v > 0.004
-        ? `<span class="pr-nome">${campoNome}<span class="pr-mes"><span class="pr-v">${brl(v)}</span><span class="nf-barra"><i style="width:${(peso.maior > 0.004 ? v / peso.maior * 100 : 0).toFixed(1)}%"></i></span><span class="pr-p">${dec(peso.total > 0.004 ? v / peso.total * 100 : 0, 1, 1)}%</span></span></span>`
-        : campoNome;
+      const mesCel = v > 0.004
+        ? `<span class="pr-mes"><span class="pr-v">${brl(v)}</span><span class="nf-barra"><i style="width:${(peso.maior > 0.004 ? v / peso.maior * 100 : 0).toFixed(1)}%"></i></span><span class="pr-p">${dec(peso.total > 0.004 ? v / peso.total * 100 : 0, 1, 1)}%</span></span>`
+        : '';
+      // quatro colunas, como o protótipo: o produto (com o tipo e o movimento do mês embaixo), o código,
+      // a classificação e o tratamento na CBS — a alíquota calculada fica sob o seletor, não numa coluna só dela
       return `<div class="gprod">
-      ${nomeCel}
-      <span class="sel-wrap"><select class="sel" data-nat data-i="${i}" aria-label="Produto ou serviço — item ${i + 1}"${ro}>${opcoesSel(NATUREZAS, nat)}</select></span>
+      <span class="pr-nome">${campoNome}
+        <span class="pr-sub"><span class="sel-wrap mini"><select class="sel${nat ? '' : ' vazio'}" data-nat data-i="${i}" aria-label="Produto ou serviço — item ${i + 1}"${ro}>${opcoesSel(NATUREZAS, nat)}</select></span>${mesCel}</span></span>
       ${codigo}
       ${classtrib}
-      <span class="sel-wrap"><select class="sel" data-b="produtos.${i}.1" data-f="txt" aria-label="Redução da CBS — item ${i + 1}"${ro}>${opcoesSel(TIPOS, tipo)}</select></span>
-      <span class="r m" data-o="pr.${i}.red"></span>
+      <span class="pr-cbs"><span class="sel-wrap"><select class="sel" data-b="produtos.${i}.1" data-f="txt" aria-label="Redução da CBS — item ${i + 1}"${ro}>${opcoesSel(TIPOS, tipo)}</select></span>
+        <span class="pr-aliq m" data-o="pr.${i}.red"></span></span>
       <button class="cad-x" data-act="pr-rm" data-i="${i}" aria-label="Remover item ${i + 1}" title="Remover item">×</button></div>`;
     }).join('');
-    corpo = `<div class="cad-grafico" data-h="pr.grafico"></div>
+    corpo = `<div class="cad-grafico" data-h="pr.resumo3"></div>
       ${!cadastroAberto('produtos') ? '' : `<div class="scroll-x">
-        <div class="gprod gh"><span>Nome${peso.tem ? (peso.lado === 'vendas' ? ' · nas vendas' : ' · nas compras') : ''}</span><span>Tipo</span><span>NCM / NBS</span><span>cClassTrib</span><span>Redução da CBS</span><span>Alíquota reduzida</span><span></span></div>
+        <div class="gprod gh"><span>Produto${peso.tem ? (peso.lado === 'vendas' ? ' · nas vendas' : ' · nas compras') : ''}</span><span>NCM / NBS</span><span>cClassTrib</span><span>Tratamento na CBS</span><span></span></div>
         ${linhas || `<div class="cli-nada">Nenhum item encontrado. <button class="lk" data-act="cli-limpar">mostrar todos</button></div>`}
       </div>
-      ${ui.present || ui.imprimindo ? '' : `<button class="cad-mais" data-act="pr-add">+ adicionar produto</button>`}`}`;
+      <div class="cad-pe">
+        ${ui.present || ui.imprimindo ? '<span></span>' : `<button class="cad-mais" data-act="pr-add">+ adicionar produto</button>`}
+        <span>${lst.length} ${lst.length === 1 ? 'produto ou serviço cadastrado' : 'produtos e serviços cadastrados'}</span>
+      </div>`}`;
   }
   return `<div class="cadeia">
     <div class="cad-h">
@@ -3216,10 +3846,10 @@ function rAnoMeses(){
     <p>Salve um mês na aba Lançamento e ele passa a somar aqui.</p></div>
     <div class="ano-acoes">${atualizar}</div></section>`;
   return `<section class="card ano" id="painel" role="tabpanel" aria-labelledby="tab-anual">${cab(a.ano)}
+    ${rFaixaAno(a)}
     <div class="scroll-x">
       <div class="gano gh"><span>Mês</span><span>Receita</span><span>DAS</span><span>CBS a pagar</span><span>CBS crédito</span><span>Resultado</span><span>Margem</span></div>
-      ${a.linhas.map((x, i) => `<div class="gano"><span>${mesCurto(x.periodo)}</span>
-        <span data-o="an.${i}.rec"></span><span data-o="an.${i}.das"></span><span data-o="an.${i}.cbsPag"></span><span data-o="an.${i}.cbsCred"></span><span data-o="an.${i}.res"></span><span data-o="an.${i}.mar"></span></div>`).join('')}
+      ${linhasAno(a)}
       <div class="gano tot"><span>Total</span><span data-o="an.rec"></span><span data-o="an.das"></span><span data-o="an.cbsPag"></span><span data-o="an.cbsCred"></span><span data-o="an.res"></span><span data-o="an.mar"></span></div>
       ${rCbsAno(a)}
     </div>
@@ -3227,6 +3857,41 @@ function rAnoMeses(){
     <div class="flag" data-v="an.temFalta" data-o="an.falta"></div>
     <div class="ano-acoes">${atualizar}</div>
   </section>`;
+}
+// v3: os totais do ano em cima da tabela, e o que falta fechar em amarelo — é a primeira pergunta de quem
+// abre a aba no fim do exercício
+function rFaixaAno(a){
+  const falta = mesesFaltando(a.linhas, a.ano);
+  return `<div class="ano-faixa">
+    <div><span class="cap">Receita do ano</span><span class="af-v" data-o="an.rec"></span></div>
+    <div><span class="cap">DAS pago</span><span class="af-v" data-o="an.das"></span></div>
+    <div><span class="cap">Resultado</span><span class="af-v" data-o="an.res"></span></div>
+    ${falta.length ? `<div class="af-falta"><span class="cap">Faltando</span>
+      <span class="af-v">${esc(falta.map(m => m[0].toUpperCase() + m.slice(1)).join(', '))}</span></div>` : ''}
+  </div>`;
+}
+// As linhas do ano, na ordem do calendário: o mês sem competência salva entra como uma linha clicável, que leva
+// para o Lançamento — antes ele só existia como nota no rodapé, e não dava para agir dali.
+function linhasAno(a){
+  const porMes = new Map(a.linhas.map((x, i) => [+x.periodo.slice(5, 7), {x, i}]));
+  const ate = mesesFaltando(a.linhas, a.ano).length ? 12 : 12;
+  const linhas = [];
+  for(let m = 1; m <= ate; m++){
+    const achou = porMes.get(m);
+    if(achou){
+      const {x, i} = achou;
+      linhas.push(`<div class="gano"><span>${mesCurto(x.periodo)}</span>` +
+        ['rec', 'das', 'cbsPag', 'cbsCred', 'res', 'mar'].map(k => `<span data-o="an.${i}.${k}"></span>`).join('') + `</div>`);
+      continue;
+    }
+    // só até o mês corrente do exercício aberto: adiantar meses futuros seria cobrar lançamento que nem existe
+    const per = `${a.ano}-${String(m).padStart(2, '0')}-01`;
+    if(!mesesFaltando(a.linhas, a.ano).includes(MESES[m - 1].slice(0, 3).toLowerCase())) continue;
+    linhas.push(`<button type="button" class="gano vazio" data-act="ano-lancar" data-p="${per}">
+      <span>${mesCurto(per)}</span><span class="gano-lanc">não salvo · lançar</span>
+      <span></span><span></span><span></span><span></span><span></span></button>`);
+  }
+  return linhas.join('');
 }
 // CBS do ano, para conferir com um clique: débito e crédito de cada mês, o crédito transportado e o que foi pago no mês
 function rCbsAno(a){
@@ -3258,7 +3923,7 @@ function rPresumido(){
   const a = banco.ano;
   if(!banco.ativo || !banco.empresaId || !a || a.carregando || a.semFuncao || !a.linhas.length) return '';
   const aberto = ui.presumido, p = banco.presumido && banco.presumido.de === a ? banco.presumido : null;
-  const botao = `<button class="btn" data-act="presumido" aria-expanded="${aberto}">${aberto ? 'Ocultar trimestres' : 'Ver por trimestre'}</button>`;
+  const botao = `<button class="btn" data-act="presumido" aria-expanded="${aberto}">${aberto ? 'Ocultar simulação' : 'Abrir simulação'}</button>`;
   const cartao = (corpo, comBotao) => `<section class="card presumido" aria-label="Lucro Presumido">
     <div class="card-h"><div><h2>Sair do Simples? Lucro Presumido</h2>
       <p class="sub">Quanto a empresa pagaria de imposto no Lucro Presumido com os meses salvos de ${a.ano}, pelas regras de 2027. Estimativa.</p></div>${comBotao ? botao : ''}</div>
@@ -3409,9 +4074,12 @@ function atualizarBarra(){
 // render() refaz a tela inteira, então animar tudo faria a página piscar a cada linha adicionada. Entra com efeito
 // só o que não estava na tela: a aba nova, a seção que abriu, o menu, a linha recém-criada. Na troca de mês ou de
 // empresa (ui.animarTela) o conteúdo todo entra de novo, menos o cabeçalho e a barra de seleção, que não mudaram.
-const SEL_ANIM = '.conteudo > *, .det, .prem, .calc, .menu, .panel, .li, .gr, .cr, .cad-row:not(.gh), .gprod:not(.gh)';
+// o .lanc é só o arranjo das duas colunas: quem entra são as seções dentro dele
+const SEL_ANIM = '.conteudo > *:not(.lanc), .lanc-col > *, .det, .prem, .calc, .menu, .panel, .li, .gr, .cr, .cad-row:not(.gh), .gprod:not(.gh)';
+const blocoDeTela = el => !!el.parentElement &&
+  (el.parentElement.classList.contains('conteudo') || el.parentElement.classList.contains('lanc-col'));
 function chaveAnim(el){
-  if(el.parentElement && el.parentElement.classList.contains('conteudo'))
+  if(blocoDeTela(el))
     return 'bloco:' + (el.getAttribute('aria-label') || el.getAttribute('aria-labelledby') || el.id || el.classList[0] || el.tagName);
   // linha e seção se reconhecem pelo primeiro campo (ou botão) que carregam: é o que não muda entre um render e outro
   const b = el.querySelector('[data-b]'), a = el.querySelector('[data-act]'), d = a ? a.dataset : {};
@@ -3429,9 +4097,12 @@ function animarNovos(antes){
   let n = 0;
   app.querySelectorAll(SEL_ANIM).forEach(el => {
     // dentro de um bloco que já está entrando, o filho entra junto: animar os dois daria o efeito em dobro
-    if(antes.has(chaveAnim(el)) || (el.parentElement !== app && el.parentElement.closest('.entra'))) return;
+    // dentro de um bloco que já entra, o filho entra junto — menos a coluna do Lançamento, que é só o arranjo
+    // das duas colunas: quem tem de entrar em cascata são as seções dentro dela
+    const paiEntrando = el.parentElement !== app && el.parentElement.closest('.entra');
+    if(antes.has(chaveAnim(el)) || (paiEntrando && !blocoDeTela(el))) return;
     el.classList.add('entra');
-    if(el.parentElement && el.parentElement.classList.contains('conteudo')) el.style.setProperty('--i', n++);
+    if(blocoDeTela(el)) el.style.setProperty('--i', n++);
   });
 }
 // barra compacta: desce quando a barra de seleção sai da tela. Nome e competência vêm dos mesmos data-o do
@@ -3475,9 +4146,9 @@ function render(){
   document.body.classList.toggle('lat-fina', !!ui.latFina || ui.present);
   document.body.classList.toggle('lat-aberta', !!ui.latAberta);
   const antes = chavesNaTela();
-  const telas = {visao: rVisao, resultado: rResultado, regimes: rRegimes, cliente: rCliente, anual: rAnual};
+  const telas = {empresas: rEmpresas, visao: rVisao, resultado: rResultado, regimes: rRegimes, cliente: rCliente, anual: rAnual};
   app.innerHTML = `<div class="app2"><div class="lat-veu" data-act="lat-fechar"></div>` + rLateral() +
-    `<main class="main">` + rCabecalho() + `<div class="conteudo">` + rPersonalizar() + rSelo() + telas[ui.tab]() +
+    `<main class="main">` + rCabecalho() + `<div class="conteudo">` + rPersonalizar() + rConclusao() + telas[ui.tab]() +
     `<footer class="foot"><span data-o="footer"></span><span data-o="comp"></span></footer>` +
     `</div></main>` + rGlossario() + `</div>`;
   refresh();
@@ -3882,6 +4553,46 @@ async function herdarDoAnterior(empresaId, periodo, anterior, h){
     if(soma && soma.total > 0){ S.monthly.rbt12 = soma.total; info.rbt12Meses = soma.meses; }
   }
   banco.heranca = info;
+}
+/* ---------- Painel de empresas (v3): a carteira do escritório num mês só ---------- */
+// Doze meses de cada empresa, terminando na competência escolhida. Uma consulta por empresa, todas em paralelo:
+// a RPC "resumos" é por empresa, e trocá-la por uma da carteira inteira exigiria migração no banco.
+async function carregarCarteira(periodo){
+  const emps = banco.empresas || [];
+  banco.carteira = {periodo, carregando: true, linhas: []};
+  render();
+  const de = somarMeses(periodo, -11);
+  const lidas = await Promise.all(emps.map(async e => {
+    try{
+      const lista = await sb('rpc/resumos', {metodo: 'POST', corpo: {p_empresa_id: e.id, p_de: de, p_ate: periodo}}) || [];
+      return {empresa: e, meses: lista};
+    }catch(err){ return {empresa: e, meses: [], erro: true}; }
+  }));
+  banco.carteira = {periodo, carregando: false, linhas: lidas.map(x => montarLinhaCarteira(x, periodo))};
+  render();
+}
+// O que a tela mostra de cada empresa. Sem o mês salvo, sobra a tendência e o último mês que existe.
+function montarLinhaCarteira({empresa, meses, erro}, periodo){
+  const doMes = meses.find(m => m.periodo === periodo);
+  const r = doMes && doMes.resumo ? doMes.resumo : null;
+  const ultimo = [...meses].reverse().find(m => m.periodo !== periodo && (+m.receita || 0) > 0.004);
+  const das = r ? +r.das || 0 : 0, hib = r ? +r.naTransicao || 0 : 0;
+  const delta = das - hib;                          // > 0: o híbrido custa menos
+  return {
+    empresa, erro,
+    salvo: !!doMes, resumo: r,
+    receita: r ? +r.receita || 0 : (doMes ? +doMes.receita || 0 : 0),
+    resultado: r ? +r.resultado || 0 : null,
+    efetiva: r ? +r.efetiva || 0 : null,
+    das, hib, delta, hibGanha: !!r && hib > 0.004 && das > 0.004 && delta > 0.004,
+    salvoEm: doMes ? doMes.salvo_em || doMes.salvoEm || null : null,
+    ultimo: ultimo ? {periodo: ultimo.periodo, receita: +ultimo.receita || 0} : null,
+    // doze colunas para a tendência: o mês sem receita salva fica tracejado
+    serie: Array.from({length: 12}, (_, k) => {
+      const per = somarMeses(periodo, k - 11), m = meses.find(x => x.periodo === per);
+      return {periodo: per, receita: m ? +m.receita || 0 : 0, salvo: !!m};
+    })
+  };
 }
 // receita bruta dos 12 meses anteriores, somada pelos meses já salvos desta empresa
 async function somarRbt12(empresaId, periodo){
@@ -4538,6 +5249,7 @@ function lerNfeDoc(doc){
                      ie: txtXml(dest, 'indIEDest')} : null,
     valor: +String(txtXml(tot, 'vNF') || 0).replace(',', '.') || 0,
     emissao: (txtXml(ide, 'dhEmi') || txtXml(ide, 'dEmi') || '').slice(0, 10),
+    numero: txtXml(ide, 'nNF'), serie: txtXml(ide, 'serie'),
     natureza: txtXml(ide, 'natOp'),
     itens: itensNfe(inf)
   };
@@ -4567,6 +5279,7 @@ function lerNfse(doc){
                      nome: primeiroTxt(toma, ['RazaoSocial', 'xNome']), ie: ''} : null,
     valor,
     emissao: (primeiroTxt(inf, ['DataEmissao', 'dhEmi', 'dhProc']) || '').slice(0, 10),
+    numero: primeiroTxt(inf, ['nNFSe', 'Numero', 'nNF']), serie: '',
     natureza: 'Serviço',
     itens: [{desc, valor, servico: true, nbs: primeiroTxt(serv, ['cNBS']),
              cod: primeiroTxt(serv, ['cTribNac', 'ItemListaServico', 'cServ'])}]
@@ -4617,6 +5330,7 @@ function listaItens(mapa){
 // recebida é compra. Sem o CNPJ da empresa cadastrado, cai no tpNF da própria nota.
 function agruparNotas(notas, cnpjEmpresa){
   const compras = new Map(), vendas = new Map(), fora = [], itC = new Map(), itV = new Map();
+  const uma = [];                                    // cada nota, para a tabela nota a nota
   const meu = limpaCnpj(cnpjEmpresa || '');
   notas.forEach(n => {
     const daEmpresa = meu && n.emitente.cnpj === meu;
@@ -4633,11 +5347,13 @@ function agruparNotas(notas, cnpjEmpresa){
     if(n.servico) item.servico = true;
     item.valor += n.valor; item.notas += 1;
     mapa.set(chave, item);
+    uma.push({lado, doc, nome: p.nome || 'sem identificação', valor: n.valor,
+              numero: n.numero || '', emissao: n.emissao || '', servico: !!n.servico});
     juntarItens(lado === 'venda' ? itV : itC, n.itens, chave);
   });
   const lista = mapa => [...mapa.values()].sort((a, b) => b.valor - a.valor);
   return {compras: lista(compras), vendas: lista(vendas), fora, servicos: notas.filter(n => n.servico).length,
-          itens: {compras: listaItens(itC), vendas: listaItens(itV)}};
+          itens: {compras: listaItens(itC), vendas: listaItens(itV)}, notas: uma};
 }
 // peso de cada parceiro e quantos respondem por 80% do movimento (a conversa é sempre sobre esses)
 function pesoNotas(lista){
@@ -4928,6 +5644,9 @@ async function importarNotas(){
                      vendas: r.vendas.map(x => [x.doc, x.nome, x.valor, x.notas, x.consumidor ? 'consumidor' : ''])};
   S.monthly.itens = {compras: serieItens(r.itens.compras), vendas: serieItens(r.itens.vendas),
                      resumo: {compras: resumoItens(r.itens.compras), vendas: resumoItens(r.itens.vendas)}};
+  // as notas, das maiores para as menores (o mês de uma farmácia pode ter centenas; guardar todas incharia o estado)
+  S.monthly.notasUma = r.notas.slice().sort((a, b) => b.valor - a.valor).slice(0, 250)
+    .map(n => [n.lado, n.doc, n.nome, n.valor, n.numero, n.emissao]);
   const resp = await modal({titulo: 'Notas do mês', html: rNotas(r, notas.length, ruins),
     botoes: [['fechar', 'Fechar'], ['cadeia', 'Trazer para o cadastro', 'prim']], padrao: 'fechar'});
   if(resp.botao === 'cadeia') levarParaCadeia(r);
@@ -5293,6 +6012,12 @@ app.addEventListener('focusin', e => {
 });
 app.addEventListener('focusout', e => { if(e.target.dataset && e.target.dataset.premissa === 'geral') alvoGeral = null; });
 app.addEventListener('input', e => {
+  if(e.target.matches('input[data-busca-emp]')){
+    ui.buscaEmp = e.target.value; render();
+    const c = app.querySelector('input[data-busca-emp]');
+    if(c){ c.focus(); c.setSelectionRange(c.value.length, c.value.length); }
+    return;
+  }
   if(e.target.matches('input[data-busca]')){
     ui.cliBusca = e.target.value; render();
     const c = app.querySelector('input[data-busca]');
@@ -5432,7 +6157,7 @@ app.addEventListener('click', e => {
     case 'pgdas': ui.menu = false; render(); comErro(conferirPgdas); break;
     case 'notas-xml': comErro(importarNotas); break;
     case 'notas-limpar': S.monthly.notas = {compras: [], vendas: []};
-      S.monthly.itens = {compras: [], vendas: [], resumo: {}}; render(); break;
+      S.monthly.itens = {compras: [], vendas: [], resumo: {}}; S.monthly.notasUma = []; render(); break;
     case 'notas-vis': ui.notasVis = b.dataset.id; render();
       focar(`[data-act="notas-vis"][data-id="${b.dataset.id}"]`); break;
     case 'copiar-empresa': ui.menu = false; render(); comErro(copiarEmpresa); break;
@@ -5495,10 +6220,41 @@ app.addEventListener('click', e => {
       break;
     case 'rm-co': S.monthly.compras.splice(i, 1); render(); break;
     case 'logo-padrao': S.logo = null; refresh(); break;
+    // andar um mês para trás ou para frente, dentro dos meses salvos
+    case 'mes-passo': { const meses = banco.meses || [], i = meses.indexOf(banco.periodo);
+      const alvo = i >= 0 ? meses[i + (+b.dataset.d || 0)] : null;
+      if(alvo) comErro(() => trocar('periodo', alvo)); break; }
+    // o trilho leva até a seção, com folga para o cabeçalho fixo não cobrir o título
+    // o mês que falta: se já existe no banco, abre; senão, abre o fluxo de mês novo
+    // abrir a carteira: carrega os doze meses de cada empresa na competência aberta
+    case 'carteira': comErro(async () => {
+      if(!(await podeSair())){ render(); return; }
+      ui.tab = 'empresas'; ui.menu = false; render();
+      await carregarCarteira(banco.periodo || periodoAtual());
+    }); break;
+    case 'carteira-mes': { const c = banco.carteira;
+      comErro(() => carregarCarteira(somarMeses((c && c.periodo) || banco.periodo || periodoAtual(), +b.dataset.d || 0)));
+      break; }
+    case 'emp-filtro': ui.filtroEmp = b.dataset.id; render(); focar(`[data-act="emp-filtro"][data-id="${b.dataset.id}"]`); break;
+    case 'emp-limpar': ui.buscaEmp = ''; ui.filtroEmp = 'todas'; render(); break;
+    // clicar na linha abre a empresa: na Visão geral quando o mês está lançado, no Lançamento quando não está
+    case 'abrir-empresa': { const id = b.dataset.id, salvo = b.dataset.salvo === '1';
+      comErro(async () => { await trocar('empresa', id); irPara(salvo ? 'visao' : 'resultado'); garantirAnoDaTela(); });
+      break; }
+    case 'nova-empresa': comErro(novaEmpresa); break;
+    case 'ano-lancar': { const per = b.dataset.p;
+      if((banco.meses || []).includes(per)) comErro(async () => { await trocar('periodo', per); irPara('resultado'); });
+      else comErro(novoMes);
+      break; }
+    case 'ir-secao': { const alvo = document.getElementById('sec-' + b.dataset.id);
+      if(alvo) scrollTo({top: alvo.getBoundingClientRect().top + scrollY - 100, behavior: 'smooth'}); break; }
     case 'cadeia': ui.cadeia = b.dataset.id; render(); focar(`[data-act="cadeia"][data-id="${b.dataset.id}"]`); break;
     // trocar de visão zera a busca e o filtro: cada lista começa inteira
+    // o item do menu lateral e a régua antiga usam a mesma ação: escolher a lista já abre a aba do cliente
     case 'cli-vis': ui.cliVis = b.dataset.id; ui.cadeia = b.dataset.id === 'clientes' ? 'clientes' : 'fornecedores';
-      ui.cliBusca = ''; ui.cliFiltro = ''; render(); focar(`[data-act="cli-vis"][data-id="${b.dataset.id}"]`); break;
+      ui.cliBusca = ''; ui.cliFiltro = '';
+      if(ui.tab !== 'cliente'){ irPara('cliente'); } else { render(); }
+      focar(`[data-act="cli-vis"][data-id="${b.dataset.id}"]`); break;
     case 'cli-filtro': ui.cliFiltro = ui.cliFiltro === b.dataset.id ? '' : b.dataset.id; render();
       focar(`[data-act="cli-filtro"][data-id="${b.dataset.id}"]`); break;
     case 'cli-limpar': ui.cliBusca = ''; ui.cliFiltro = ''; render(); break;
@@ -5626,7 +6382,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- início ---------- */
 let S = defaults();
 // cadastro: as tabelas da aba do cliente começam recolhidas — ali o gráfico é que conversa
-const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', notasVis: 'parceiros', cliVis: 'fornecedores', cliBusca: '', cliFiltro: '', imprimindo: false, cadastro: {cadeia: null, produtos: null}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, janela: 12, mesSel: null, lpCenario: 'ambos', lpResumo: true, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
+const ui = {tab: 'visao', detalhe: false, estoque: false, memoria: false, cadeia: 'fornecedores', notasVis: 'parceiros', cliVis: 'fornecedores', cliBusca: '', cliFiltro: '', imprimindo: false, buscaEmp: '', filtroEmp: 'todas', cadastro: {cadeia: null, produtos: null}, presumido: false, inssBase: false, cbsLP: false, icmsLP: false, latFina: false, latAberta: false, selo: false, termo: null, janela: 12, mesSel: null, lpCenario: 'ambos', lpResumo: true, lpVazias: false, lpMenu: false, papelDeitado: false, cbsAno: false, lpMes: false, editando: false, menu: false, personalizar: false, present: false, client: false, armado: false};
 if(/cliente|apresentar/i.test(location.hash)){ ui.present = true; ui.client = true; ui.tab = 'cliente'; }
 (async function(){
   await carregar();
