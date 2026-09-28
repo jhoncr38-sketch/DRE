@@ -898,15 +898,32 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
 - **Qual lado é qual:** decidido pelo CNPJ da empresa. Nota emitida por ela é venda; recebida, compra; nota entre
   terceiros fica de fora e a janela diz quantas foram.
 - **O que sai de cada nota:** emitente (CNPJ, nome e CRT), destinatário (CNPJ ou CPF, nome, `indIEDest`), valor
-  total e data. O **CRT do emitente** dá o regime do fornecedor (1 e 2 = Simples, 3 = normal) — é o que decide o
-  crédito de CBS. Do lado das vendas, CPF ou `indIEDest = 9` marca **consumidor final**, que não aproveita
-  crédito.
+  total e data. O **CRT do emitente** dá o regime do fornecedor (`REGIME_CRT`: 1 e 2 = Simples, 4 = MEI, 3 = regime
+  normal, que entra como **Lucro Presumido ou Real** — a nota não diz qual, e distribuidor grande costuma ser Real)
+  — é o que decide o crédito de CBS. Do lado das vendas, quem compra **sem CNPJ** (NFC-e sem destinatário, pessoa física) é
+  **consumidor final**, que não aproveita crédito: não entra no cadastro de clientes, mas entra na base do resumo
+  das vendas como um grupo próprio (numa loja, é quase tudo). Escola e associação com CNPJ não contribuem com ICMS
+  (`indIEDest = 9`), mas isso não diz nada sobre o crédito da CBS: elas vão para o cadastro, e o regime decide.
+  Cliente sem nome na nota entra com o nome em branco, que a consulta de regime pelo CNPJ preenche.
 - **Nota de serviço também entra** (`lerNfse`, com `lerNota` roteando): NFS-e não tem um layout só, então são
   lidos o **padrão nacional** (`infNFSe`, com `emit`/`prest` e `toma`) e o **ABRASF** das prefeituras
   (`InfNfse`, com `PrestadorServico` e `TomadorServico`), pegando as tags em qualquer nível e aceitando as
   variações de valor (`vLiq`, `ValorLiquidoNfse`, `vServ`, `ValorServicos`). Serviço e mercadoria somam nos
   mesmos dois blocos, e a janela diz quantas notas vieram de cada tipo. Layout municipal próprio continua caindo
-  em "arquivos não reconhecidos", que a janela conta. Três armadilhas do padrão nacional, que só apareceram na
+  em "arquivos não reconhecidos", que a janela conta.
+- **Um arquivo, várias notas** (`lerNotas`): a exportação da prefeitura no padrão ABRASF (`ListaNotaFiscal`,
+  `ListaNfse`, `ConsultarNfseResposta`) traz todas as notas do período num XML só. O leitor pegava a primeira e o
+  resto sumia sem aviso — de uma exportação de 10 notas (R$ 207.319,68), entrava só uma (R$ 8.615,00). Agora cada
+  `InfNfse`/`infNFSe`/`infNFe` do arquivo vira uma nota. `lerNota` continua existindo e devolve a primeira.
+  - **nota cancelada** no ABRASF vem no mesmo `CompNfse`, acompanhada de `NfseCancelamento`: fica fora da conta, e
+    a janela diz quantas;
+  - **a mesma nota em dois arquivos** (o XML avulso e a exportação) conta uma vez só (`idNota`: a chave de acesso na
+    NF-e; prestador e número na NFS-e, porque o `Id` do ABRASF é interno de cada prefeitura);
+  - **o valor é o do serviço menos o desconto incondicional** (`vServ`/`ValorServicos` − `vDescIncond`/
+    `DescontoIncondicionado`). O líquido desconta também as retenções — INSS de 11% na construção, IR, PIS/COFINS/
+    CSLL —, que não diminuem a receita nem a base do crédito;
+  - **o regime do prestador no ABRASF** vem de `OptanteSimplesNacional` (1 Simples, 2 regime normal) e, na versão 2,
+    de `RegimeEspecialTributacao` 5 (MEI). Três armadilhas do padrão nacional, que só apareceram na
   primeira importação de verdade (122 notas de agosto/2026):
   - **o nome do prestador não está em `prest`.** O bloco que tem o CNPJ e o regime, dentro do DPS, não tem nome
     nenhum: o nome está em `emit`, lá em cima. Sem isso, todo fornecedor entrava como "sem identificação". O
@@ -915,7 +932,8 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   - **o ISS retido é escrito ao contrário nos dois layouts.** No ABRASF, `IssRetido` 1 é sim e 2 é não. No
     nacional, `tpRetISSQN` **1 é *não* retido**, 2 é retido pelo tomador e 3 pelo intermediário. Lendo os dois
     pelo mesmo "1", as 122 notas vinham marcadas como retidas — e nenhuma era.
-  - **o regime do prestador existe** em `prest/regTrib/opSimpNac` (1 não optante, 2 MEI, 3 ME/EPP no Simples).
+  - **o regime do prestador existe** em `prest/regTrib/opSimpNac` (1 não optante → Lucro Presumido ou Real,
+    2 MEI, 3 ME/EPP no Simples).
     Não é CRT, mas serve ao mesmo: `REGIME_SIMP` traduz, e a coluna de regime do fornecedor — que ficava vazia
     em toda nota de serviço — vem preenchida do XML.
 - **Relevância:** cada parceiro com a sua participação e uma barra; a nota embaixo diz quantos respondem por 80%
@@ -924,12 +942,12 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   tela. Em tela baixa ela **rola por dentro**, com os botões colados no rodapé (regra `:has(.nf)`/`:has(.pg)`, que
   vale também para a janela do PGDAS): antes os botões ficavam abaixo da dobra e não dava para clicar.
 - **Os itens também entram** (`itensNfe`, `juntarItens`, `listaItens`): de cada `det/prod` saem descrição, NCM e
-  valor; da NFS-e sai a discriminação do serviço (`xDescServ`/`Discriminacao`), o NBS quando o layout traz `cNBS`
+  valor — o do produto menos o desconto do item, que não é receita; é assim que a soma dos itens bate com a nota; da NFS-e sai a discriminação do serviço (`xDescServ`/`Discriminacao`), o NBS quando o layout traz `cNBS`
   e o **código nacional do serviço** (`cTribNac`, ou `ItemListaServico` no ABRASF) com o seu nome oficial
   (`xTribNac`). **A chave do agrupamento é o código, não a descrição** — é a única coisa que não muda quando o
   mesmo produto vem de fornecedores diferentes ("DIPIRONA MONOIDRATADA 500MG CX C/20" e "DIPIRONA SODICA 500MG
   C/20" são um item só). Para mercadoria o código é o NCM; para serviço é o `cTribNac`, porque a discriminação da
-  NFS-e costuma trazer o número da fatura ("Nota fiscal da Fatura 880372223…") e aí cada nota viraria uma linha —
+  NFS-e costuma trazer o número da fatura ("Nota fiscal da Fatura 123456789…") e aí cada nota viraria uma linha —
   na primeira importação real, 92 notas de venda viraram **1 item** ("Medicina.") em vez de 82. Sem código nenhum,
   agrupa pela descrição normalizada (sem acento, sem pontuação). O NBS, que poucas notas informam, fica guardado
   no grupo: quando as notas do grupo trazem NBS diferentes, vale o que mais pesa. Cada item mostra de quantos
@@ -943,7 +961,11 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   **catálogo de produtos** (`levarParaCatalogo`), casa pela mesma chave da consolidação e completa o NCM/NBS do
   que já estava cadastrado. A linha do catálogo tem uma **7ª posição, sem tela: o código nacional do serviço** —
   sem ela, a mesma atividade entrava duas vezes (uma pelas compras, com NBS; outra pelas vendas, sem) e uma
-  segunda importação duplicaria tudo de novo. O nome vem da nota de **venda** quando existe — a
+  segunda importação duplicaria tudo de novo. **O que foi cadastrado à mão também casa** (`chavesItem`,
+  `noCatalogo`): a nota tenta as suas chaves da mais forte para a mais fraca (código, NBS, nome — ou NCM, nome)
+  contra a chave mais forte que a linha do catálogo tem. O serviço manual com NBS casa pelo NBS e ganha o código;
+  o produto manual sem NCM casa pelo nome e ganha o NCM; uma linha com outro código ou outro NCM não "rouba" o
+  item só por ter o mesmo nome. O nome vem da nota de **venda** quando existe — a
   descrição da própria empresa é melhor que a do fornecedor. Entram os 150 que mais pesam. Como sempre, fica na
   tela até você salvar.
 - **O que fica depois** (`rNotasMes`): o resumo não morre com a janela. Os valores vão para `monthly.notas` e
@@ -952,15 +974,14 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   que a empresa compra e vende", dez maiores de cada lado, com NCM e a contagem de fornecedores/descrições). A
   lista guardada no mês é cortada nos 250 maiores; o `resumo` guarda o total de linhas, itens e valor, para as contas
   continuarem certas. Aparece na apresentação ao cliente (lá sem o botão de limpar) e some quando não há notas
-  lidas naquele mês.
-- **As duas telas se encontram** (`pesoCatalogo`, `mapaCatalogo`): no bloco das notas, cada item mostra embaixo do
-  NCM a **redução da CBS e a alíquota** do produto cadastrado (verde só quando há redução — é a favor da empresa);
-  na tabela de **Produtos e serviços**, embaixo do nome, entra **quanto o item movimentou no mês**: o valor, uma
-  barra proporcional ao **maior item** (numa tabela longa o que interessa é comparar um produto com o outro; a
-  fatia do total deixaria todas as barras minúsculas) e, ao lado, a **fatia do mês** em percentual — que é a mesma
-  leitura do número no bloco das notas. Usa as vendas quando o mês tem notas de saída (é o que a empresa fatura) e as
-  compras quando só há entradas — o cabeçalho da coluna diz qual. O movimento fica *dentro* da célula do nome de
-  propósito: como coluna, ele empurrava a alíquota reduzida para fora da tela.
+  lidas naquele mês. O **limpar** tira só essa leitura do mês (`monthly.notas`, `monthly.itens`,
+  `monthly.notasUma`): fornecedores, clientes e produtos já levados para o cadastro ficam.
+- **As duas telas se encontram** (`pesoCatalogo`, `mapaCatalogo`, `noCatalogo`): no bloco das notas, cada item
+  mostra embaixo do NCM a **redução da CBS e a alíquota** do produto cadastrado; no resumo do catálogo, cada linha
+  pesa pelo que o item movimentou no mês (cada item da nota conta uma vez, na linha que responde por ele). O peso
+  vem das **vendas** quando o mês tem notas de saída — "Receita por tratamento na CBS" — e das **compras** quando só
+  há entradas: aí o resumo diz "Compras por tratamento na CBS" e explica que o peso vem do que a empresa compra,
+  em vez de chamar compra de receita. A tabela do catálogo não repete o movimento: ele mora na aba Notas do mês.
 
 Testes: seção `nf)` da suíte do painel — leitura dos campos, separação por CNPJ com descarte de nota de
 terceiros, o peso e a curva de 80%, a cadeia recebendo sem duplicar, o mesmo NCM de dois fornecedores virando um
@@ -968,6 +989,41 @@ item só (com as três descrições contadas), o catálogo recebendo um item por
 ignorado.
 
 ---
+
+## Regime pelo CNPJ (consulta pública)
+
+A nota só diz o regime de **quem a emite**: o CRT da NF-e e o `opSimpNac` da NFS-e são do emitente/prestador.
+Do destinatário — e do tomador, na NFS-e — nenhum layout informa o regime. Por isso os fornecedores vêm
+classificados da importação e os clientes não.
+
+**Resumo do cliente → Fornecedores ou Clientes → consultar regimes** (o botão só aparece quando há alguém com
+CNPJ válido e regime em branco, e mostra quantos): o painel pergunta à **BrasilAPI**
+(`brasilapi.com.br/api/cnpj/v1/{cnpj}`), que usa a base pública da Receita, se cada um é do Simples, MEI ou
+regime normal (`consultarCnpj`, `consultarRegimes`).
+
+- **Só o CNPJ sai do computador**, e só quando a pessoa aperta o botão e confirma. A janela é curta — "Existem 82
+  CNPJs sem regime definido. Deseja definir o regime através da API?" —; o que sai e para onde fica no balão do
+  botão. Nomes, valores e notas ficam aqui. É a única chamada para fora que o painel faz sem ser o
+  banco e a leitura de documentos.
+- **O que a Receita diz → o regime** (`regimeDaReceita`): `opcao_pelo_mei` → MEI; `opcao_pelo_simples` →
+  Simples Nacional; o resto → **Lucro Presumido ou Real**, uma opção nova da lista. A consulta pública não separa
+  Presumido de Real, e para o crédito dá no mesmo. Quem nunca optou pelo Simples volta sem registro (`null`) e
+  quem saiu volta com `false`: os dois estão no regime normal.
+- **A coluna de crédito vem junto.** MEI → não; regime normal → sim (fornecedor: `creditoDoRegime`; cliente:
+  `aproveitaDoRegime`). **O Simples é pergunta de toda vez:** antes de preencher, a janela pede para escolher se os
+  do Simples ficam como **parcial** (só o que vier dentro do DAS) ou **com crédito cheio** — nenhuma opção vem
+  marcada, e o Preencher não passa sem a escolha. Na lista de clientes a coluna passou a se chamar **Aproveita
+  crédito**: "Gera crédito" era o termo do fornecedor.
+- **Nos fornecedores o botão quase não aparece**, e é esperado: quem emite a nota de compra é o fornecedor, então
+  o regime já vem do XML (CRT ou `opSimpNac`). Ele surge para quem foi cadastrado à mão.
+- **É sugestão:** preenche só o que está em branco (regime, crédito e, se faltar, o nome), nunca troca o que já
+  estava escrito, e nada é gravado sem salvar. Antes de preencher, a janela mostra o resultado por grupo, com os
+  nomes: Simples, MEI, Lucro Presumido ou Real, **situação irregular na Receita** (baixada, inapta — o regime entra
+  igual, com o aviso), não encontrados e sem resposta.
+- **Três de cada vez**, com uma nova tentativa quando o serviço recusa ou não responde. Quem ficou sem resposta
+  continua em branco, e o botão passa a contar só esses.
+- A BrasilAPI é gratuita e sem contrato. Se um dia o escritório precisar de garantia, trocar por uma API paga
+  (CNPJá, ReceitaWS) é mexer só em `consultarCnpj` e `regimeDaReceita`.
 
 ## Leitura de documentos (API da Claude)
 
