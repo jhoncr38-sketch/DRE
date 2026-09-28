@@ -346,7 +346,7 @@
   .pg-anexo-l{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
   .pg-anexo-n{font-size:11.5px; color:var(--muted); flex:1; min-width:180px; max-width:300px}
   .pg-anexo-n b{font-weight:600; color:var(--ink-3)}
-  /* Notas do mês (XML): quem pesa em cada lado */
+  /* Notas fiscais (XML): quem pesa em cada lado */
   .modal-caixa:has(.nf){width:min(680px,100%)}
   .modal-caixa:has(.nf), .modal-caixa:has(.pg), .modal-caixa:has(.rc){max-height:calc(100dvh - 32px); overflow:auto; overscroll-behavior:contain}
   /* regime pelo CNPJ: um bloco por resultado, filete entre eles */
@@ -2742,7 +2742,7 @@ function rLateral(){
   // Cadastros: cada lista é um item do menu (v3). O clique leva para a aba do cliente já na lista certa, e a
   // contagem vem do refresh, como vinha na régua que isto substitui.
   const cadastros = [['fornecedores', 'Fornecedores', 'cad.fornecedores.qtd'], ['clientes', 'Clientes', 'cad.clientes.qtd'],
-                     ['produtos', 'Produtos e serviços', 'pr.qtd'], ['notas', 'Notas do mês', 'nf.qtd']];
+                     ['produtos', 'Produtos e serviços', 'pr.qtd'], ['notas', 'Notas fiscais', 'nf.qtd']];
   const itemCad = ([id, rot, chave]) => (id === 'notas' && ui.present) ? '' :
     // o primeiro cadastro carrega o id da aba: é por #tab-cliente que o teclado, o link do cliente e os testes chegam
     `<button class="lat-item" type="button" id="${id === 'fornecedores' ? 'tab-cliente' : 'tab-cad-' + id}" data-act="cli-vis" data-id="${id}" title="${rot}"` +
@@ -3633,7 +3633,7 @@ const chaveDosItens = lista => {
   const serv = lista.filter(x => x.servico).length;
   return !serv ? 'NCM' : serv === lista.length ? 'código de serviço' : 'NCM ou código de serviço';
 };
-// Notas do mês: quem pesa nas compras e nas vendas. Só aparece depois de importar os XML do mês.
+// Notas fiscais: quem pesa nas compras e nas vendas. Só aparece depois de importar os XML do mês.
 function rNotasMes(){
   const n = (S.monthly.notas || {}), compras = n.compras || [], vendas = n.vendas || [];
   const it = (S.monthly.itens || {}), itC = lerItens(it.compras), itV = lerItens(it.vendas), res = it.resumo || {};
@@ -3666,8 +3666,8 @@ function rNotasMes(){
   const abas = [['notas', 'Notas', temUma], ['parceiros', 'Parceiros', true], ['itens', 'Produtos e serviços', temItens]];
   const alt = `<div class="cad-alt" role="group" aria-label="Mostrar">${abas.filter(a => a[2]).map(([k, rot]) =>
     `<button class="cad-aba" data-act="notas-vis" data-id="${k}" aria-pressed="${vis === k}">${rot}</button>`).join('')}</div>`;
-  return `<section class="card nf nf-mes" aria-label="Notas do mês">
-    <div class="card-h"><div><h2>${ui.imprimindo ? 'Notas do mês'
+  return `<section class="card nf nf-mes" aria-label="Notas fiscais">
+    <div class="card-h"><div><h2>${ui.imprimindo ? 'Notas fiscais'
       : vis === 'itens' ? 'O que a empresa compra e vende'
       : vis === 'notas' ? 'Crédito das notas do mês' : 'Quem pesa nas compras e nas vendas'}</h2>
       <p class="sub">${ui.imprimindo ? 'Parceiros e itens das notas fiscais do mês, lidas do XML.'
@@ -3696,7 +3696,7 @@ function rNotasMes(){
 // ficava no rodapé da tabela — para cadastrar um fornecedor era preciso rolar a página inteira. Agora é uma
 // régua só, com a definição do que é cada lista, a busca e as ações no topo.
 const CLI_VIS = [['fornecedores', 'Fornecedores'], ['clientes', 'Clientes'],
-                 ['produtos', 'Produtos e serviços'], ['notas', 'Notas do mês']];
+                 ['produtos', 'Produtos e serviços'], ['notas', 'Notas fiscais']];
 const cliVis = () => { const v = ui.cliVis || 'fornecedores'; return CLI_VIS.some(([k]) => k === v) ? v : 'fornecedores'; };
 // busca sem acento e sem separador: assim "37354860" acha o CNPJ escrito com ponto e barra
 const normBusca = t => semAcento(t).replace(/[^a-z0-9]+/g, '');
@@ -3724,6 +3724,7 @@ function rCliBarra({vis, lst, filtros, campos, achados, addAct, addRot, addG, ca
         ${semRegime(vis, lst) ? `<button class="btn" data-act="cad-regimes" data-g="${vis}"
           title="Consulta a opção pelo Simples e pelo MEI na base pública da Receita. Só o CNPJ sai do computador.">consultar regimes <span class="m">${semRegime(vis, lst)}</span></button>` : ''}
         ${lst.length ? btnCadastro(cadastro) : ''}
+        ${lst.length && LISTAS_CADASTRO[vis] ? `<button class="btn" data-act="cad-limpar" data-g="${vis}">limpar</button>` : ''}
       </div>
     </div>
     ${chips || filtrando ? `<div class="cli-filtros">${chips}
@@ -3798,7 +3799,7 @@ function rNotasVis(){
   const n = (S.monthly.notas || {}), it = (S.monthly.itens || {});
   if((n.compras || []).length || (n.vendas || []).length || (it.compras || []).length) return rNotasMes();
   return `<div class="cadeia">
-    <div class="cad-h"><div class="cad-h-txt"><h3>Notas do mês</h3>
+    <div class="cad-h"><div class="cad-h-txt"><h3>Notas fiscais</h3>
       <p class="cli-def">Os XML das notas de entrada e de saída do mês. O painel lê tudo aqui no navegador —
         nenhuma nota sai do seu computador.</p></div></div>
     <div class="cad-vazio">
@@ -5860,7 +5861,7 @@ async function importarNotas(){
       .map(n => [n.lado, n.doc, n.nome, n.valor, n.numero, n.emissao]);
   }
   // Enter traz para o cadastro: é o que quem importa quer. Se nenhuma nota é da empresa aberta, não há o que trazer.
-  const resp = await modal({titulo: 'Notas do mês', html: rNotas(r, notas.length, ruins, {repetidas, canceladas, cnpj: emp.cnpj || '', antes}),
+  const resp = await modal({titulo: 'Notas fiscais', html: rNotas(r, notas.length, ruins, {repetidas, canceladas, cnpj: emp.cnpj || '', antes}),
     botoes: nada ? [['fechar', 'Fechar']] : [['fechar', 'Fechar sem trazer'], ['cadeia', 'Trazer para o cadastro', 'prim']],
     padrao: nada ? 'fechar' : 'cadeia'});
   if(resp.botao === 'cadeia') levarParaCadeia(r);
@@ -5963,7 +5964,7 @@ function rNotas(r, quantas, ruins, extra = {}){
     ? `<p class="nf-troca">Nenhuma destas notas é da empresa aberta: o CNPJ dela (${fmtCnpj(extra.cnpj)}) não aparece como emitente nem como destinatário. Confira se a empresa aberta é a certa, ou o CNPJ em Opções → Editar empresa.</p>`
     : `<p class="nf-troca">A empresa aberta está sem CNPJ no cadastro, e é por ele que o painel separa compra de venda. Cadastre em Opções → Editar empresa e importe de novo.</p>`;
   return `<div class="nf">${aviso}
-    ${jaTem ? `<p class="nf-troca">Este mês já tinha ${jaTem} ${jaTem === 1 ? 'nota lida' : 'notas lidas'}: esta importação substitui aquela leitura na aba Notas do mês. Fornecedores, clientes e produtos não são apagados, só completados. Para juntar as duas leituras, escolha todos os arquivos de uma vez.</p>` : ''}
+    ${jaTem ? `<p class="nf-troca">Este mês já tinha ${jaTem} ${jaTem === 1 ? 'nota lida' : 'notas lidas'}: esta importação substitui aquela leitura na aba Notas fiscais. Fornecedores, clientes e produtos não são apagados, só completados. Para juntar as duas leituras, escolha todos os arquivos de uma vez.</p>` : ''}
     <p class="sub">${quantas} ${quantas === 1 ? 'nota lida' : 'notas lidas'}${tipos}${ruins.length ? ` · ${ruins.length} ${ruins.length === 1 ? 'arquivo não reconhecido' : 'arquivos não reconhecidos'}` : ''}${r.fora.length ? ` · ${r.fora.length} de outra empresa, fora da conta` : ''}${extra.canceladas ? ` · ${extra.canceladas} ${extra.canceladas === 1 ? 'cancelada, fora da conta' : 'canceladas, fora da conta'}` : ''}${extra.repetidas ? ` · ${extra.repetidas} ${extra.repetidas === 1 ? 'repetida, contada uma vez só' : 'repetidas, contadas uma vez só'}` : ''}.</p>
     ${todasFora ? '' : `<p class="nota">Trazer para o cadastro completa Fornecedores, Clientes e Produtos e serviços: acrescenta quem é novo e preenche o que está em branco, sem apagar nem trocar o que já está lá.</p>`}
     ${bloco('Compras — fornecedores', r.compras, true)}
@@ -6128,6 +6129,30 @@ function faltamNoCadastro(){
   const cat = mapaCatalogo();
   const itens = itensDasNotas(l).slice(0, MAX_CATALOGO).filter(([, x]) => noCatalogo(cat, x) === undefined).length;
   return {parceiros, itens, total: parceiros + itens};
+}
+// Esvazia uma lista do cadastro de uma vez: o que veio das notas e o que foi digitado à mão. O cadastro é da empresa
+// (vale para todos os meses), então pergunta antes — no padrão das outras ações sem volta, "Cancelar" é o principal.
+const LISTAS_CADASTRO = {
+  fornecedores: {um: 'fornecedor', varios: 'fornecedores', titulo: 'Limpar fornecedores', com: 'regime e crédito', feito: 'Fornecedores limpos'},
+  clientes: {um: 'cliente', varios: 'clientes', titulo: 'Limpar clientes', com: 'regime e crédito', feito: 'Clientes limpos'},
+  produtos: {um: 'item', varios: 'itens', titulo: 'Limpar produtos e serviços',
+             com: 'NCM, NBS, cClassTrib e tratamento na CBS', feito: 'Produtos e serviços limpos'}
+};
+async function limparCadastro(g){
+  const t = LISTAS_CADASTRO[g]; if(!t) return;
+  const lst = g === 'produtos' ? (S.produtos || []) : ((S.cadeia || {})[g] || []);
+  if(!lst.length) return;
+  const n = lst.length;
+  const r = await modal({titulo: t.titulo,
+    texto: `${n === 1 ? `O ${t.um} sai` : `Os ${n} ${t.varios} saem`} do cadastro, com ${t.com}` +
+      (n === 1 ? '.' : ': os que vieram das notas e os digitados à mão.') +
+      (banco.ativo ? ' O cadastro é da empresa: vale para todos os meses. Nada é apagado do banco até você salvar.' : ''),
+    botoes: [['cancelar', 'Cancelar', 'prim'], ['limpar', 'Limpar o cadastro']], padrao: 'cancelar'});
+  if(r.botao !== 'limpar'){ render(); return; }
+  if(g === 'produtos') S.produtos = []; else S.cadeia[g] = [];
+  ui.cliBusca = ''; ui.cliFiltro = '';
+  render();
+  toast(banco.ativo ? `${t.feito} — salve para confirmar` : t.feito);
 }
 // Leva os itens para o catálogo de Produtos e serviços, com a mesma chave da consolidação: o produto comprado de
 // três fornecedores entra uma vez, e o que já está cadastrado só é completado (NCM, NBS), nunca duplicado.
@@ -6694,6 +6719,7 @@ app.addEventListener('click', e => {
       break;
     case 'cad-rm': S.cadeia[g].splice(i, 1); render(); break;
     case 'cad-regimes': comErro(() => consultarRegimes(g)); break;
+    case 'cad-limpar': comErro(() => limparCadastro(g)); break;
   }
 });
 document.addEventListener('click', e => {

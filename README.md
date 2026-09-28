@@ -585,7 +585,7 @@ cálculo mudou). O que entrou:
   Modo apresentação, Imprimir, Salvar, Baixar HTML, Restaurar padrão, Limpar tudo
 - **Resumo do cliente — uma lista de cada vez** (reorganizado em 24/09/2026, a pedido do usuário: "muita
   bagunça, tenho que ir lá embaixo para adicionar um cliente ou produto, não sei o que é fornecedor, cliente").
-  A aba abre com uma **régua** de quatro visões — Fornecedores · Clientes · Produtos e serviços · Notas do mês —,
+  A aba abre com uma **régua** de quatro visões — Fornecedores · Clientes · Produtos e serviços · Notas fiscais —,
   cada uma com a sua contagem (`rCliNav`, `ui.cliVis`). Em cada visão:
   - **o que é aquilo, em uma linha** (`.cli-def`): "De quem a empresa **compra**. O regime tributário de cada
     fornecedor define quanto crédito de CBS a compra gera." / "Para quem a empresa **vende**…" / "O que a empresa
@@ -593,6 +593,10 @@ cálculo mudou). O que entrou:
   - **barra de trabalho no topo** (`rCliBarra`), antes da lista: busca, filtros e as ações — **+ adicionar**,
     importar notas (XML) e Ver/Ocultar cadastro. O botão de adicionar continua também no rodapé da tabela, mas
     não é mais o único: era preciso rolar a página inteira para cadastrar um fornecedor.
+  - **limpar** (`limparCadastro`), nas três listas, no estilo do "limpar" das notas: esvazia a lista de uma vez —
+    o que veio das notas e o que foi digitado à mão. Antes só dava para apagar linha por linha. Como o cadastro é
+    da empresa (vale para todos os meses), pergunta antes, no padrão das outras ações sem volta: "Cancelar" é o
+    botão principal e o padrão do Enter. Não aparece na apresentação ao cliente, e só é gravado ao salvar.
   - **busca** (`normBusca`) sem acento e sem separador, então `37354860` acha o CNPJ escrito com ponto e barra;
     casa nome, CNPJ e regime na cadeia, nome, NCM, NBS e cClassTrib no catálogo. Filtra só a lista — o gráfico e
     a frase continuam falando do cadastro inteiro.
@@ -776,7 +780,7 @@ código para copiar**. Ordem combinada: fundação → casca → telas → Paine
 - **Vermelho só da marca.** O "Lucro operacional bruto" era `var(--brand)`; virou tinta comum. O vermelho fica
   em Salvar, no ícone do item aberto do menu e nos links.
 - **Barra lateral por grupos** (`ICONES`, `iconeLat`): Mês · <competência> (Visão geral, Lançamento, Comparar
-  regimes), Cadastros (Fornecedores, Clientes, Produtos e serviços, Notas do mês, cada um com a contagem) e
+  regimes), Cadastros (Fornecedores, Clientes, Produtos e serviços, Notas fiscais, cada um com a contagem) e
   Exercício · <ano>. Ícone de traço 17px em cada item; o aberto marca o ícone em `#FF6B5E`. **"Resumo do cliente"
   deixou de ser uma aba**: as quatro listas são itens do menu, e a régua interna saiu. O primeiro cadastro leva o
   id `tab-cliente`, que é por onde o teclado, o link do cliente e os testes chegam à aba.
@@ -833,7 +837,7 @@ código para copiar**. Ordem combinada: fundação → casca → telas → Paine
   alíquota. A tabela de produtos passou de sete para **quatro colunas** (produto · NCM/NBS · cClassTrib ·
   tratamento): o tipo desceu para baixo do nome, junto do movimento do mês, e a alíquota, para baixo do seletor.
   Campos vazios escritos em amarelo ("sem NCM", "sem classificação") e a contagem no rodapé.
-- **Notas do mês: o crédito nota a nota** (`creditoDasNotas`, `rCreditoNotas`). O painel passou a guardar cada
+- **Notas fiscais: o crédito nota a nota** (`creditoDasNotas`, `rCreditoNotas`). O painel passou a guardar cada
   nota (`monthly.notasUma`: lado, parceiro, valor, número, emissão — as 250 maiores), porque antes a importação
   agregava por parceiro e o número e a data se perdiam. A aba abre com o resumo do crédito (integral · do DAS ·
   a definir, por valor) e a tabela Nota · Fornecedor · Valor · Crédito CBS. **O crédito sai do cadastro**: quem
@@ -846,7 +850,7 @@ código para copiar**. Ordem combinada: fundação → casca → telas → Paine
 - **Memória da CBS** com as barras em azul petróleo e o bloco "CBS a pagar" em fundo neutro, sem filete lateral
   e sem vermelho (o valor só fica verde quando o crédito passa o débito — aí é dinheiro a favor).
 
-- **Notas do mês: importador num lugar só.** O botão vive na aba Notas (no estado vazio e no cabeçalho do
+- **Notas fiscais: importador num lugar só.** O botão vive na aba Notas (no estado vazio e no cabeçalho do
   bloco); nas outras listas, o estado vazio diz os dois caminhos e leva até lá. Com notas já lidas o botão
   continua à mão — antes era preciso limpar para reimportar —, e a janela avisa que a leitura nova **substitui**
   a anterior (para juntar, escolher todos os arquivos de uma vez).
@@ -889,6 +893,8 @@ de clientes reais e o repositório é público.
 ---
 
 ## Notas fiscais (XML)
+
+A aba se chamava **Notas do mês** até 28/09/2026; o nome mudou para **Notas fiscais**.
 
 **Resumo do cliente → cadeia de crédito → importar notas (XML)** (o botão fica no cabeçalho do bloco, ao lado do
 alternador Fornecedores/Clientes — nasceu dentro do estado vazio e sumia assim que havia um cadastro): o navegador lê os XMLs de NF-e escolhidos,
@@ -989,7 +995,7 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   pesa pelo que o item movimentou no mês (cada item da nota conta uma vez, na linha que responde por ele). O peso
   vem das **vendas** quando o mês tem notas de saída — "Receita por tratamento na CBS" — e das **compras** quando só
   há entradas: aí o resumo diz "Compras por tratamento na CBS" e explica que o peso vem do que a empresa compra,
-  em vez de chamar compra de receita. A tabela do catálogo não repete o movimento: ele mora na aba Notas do mês.
+  em vez de chamar compra de receita. A tabela do catálogo não repete o movimento: ele mora na aba Notas fiscais.
 
 Testes: seção `nf)` da suíte do painel — leitura dos campos, separação por CNPJ com descarte de nota de
 terceiros, o peso e a curva de 80%, a cadeia recebendo sem duplicar, o mesmo NCM de dois fornecedores virando um
