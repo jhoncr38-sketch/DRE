@@ -174,7 +174,11 @@ cálculo mudou). O que entrou:
   Resultado, Comparar regimes e Resumo do cliente; Exercício com Anual) e, no pé, o estado do salvamento com
   Baixar PDF e Opções. Recolhe para 64px (`ui.latFina`, só os pontos, nome no `title`) e, abaixo de 900px, vira
   gaveta com véu (`ui.latAberta`, botão ☰ no cabeçalho). **Na apresentação ela recolhe sozinha**: a lista de
-  empresas é de outros clientes.
+  empresas é de outros clientes — e, ali, clicar na empresa não abre a lista.
+  Recolhida, "← Todas as empresas" vira só a seta (o nome no balão e no `aria-label`) e o cartão da empresa mostra
+  as **iniciais** — as mesmas do Painel de empresas (`iniciais`). Antes a volta quebrava em quatro linhas e o
+  cartão virava uma caixa vazia. Clicar nas iniciais abre a barra já com a lista de empresas: dentro de 64px ela
+  ficaria espremida.
 - **Cabeçalho preso no alto** (`rCabecalho`): empresa, CNPJ · competência, alternador **Lançar / Apresentar**
   (o mesmo que o item do menu: recolhe a maquinaria ao entrar e devolve ao sair), seletor de competência,
   Tela cheia (só apresentando) e Salvar. A barra compacta que descia ao rolar saiu — o cabeçalho já é fixo.
