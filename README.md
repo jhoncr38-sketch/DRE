@@ -1070,6 +1070,18 @@ anexo do mês, se estiver vazio, recebe o da receita que mais pesa, que é o que
 tem anexo próprio. Marcar sem escolher não aplica nada — o painel não inventa anexo. A instrução da função também ganhou onde procurar (tabela de apuração e título da
 seção) e a ordem de dizer em `observacoes` quando o documento não trouxer.
 
+**Receita em dois anexos** (28/09/2026, conferido com uma declaração real de serviços: Anexo III e Anexo IV, com
+ISS devido a outro município). O painel calcula o mesmo DAS da declaração até o centavo (4ª faixa, III a 13,20% e
+IV a 10,88%). O que estava errado:
+- a etapa **"Simples do mês"** do fechamento exigia o anexo da *empresa* e ficava pendente para sempre — com dois
+  anexos o painel põe o anexo em cada linha de receita e deixa o da empresa vazio (`anexoDoMesOk`: basta que toda
+  linha com receita tenha o seu). Pelo mesmo motivo a Visão geral dizia "Anexo: não informado" — agora diz "III e
+  IV" (`anexosDoMes`) — e o aviso de DAS zerado pedia o anexo da empresa;
+- a linha de receita nascia com a frase inteira do PGDAS ("Prestação de Serviços, exceto para o exterior - Não
+  sujeitos ao fator "r" e tributados pelo Anexo III, sem retenção…"). Agora fica a atividade (`nomeAtividade`); se
+  duas linhas colidem, o anexo entra no nome ("Prestação de Serviços · Anexo III") e, se ainda colidem, a situação
+  ("· ICMS-ST"). A janela continua mostrando a frase inteira em *Atividades declaradas*, para conferir.
+
 **Preencher o mês** (`camposPgdas`, `aplicarPgdas`): cada campo divergente ganha uma caixa *usar*, e o botão joga
 os marcados na tela — receita na primeira linha de receita, DAS na linha "Simples Nacional" das despesas
 tributárias (criada se não existir), RBT12 no campo, e o anexo quando a declaração traz um só e ele difere.

@@ -2330,7 +2330,7 @@ function saidas(){
     'k.cbsHibInfo': credor ? `crédito de ${brl(cm.saldoCredor)} vai para o mês seguinte` : '',
     'k.equilibrio': textoEquilibrio(cm),
     // zero no quadro não explica nada: diga o que falta para o DAS existir
-    'k.semDas': !ANEXOS[S.anexo]
+    'k.semDas': !ANEXOS[anexoEmpresa()]
       ? 'Sem o anexo do Simples o painel não calcula o DAS. Escolha o anexo no cartão "Simples Nacional do mês", no topo — ou lance o DAS declarado na linha "Simples Nacional" das despesas tributárias.'
       : cm.R <= 0.004 ? 'Sem receita declarada no mês não há DAS a comparar.'
       : 'DAS zerado: confira a receita dos 12 meses e a situação no DAS de cada linha de receita.',
@@ -2421,7 +2421,8 @@ function saidas(){
                          : 'Neste mês o crédito de CBS passou o débito: não haveria CBS a pagar.');
   const fatR = calcFatorR();
   O['v.rbt12'] = brl(+m.rbt12 || 0);
-  O['v.anexo'] = S.anexo && ANEXOS[S.anexo] ? `${S.anexo} · ${ANEXOS[S.anexo].nome}` : 'não informado';
+  { const ax = anexosDoMes();
+    O['v.anexo'] = ax.length > 1 ? ax.join(' e ') : ax.length ? `${ax[0]} · ${ANEXOS[ax[0]].nome}` : 'não informado'; }
   O['v.resultadoSub'] = P(cm.resultado, cm.R) + ' da receita' + varTexto(cm.resultado, vAnt ? +vAnt.resultado || 0 : NaN);
   // aba Anual: o ano somado pelas competências salvas no banco
   const ano = banco.ano;
@@ -3093,11 +3094,23 @@ function rComparativo(){
 }
 // As quatro etapas do fechamento, na ordem em que se lança. O ✓ e o ! saem das mesmas conferências da pílula
 // do cabeçalho — é a mesma verdade, dita no lugar onde se trabalha.
+// O anexo está na empresa ou em cada linha de receita — a declaração com receita em dois anexos (III e IV, por
+// exemplo) põe um em cada linha e deixa o da empresa em branco. Basta que toda linha com receita tenha o seu.
+function anexoDoMesOk(){
+  const linhas = (S.monthly.reforma.debitos || []).filter(r => (+r[1] || 0) > 0.004);
+  return linhas.length ? linhas.every(r => !!ANEXOS[anexoLinha(r)]) : !!ANEXOS[anexoEmpresa()];
+}
+// os anexos em que o mês tem receita, na ordem da tabela ("III e IV"); sem receita, o da empresa
+function anexosDoMes(){
+  const usados = new Set((S.monthly.reforma.debitos || []).filter(r => (+r[1] || 0) > 0.004).map(anexoLinha));
+  const lista = Object.keys(ANEXOS).filter(a => usados.has(a));
+  return lista.length ? lista : (ANEXOS[anexoEmpresa()] ? [anexoEmpresa()] : []);
+}
 function etapasLanc(){
   const c = calcMes(), conf = conferencias();
   const ok = titulo => { const x = conf.find(y => y.titulo === titulo); return !x || x.ok; };
   return [
-    {id: 'sn', n: '01', rot: 'Simples do mês', ok: !!ANEXOS[S.anexo] && (+S.monthly.rbt12 || 0) > 0.004},
+    {id: 'sn', n: '01', rot: 'Simples do mês', ok: anexoDoMesOk() && (+S.monthly.rbt12 || 0) > 0.004},
     {id: 'dre', n: '02', rot: 'DRE', ok: ok('Receita da DRE bate com as linhas do PGDAS') && ok('DAS declarado confere com o calculado')},
     {id: 'est', n: '03', rot: 'Estoque e compras', ok: c.compras > 0.004 || (S.monthly.estoque || []).length > 0},
     {id: 'cbs', n: '04', rot: 'Memória da CBS', ok: ok('Crédito de CBS compatível com as compras')}
@@ -5610,14 +5623,29 @@ async function pedirLeitura(acao, arquivo){
 // Compara o que o PGDAS declara com o que está lançado no mês aberto. Diferença de até R$ 1 passa (centavo de
 // arredondamento não é divergência).
 // atividades declaradas que dão para virar linha de receita: precisam de valor e de nome
+// O PGDAS descreve a atividade numa frase inteira — "Prestação de Serviços, exceto para o exterior - Sujeitos ao
+// Anexo IV, sem retenção/substituição tributária de ISS, com ISS devido a outro(s) Município(s)". Como nome de
+// linha de receita fica a atividade ("Prestação de Serviços"): anexo e situação já têm campo próprio na linha.
+const nomeAtividade = t => {
+  const n = String(t || '').split(/\s+-\s+/)[0].replace(/,?\s*exceto para o exterior/i, '').replace(/\s+/g, ' ').trim();
+  return (n.length > 60 ? n.slice(0, 57).trim() + '…' : n) || 'Receita declarada';
+};
 function atividadesPgdas(d){
-  return (d.atividades || []).filter(a => a && +a.receita > 0.004).map(a => {
+  const lista = (d.atividades || []).filter(a => a && +a.receita > 0.004).map(a => {
     const st = !!a.icms_st, mono = !!a.monofasico;
     const sit = st && mono ? 'stmono' : st ? 'st' : mono ? 'mono' : a.iss_retido ? 'iss' : '';
-    return {descricao: String(a.descricao || 'Receita declarada').trim(),
+    return {descricao: nomeAtividade(a.descricao),
             anexo: ANEXOS[a.anexo] ? a.anexo : '', receita: +a.receita, sit,
             sitNome: (SITUACOES.find(x => x[0] === sit) || ['', ''])[1]};
   });
+  // a mesma atividade em duas linhas (serviços no III e no IV, revenda com e sem ST): o anexo entra no nome e,
+  // se ainda repetir, a situação — duas linhas iguais na DRE não dizem qual é qual
+  const repete = x => lista.filter(y => y.descricao === x.descricao).length > 1;
+  lista.filter(repete).forEach(x => { x.nomeAnexo = x.anexo ? `${x.descricao} · Anexo ${x.anexo}` : x.descricao; });
+  lista.forEach(x => { if(x.nomeAnexo){ x.descricao = x.nomeAnexo; delete x.nomeAnexo; } });
+  lista.filter(repete).forEach(x => { x.nomeSit = `${x.descricao} · ${x.sitNome}`; });
+  lista.forEach(x => { if(x.nomeSit){ x.descricao = x.nomeSit; delete x.nomeSit; } });
+  return lista;
 }
 // O que a declaração pode preencher no mês aberto. Devolve a lista de campos aplicáveis (cada um com o valor e
 // o motivo, quando não dá) — o mesmo cálculo serve para desenhar as caixas e para aplicar depois.
