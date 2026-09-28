@@ -905,26 +905,45 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   lidos o **padrão nacional** (`infNFSe`, com `emit`/`prest` e `toma`) e o **ABRASF** das prefeituras
   (`InfNfse`, com `PrestadorServico` e `TomadorServico`), pegando as tags em qualquer nível e aceitando as
   variações de valor (`vLiq`, `ValorLiquidoNfse`, `vServ`, `ValorServicos`). Serviço e mercadoria somam nos
-  mesmos dois blocos, e a janela diz quantas notas vieram de cada tipo. **Não existe CRT na NFS-e**: o prestador
-  entra sem regime (marcado como "serviço" na lista) e o cadastro pergunta. Em compensação vem o ISS retido
-  (`IssRetido`/`tpRetISSQN`), guardado na leitura. Layout municipal próprio (São Paulo, por exemplo) continua
-  caindo em "arquivos não reconhecidos", que a janela conta.
+  mesmos dois blocos, e a janela diz quantas notas vieram de cada tipo. Layout municipal próprio continua caindo
+  em "arquivos não reconhecidos", que a janela conta. Três armadilhas do padrão nacional, que só apareceram na
+  primeira importação de verdade (122 notas de agosto/2026):
+  - **o nome do prestador não está em `prest`.** O bloco que tem o CNPJ e o regime, dentro do DPS, não tem nome
+    nenhum: o nome está em `emit`, lá em cima. Sem isso, todo fornecedor entrava como "sem identificação". O
+    leitor só aproveita o `emit` quando o CNPJ é o mesmo — em nota emitida pelo tomador (`tpEmit` 2), `emit` é
+    outra pessoa.
+  - **o ISS retido é escrito ao contrário nos dois layouts.** No ABRASF, `IssRetido` 1 é sim e 2 é não. No
+    nacional, `tpRetISSQN` **1 é *não* retido**, 2 é retido pelo tomador e 3 pelo intermediário. Lendo os dois
+    pelo mesmo "1", as 122 notas vinham marcadas como retidas — e nenhuma era.
+  - **o regime do prestador existe** em `prest/regTrib/opSimpNac` (1 não optante, 2 MEI, 3 ME/EPP no Simples).
+    Não é CRT, mas serve ao mesmo: `REGIME_SIMP` traduz, e a coluna de regime do fornecedor — que ficava vazia
+    em toda nota de serviço — vem preenchida do XML.
 - **Relevância:** cada parceiro com a sua participação e uma barra; a nota embaixo diz quantos respondem por 80%
   do movimento, quanto vem de fornecedor do Simples (sem crédito cheio) e quanto foi para consumidor final. A
   janela mostra os seis maiores de cada lado e os quatro itens que mais pesam — a lista inteira fica no bloco da
   tela. Em tela baixa ela **rola por dentro**, com os botões colados no rodapé (regra `:has(.nf)`/`:has(.pg)`, que
   vale também para a janela do PGDAS): antes os botões ficavam abaixo da dobra e não dava para clicar.
 - **Os itens também entram** (`itensNfe`, `juntarItens`, `listaItens`): de cada `det/prod` saem descrição, NCM e
-  valor; da NFS-e sai a discriminação do serviço (`xDescServ`/`Discriminacao`) e o NBS quando o layout traz
-  `cNBS`. **A chave do agrupamento é o NCM, não a descrição** — é a única coisa que não muda quando o mesmo
-  produto vem de fornecedores diferentes ("DIPIRONA MONOIDRATADA 500MG CX C/20" e "DIPIRONA SODICA 500MG C/20"
-  são um item só). Sem NCM, agrupa pela descrição normalizada (sem acento, sem pontuação). Cada item mostra de
-  quantos parceiros veio e quantas descrições juntou, e a nota embaixo diz quantas linhas de nota viraram quantos
-  itens.
+  valor; da NFS-e sai a discriminação do serviço (`xDescServ`/`Discriminacao`), o NBS quando o layout traz `cNBS`
+  e o **código nacional do serviço** (`cTribNac`, ou `ItemListaServico` no ABRASF) com o seu nome oficial
+  (`xTribNac`). **A chave do agrupamento é o código, não a descrição** — é a única coisa que não muda quando o
+  mesmo produto vem de fornecedores diferentes ("DIPIRONA MONOIDRATADA 500MG CX C/20" e "DIPIRONA SODICA 500MG
+  C/20" são um item só). Para mercadoria o código é o NCM; para serviço é o `cTribNac`, porque a discriminação da
+  NFS-e costuma trazer o número da fatura ("Nota fiscal da Fatura 880372223…") e aí cada nota viraria uma linha —
+  na primeira importação real, 92 notas de venda viraram **1 item** ("Medicina.") em vez de 82. Sem código nenhum,
+  agrupa pela descrição normalizada (sem acento, sem pontuação). O NBS, que poucas notas informam, fica guardado
+  no grupo: quando as notas do grupo trazem NBS diferentes, vale o que mais pesa. Cada item mostra de quantos
+  parceiros veio e quantas descrições juntou, e a nota embaixo diz quantas linhas de nota viraram quantos itens —
+  falando em NCM, em código de serviço ou nos dois, conforme a lista (`chaveDosItens`).
 - **Trazer para o cadastro:** um botão só, que completa os dois lados sem duplicar. Na **cadeia**, casa pelo CNPJ,
-  preenche o que estiver em branco e sugere o crédito pelo regime (Simples → parcial, normal → sim). No
-  **catálogo de produtos** (`levarParaCatalogo`), casa pelo NCM (ou pelo NBS, ou pela descrição), cria um item por
-  NCM e completa o NCM/NBS do que já estava cadastrado. O nome vem da nota de **venda** quando existe — a
+  preenche o que estiver em branco e sugere o crédito pelo regime (`creditoDoRegime`: Simples → parcial, porque o crédito é o que vier dentro do DAS;
+  **MEI → não**, que é do Simples mas não transfere crédito nenhum; Simples recolhendo IBS/CBS por fora → sim,
+  como qualquer empresa do regime normal; pessoa física, imune e isento → não; o resto → sim). É palpite de
+  partida: a coluna continua editável. No
+  **catálogo de produtos** (`levarParaCatalogo`), casa pela mesma chave da consolidação e completa o NCM/NBS do
+  que já estava cadastrado. A linha do catálogo tem uma **7ª posição, sem tela: o código nacional do serviço** —
+  sem ela, a mesma atividade entrava duas vezes (uma pelas compras, com NBS; outra pelas vendas, sem) e uma
+  segunda importação duplicaria tudo de novo. O nome vem da nota de **venda** quando existe — a
   descrição da própria empresa é melhor que a do fornecedor. Entram os 150 que mais pesam. Como sempre, fica na
   tela até você salvar.
 - **O que fica depois** (`rNotasMes`): o resumo não morre com a janela. Os valores vão para `monthly.notas` e
