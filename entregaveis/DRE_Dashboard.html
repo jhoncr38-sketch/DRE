@@ -3640,6 +3640,7 @@ function rNotasMes(){
   const temItens = !!(itC.length || itV.length);
   const vis = ui.notasVis === 'itens' && !temItens ? 'parceiros' : (ui.notasVis || 'notas');
   if(!compras.length && !vendas.length && !temItens) return '';
+  const falta = ui.present || ui.imprimindo ? {total: 0} : faltamNoCadastro();
   // v3: o mesmo resumo das outras listas — rótulo, número grande, barra de 100% e a lista com o peso de cada
   // parceiro. O número é a concentração: quantos respondem por 80% do movimento.
   const bloco = (titulo, linhas, ehCompra) => {
@@ -3674,7 +3675,9 @@ function rNotasMes(){
         : vis === 'notas' ? 'Cada nota de compra e o crédito de CBS que ela gera.'
         : 'Pelas notas fiscais do mês, lidas do XML.'}</p></div>
       <div class="cad-ctl">${temItens && !ui.imprimindo ? alt : ''}
-        ${ui.present || ui.imprimindo ? '' : `<button class="btn" data-act="notas-xml">importar notas (XML)</button>
+        ${ui.present || ui.imprimindo ? '' : `${falta.total ? `<button class="btn prim" data-act="notas-cadastro"
+          title="${falta.parceiros} ${falta.parceiros === 1 ? 'parceiro' : 'parceiros'} e ${falta.itens} ${falta.itens === 1 ? 'item' : 'itens'} destas notas ainda não estão no cadastro">trazer para o cadastro</button>` : ''}
+        <button class="btn" data-act="notas-xml">importar notas (XML)</button>
         <button class="btn" data-act="notas-limpar">limpar</button>`}</div></div>
     ${ui.imprimindo
       ? bloco('Compras — fornecedores', compras, true) + bloco('Vendas — clientes', vendas, false) +
@@ -5841,15 +5844,25 @@ async function importarNotas(){
   if(!notas.length){ render(); return toast('Nenhuma nota reconhecida nos arquivos escolhidos'); }
   const emp = banco.empresas.find(e => e.id === banco.empresaId) || {};
   const r = agruparNotas(notas, emp.cnpj || '');
-  S.monthly.notas = {compras: r.compras.map(x => [x.doc, x.nome, x.valor, x.notas, x.regime || (x.servico ? 'serviço' : '')]),
-                     vendas: r.vendas.map(x => [x.doc, x.nome, x.valor, x.notas, x.consumidor ? 'consumidor' : ''])};
-  S.monthly.itens = {compras: serieItens(r.itens.compras), vendas: serieItens(r.itens.vendas),
-                     resumo: {compras: resumoItens(r.itens.compras), vendas: resumoItens(r.itens.vendas)}};
-  // as notas, das maiores para as menores (o mês de uma farmácia pode ter centenas; guardar todas incharia o estado)
-  S.monthly.notasUma = r.notas.slice().sort((a, b) => b.valor - a.valor).slice(0, 250)
-    .map(n => [n.lado, n.doc, n.nome, n.valor, n.numero, n.emissao]);
-  const resp = await modal({titulo: 'Notas do mês', html: rNotas(r, notas.length, ruins, {repetidas, canceladas}),
-    botoes: [['fechar', 'Fechar'], ['cadeia', 'Trazer para o cadastro', 'prim']], padrao: 'fechar'});
+  const nada = !r.compras.length && !r.vendas.length && !r.itens.compras.length && !r.itens.vendas.length;
+  // quantas notas o mês já tinha lido — contado antes de a leitura nova entrar no lugar (era contado depois, e a
+  // janela avisava "já tinha 250 notas" até num mês vazio)
+  const n0 = S.monthly.notas || {};
+  const antes = nada ? 0 : [...(n0.compras || []), ...(n0.vendas || [])].reduce((a, x) => a + (+x[3] || 0), 0);
+  // nenhuma nota da empresa aberta (pasta errada, CNPJ errado): a leitura que o mês já tinha fica como estava
+  if(!nada){
+    S.monthly.notas = {compras: r.compras.map(x => [x.doc, x.nome, x.valor, x.notas, x.regime || (x.servico ? 'serviço' : '')]),
+                       vendas: r.vendas.map(x => [x.doc, x.nome, x.valor, x.notas, x.consumidor ? 'consumidor' : ''])};
+    S.monthly.itens = {compras: serieItens(r.itens.compras), vendas: serieItens(r.itens.vendas),
+                       resumo: {compras: resumoItens(r.itens.compras), vendas: resumoItens(r.itens.vendas)}};
+    // as notas, das maiores para as menores (o mês de uma farmácia pode ter centenas; guardar todas incharia o estado)
+    S.monthly.notasUma = r.notas.slice().sort((a, b) => b.valor - a.valor).slice(0, 250)
+      .map(n => [n.lado, n.doc, n.nome, n.valor, n.numero, n.emissao]);
+  }
+  // Enter traz para o cadastro: é o que quem importa quer. Se nenhuma nota é da empresa aberta, não há o que trazer.
+  const resp = await modal({titulo: 'Notas do mês', html: rNotas(r, notas.length, ruins, {repetidas, canceladas, cnpj: emp.cnpj || '', antes}),
+    botoes: nada ? [['fechar', 'Fechar']] : [['fechar', 'Fechar sem trazer'], ['cadeia', 'Trazer para o cadastro', 'prim']],
+    padrao: nada ? 'fechar' : 'cadeia'});
   if(resp.botao === 'cadeia') levarParaCadeia(r);
   else { ui.tab = 'cliente'; render(); }     // o resumo fica no Resumo do cliente, abaixo da cadeia
 }
@@ -5943,10 +5956,16 @@ function rNotas(r, quantas, ruins, extra = {}){
   const servicos = r.servicos || 0, mercadorias = quantas - servicos;
   const tipos = servicos && mercadorias ? ` (${mercadorias} de mercadoria, ${servicos} de serviço)`
     : servicos ? ' de serviço' : '';
-  const jaTem = (S.monthly.notasUma || []).length;
-  return `<div class="nf">
-    ${jaTem ? `<p class="nf-troca">Este mês já tinha ${jaTem} ${jaTem === 1 ? 'nota lida' : 'notas lidas'}: trazer estas para o cadastro substitui aquela leitura. Para juntar as duas, escolha todos os arquivos de uma vez.</p>` : ''}
+  const jaTem = extra.antes || 0;
+  // nenhuma nota da empresa aberta: sem CNPJ no cadastro, ou as notas são de outra empresa
+  const todasFora = r.fora.length > 0 && r.fora.length === quantas;
+  const aviso = !todasFora ? '' : extra.cnpj
+    ? `<p class="nf-troca">Nenhuma destas notas é da empresa aberta: o CNPJ dela (${fmtCnpj(extra.cnpj)}) não aparece como emitente nem como destinatário. Confira se a empresa aberta é a certa, ou o CNPJ em Opções → Editar empresa.</p>`
+    : `<p class="nf-troca">A empresa aberta está sem CNPJ no cadastro, e é por ele que o painel separa compra de venda. Cadastre em Opções → Editar empresa e importe de novo.</p>`;
+  return `<div class="nf">${aviso}
+    ${jaTem ? `<p class="nf-troca">Este mês já tinha ${jaTem} ${jaTem === 1 ? 'nota lida' : 'notas lidas'}: esta importação substitui aquela leitura na aba Notas do mês. Fornecedores, clientes e produtos não são apagados, só completados. Para juntar as duas leituras, escolha todos os arquivos de uma vez.</p>` : ''}
     <p class="sub">${quantas} ${quantas === 1 ? 'nota lida' : 'notas lidas'}${tipos}${ruins.length ? ` · ${ruins.length} ${ruins.length === 1 ? 'arquivo não reconhecido' : 'arquivos não reconhecidos'}` : ''}${r.fora.length ? ` · ${r.fora.length} de outra empresa, fora da conta` : ''}${extra.canceladas ? ` · ${extra.canceladas} ${extra.canceladas === 1 ? 'cancelada, fora da conta' : 'canceladas, fora da conta'}` : ''}${extra.repetidas ? ` · ${extra.repetidas} ${extra.repetidas === 1 ? 'repetida, contada uma vez só' : 'repetidas, contadas uma vez só'}` : ''}.</p>
+    ${todasFora ? '' : `<p class="nota">Trazer para o cadastro completa Fornecedores, Clientes e Produtos e serviços: acrescenta quem é novo e preenche o que está em branco, sem apagar nem trocar o que já está lá.</p>`}
     ${bloco('Compras — fornecedores', r.compras, true)}
     ${bloco('Vendas — clientes', r.vendas, false)}
     ${blocoItens('Compras — o que foi comprado', r.itens.compras, null, true, 4)}
@@ -6090,10 +6109,31 @@ async function consultarRegimes(g){
   render();
   toast(`${n} ${n === 1 ? 'regime preenchido' : 'regimes preenchidos'} pelo CNPJ — confira e salve`);
 }
+// A leitura guardada no mês, de volta no formato da importação: é o que deixa trazer para o cadastro depois, sem
+// escolher os arquivos outra vez (quem fechou a janela sem trazer não precisa reimportar).
+function leituraDoMes(){
+  const n = S.monthly.notas || {}, it = S.monthly.itens || {};
+  const parc = (r, venda) => ({doc: r[0] || '', nome: r[1] || '', valor: +r[2] || 0, notas: +r[3] || 0,
+    regime: !venda && REGIMES.includes(r[4]) ? r[4] : '', semNome: !r[1] || r[1] === 'sem identificação',
+    pf: !!r[0] && !ehCnpj(r[0]), consumidor: venda && r[4] === 'consumidor'});
+  return {compras: (n.compras || []).map(r => parc(r, false)), vendas: (n.vendas || []).map(r => parc(r, true)),
+          itens: {compras: lerItens(it.compras), vendas: lerItens(it.vendas)}};
+}
+// quantos parceiros (com CNPJ) e itens da leitura do mês ainda não estão no cadastro — os mesmos que o "trazer" levaria
+function faltamNoCadastro(){
+  const l = leituraDoMes(), cad = S.cadeia || {};
+  const fora = (lst, x) => ehCnpj(x.doc) && !(lst || []).some(r => limpaCnpj(r[0]) === limpaCnpj(x.doc));
+  const parceiros = l.compras.filter(x => fora(cad.fornecedores, x)).length
+    + l.vendas.filter(x => !x.pf && fora(cad.clientes, x)).length;
+  const cat = mapaCatalogo();
+  const itens = itensDasNotas(l).slice(0, MAX_CATALOGO).filter(([, x]) => noCatalogo(cat, x) === undefined).length;
+  return {parceiros, itens, total: parceiros + itens};
+}
 // Leva os itens para o catálogo de Produtos e serviços, com a mesma chave da consolidação: o produto comprado de
 // três fornecedores entra uma vez, e o que já está cadastrado só é completado (NCM, NBS), nunca duplicado.
 const MAX_CATALOGO = 150;
-function levarParaCatalogo(r){
+// os itens das notas juntados pela chave, do que mais pesa ao que menos pesa — o nome vem da nota de venda
+function itensDasNotas(r){
   const itens = new Map();
   const juntar = (lista, daEmpresa) => (lista || []).forEach(x => {
     const ch = chaveItem(x), a = itens.get(ch);
@@ -6108,11 +6148,14 @@ function levarParaCatalogo(r){
   });
   juntar((r.itens || {}).vendas, true);            // vendas primeiro: a descrição da própria empresa nomeia melhor
   juntar((r.itens || {}).compras, false);
-  if(!itens.size) return {novos: 0, tocados: 0, fora: 0};
+  return [...itens.entries()].sort((a, b) => b[1].valor - a[1].valor);
+}
+function levarParaCatalogo(r){
+  const ordem = itensDasNotas(r);
+  if(!ordem.length) return {novos: 0, tocados: 0, fora: 0};
   const lst = S.produtos = S.produtos || [];
   const onde = new Map();
   lst.forEach((l, i) => { const ch = chaveLinha(l); if(!onde.has(ch)) onde.set(ch, i); });
-  const ordem = [...itens.entries()].sort((a, b) => b[1].valor - a[1].valor);
   let novos = 0, tocados = 0;
   ordem.slice(0, MAX_CATALOGO).forEach(([ch, x]) => {
     const i = noCatalogo(onde, x);
@@ -6532,6 +6575,7 @@ app.addEventListener('click', e => {
     case 'fator-r': ui.menu = false; render(); comErro(alternarFatorR); break;
     case 'pgdas': ui.menu = false; render(); comErro(conferirPgdas); break;
     case 'notas-xml': comErro(importarNotas); break;
+    case 'notas-cadastro': levarParaCadeia(leituraDoMes()); break;
     case 'notas-limpar': S.monthly.notas = {compras: [], vendas: []};
       S.monthly.itens = {compras: [], vendas: [], resumo: {}}; S.monthly.notasUma = []; render(); break;
     case 'notas-vis': ui.notasVis = b.dataset.id; render();

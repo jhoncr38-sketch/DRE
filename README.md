@@ -953,7 +953,15 @@ não há IA nem servidor no caminho (`lerNfe`, `agruparNotas`, `pesoNotas`, `imp
   no grupo: quando as notas do grupo trazem NBS diferentes, vale o que mais pesa. Cada item mostra de quantos
   parceiros veio e quantas descrições juntou, e a nota embaixo diz quantas linhas de nota viraram quantos itens —
   falando em NCM, em código de serviço ou nos dois, conforme a lista (`chaveDosItens`).
-- **Trazer para o cadastro:** um botão só, que completa os dois lados sem duplicar. Na **cadeia**, casa pelo CNPJ,
+- **Trazer para o cadastro:** um botão só, que completa os dois lados sem duplicar. É o padrão da janela (Enter);
+  o outro botão diz o que faz — "Fechar sem trazer" — e, fechada assim, a leitura fica no mês e o **bloco das notas
+  oferece "trazer para o cadastro" depois** (`leituraDoMes`, `faltamNoCadastro`), sem escolher os arquivos outra
+  vez, enquanto houver parceiro ou item da leitura fora do cadastro. Antes o padrão era fechar, e quem fechava sem
+  trazer só resolvia importando de novo. Quando nenhuma nota é da empresa aberta (sem CNPJ no cadastro ou notas de
+  outra empresa), a janela diz isso em destaque, não oferece trazer nada e **não apaga a leitura que o mês já
+  tinha**. O aviso de substituição agora conta as notas que o mês tinha *antes* (era contado depois, e aparecia em
+  toda importação, até em mês vazio) e deixa claro que só a leitura do mês é substituída: os cadastros são só
+  completados. Na **cadeia**, casa pelo CNPJ,
   preenche o que estiver em branco e sugere o crédito pelo regime (`creditoDoRegime`: Simples → parcial, porque o crédito é o que vier dentro do DAS;
   **MEI → não**, que é do Simples mas não transfere crédito nenhum; Simples recolhendo IBS/CBS por fora → sim,
   como qualquer empresa do regime normal; pessoa física, imune e isento → não; o resto → sim). É palpite de
