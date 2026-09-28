@@ -4193,12 +4193,14 @@ function atualizarBarra(){
   let texto, classe = '';
   if(banco.salvando) texto = 'Salvando…';
   else if(banco.erro){ texto = 'Não salvou — tente de novo'; classe = 'erro'; }
-  else if(!banco.empresaId) texto = 'Cadastre uma empresa para salvar';
+  // na casa do site (a carteira, sem empresa aberta) não há o que salvar: a linha some. Sem empresa nenhuma, ela pede uma
+  else if(!banco.empresaId) texto = (banco.empresas || []).length ? '' : 'Cadastre uma empresa para salvar';
   else if(sujo()){ texto = 'Alterações não salvas'; classe = 'sujo'; }
   else { texto = banco.salvoEm ? `Salvo às ${hora(banco.salvoEm)}` : 'Tudo salvo'; classe = 'ok'; }
   if(st.textContent !== texto) st.textContent = texto;
   st.parentElement.className = 'lat-salvo ' + classe;
   st.parentElement.title = texto;
+  st.parentElement.hidden = !texto;
   if(bt) bt.disabled = banco.salvando;
 }
 
@@ -4618,8 +4620,15 @@ async function aposEntrar(){
   }
   banco.empresas = await listarEmpresas();
   const ultimo = guarda.ler('dre.ultimo') || {};
+  if(!banco.empresas.length){ banco.carregando = false; render(); return novaEmpresa(); }
+  // A casa do site é o Painel de empresas: o escritório entra vendo a carteira inteira, na competência em que
+  // trabalhou por último, e abre dali a empresa. O link do cliente continua indo direto à empresa dele — a carteira
+  // tem os outros clientes do escritório.
+  if(!ui.client){
+    ui.tab = 'empresas';
+    return carregarCarteira(ultimo.periodo || periodoAtual());
+  }
   const alvo = banco.empresas.find(e => e.id === ultimo.empresaId) || banco.empresas[0];
-  if(!alvo){ banco.carregando = false; render(); return novaEmpresa(); }
   await abrirEmpresa(alvo.id, alvo.id === ultimo.empresaId ? ultimo.periodo : null);
 }
 // A coluna fator_r veio depois (migração 20260923). Sem ela o painel não quebra: a marca passa a valer só
@@ -5334,12 +5343,12 @@ async function podeSair(){
   if(r.botao === 'salvar'){ await salvarBanco(); return !sujo(); }
   return r.botao === 'descartar';
 }
-async function trocar(tipo, valor){
+async function trocar(tipo, valor, periodo){
   if(valor === '__nova__'){ render(); return comErro(tipo === 'empresa' ? novaEmpresa : novoMes); }
   if(!(await podeSair())){ render(); return; }
   // sem isto a tela congela até o banco responder, e parece que o clique não pegou
   ocupado(true); ui.animarTela = true;
-  try { await comErro(() => tipo === 'empresa' ? abrirEmpresa(valor) : abrirMes(banco.empresaId, valor)); }
+  try { await comErro(() => tipo === 'empresa' ? abrirEmpresa(valor, periodo) : abrirMes(banco.empresaId, valor)); }
   finally { ocupado(false); ui.animarTela = false; garantirAnoDaTela(); }
 }
 // Copiar a empresa aberta: nasce uma empresa nova igual — categorias, alíquotas, premissas, cadeia de crédito,
@@ -6703,7 +6712,8 @@ app.addEventListener('click', e => {
     case 'emp-limpar': ui.buscaEmp = ''; ui.filtroEmp = 'todas'; render(); break;
     // clicar na linha abre a empresa: na Visão geral quando o mês está lançado, no Lançamento quando não está
     case 'abrir-empresa': { const id = b.dataset.id, salvo = b.dataset.salvo === '1';
-      comErro(async () => { await trocar('empresa', id); irPara(salvo ? 'visao' : 'resultado'); garantirAnoDaTela(); });
+      // abre na competência que a carteira está mostrando (sem ela salva, no último mês da empresa)
+      comErro(async () => { await trocar('empresa', id, (banco.carteira || {}).periodo); irPara(salvo ? 'visao' : 'resultado'); garantirAnoDaTela(); });
       break; }
     case 'nova-empresa': comErro(novaEmpresa); break;
     case 'ano-meses': ui.anoMeses = !ui.anoMeses; render(); focar('[data-act="ano-meses"]'); break;

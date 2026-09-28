@@ -824,7 +824,14 @@ código para copiar**. Ordem combinada: fundação → casca → telas → Paine
   indicado com a economia, situação e o rodapé da carteira. Os números saem do `resumo` de cada mês salvo: **uma
   consulta por empresa, todas em paralelo** (a RPC `resumos` é por empresa; uma consulta única da carteira
   exigiria migração). Clicar na linha abre a Visão geral quando o mês está lançado e o Lançamento quando não
-  está. **Não aparece na apresentação nem no link do cliente** — a tela mostra todos os clientes do escritório.
+  está — **na competência que a carteira está mostrando** (sem ela salva, no último mês da empresa); antes abria
+  sempre o último mês salvo. **Não aparece na apresentação nem no link do cliente** — a tela mostra todos os
+  clientes do escritório.
+  - **É a casa do site** (`aposEntrar`, 28/09/2026): depois do login, ou com a sessão restaurada, o escritório cai
+    na carteira, na competência em que trabalhou por último (`dre.ultimo`), e abre dali a empresa. Antes abria
+    direto a última empresa usada. O link do cliente continua indo direto à empresa dele, e sem empresa nenhuma
+    o painel ainda abre o cadastro da primeira. Sem empresa aberta, a linha de salvamento da lateral some — não
+    há o que salvar ali.
   Ficaram de fora, por não existirem no banco: **ramo**, **responsável** e os status "a conferir" e "aguardando
   documentos" (seriam colunas novas).
 - **Modo Apresentar com frase de conclusão** (`rConclusao`, `conclusaoDaTela`): cada tela abre com o que ela quer
