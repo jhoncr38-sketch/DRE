@@ -179,6 +179,9 @@ cálculo mudou). O que entrou:
   as **iniciais** — as mesmas do Painel de empresas (`iniciais`). Antes a volta quebrava em quatro linhas e o
   cartão virava uma caixa vazia. Clicar nas iniciais abre a barra já com a lista de empresas: dentro de 64px ela
   ficaria espremida.
+  **Janela baixa:** a barra tem a altura da tela e, num notebook com a barra de tarefas, o pé (salvo, Baixar PDF,
+  Opções) passava do fundo escuro e aparecia sobre a página branca. Agora quem rola é a lista do meio (`.lat-nav`,
+  barra de rolagem fina e escura) e o pé fica sempre à vista; com até 760px de altura os respiros encolhem antes.
 - **Cabeçalho preso no alto** (`rCabecalho`): empresa, CNPJ · competência, alternador **Lançar / Apresentar**
   (o mesmo que o item do menu: recolhe a maquinaria ao entrar e devolve ao sair), seletor de competência,
   Tela cheia (só apresentando) e Salvar. A barra compacta que descia ao rolar saiu — o cabeçalho já é fixo.

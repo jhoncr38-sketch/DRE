@@ -158,7 +158,12 @@
   .emp-nova{width:100%; padding:10px; border:0; border-top:1px solid var(--lat-linha); background:transparent;
     color:var(--lat-mut); font:inherit; font-size:12.5px; text-align:left; cursor:pointer}
   .emp-nova:hover{background:var(--lat-2); color:var(--lat-ink)}
-  .lat-nav{display:flex; flex-direction:column; padding:0 12px}
+  /* a barra tem a altura da tela: numa janela baixa, quem rola é a lista do meio — o rodapé (salvo, Baixar PDF,
+     Opções) fica sempre à vista, em vez de passar do fundo escuro e aparecer por cima da página branca */
+  .lat-nav{display:flex; flex-direction:column; padding:0 12px; flex:0 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+    overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#33353A transparent}
+  .lat-nav::-webkit-scrollbar{width:6px}
+  .lat-nav::-webkit-scrollbar-thumb{background:#33353A; border-radius:99px}
   .lat-grupo{font-size:9.5px; letter-spacing:.15em; text-transform:uppercase; color:var(--lat-mut-2); padding:0 10px 9px; font-family:var(--mono)}
   .lat-grupo + .lat-grupo, .lat-nav .lat-grupo ~ .lat-grupo{padding-top:22px}
   .lat-item{display:flex; align-items:center; gap:11px; width:100%; background:transparent; border:0; color:var(--lat-mut);
@@ -197,6 +202,15 @@
   body.lat-fina .lat-emp-b, body.lat-fina .lat-item{justify-content:center; padding:9px 0}
   body.lat-fina .lat-rot, body.lat-fina .lat-n{display:none}
   body.lat-fina .lat-item span:not(.lat-ponto){display:none}
+  /* tela baixa (notebook com a barra de tarefas, janela não maximizada): aperta os respiros antes de precisar rolar */
+  @media (max-height:760px){
+    .lat-topo{padding-top:14px; padding-bottom:14px}
+    .lat-emp, body.lat-fina .lat-emp{margin-bottom:14px}
+    .lat-grupo + .lat-grupo, .lat-nav .lat-grupo ~ .lat-grupo{padding-top:14px}
+    .lat-item{padding-top:7px; padding-bottom:7px}
+    .lat-pe{padding-top:12px; padding-bottom:12px; gap:8px}
+    body.lat-fina .lat-topo, body.lat-fina .lat-pe{padding:12px 0}
+  }
   .main{flex:1; min-width:0; display:flex; flex-direction:column}
   .cab{position:sticky; top:0; z-index:5; background:color-mix(in srgb, var(--canvas) 92%, transparent);
     backdrop-filter:blur(8px); border-bottom:1px solid color-mix(in srgb, var(--line-3) 70%, var(--canvas));
